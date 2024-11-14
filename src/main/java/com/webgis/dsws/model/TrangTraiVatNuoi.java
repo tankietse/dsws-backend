@@ -1,4 +1,4 @@
-package com.webgis.dsws.Model;
+package com.webgis.dsws.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
