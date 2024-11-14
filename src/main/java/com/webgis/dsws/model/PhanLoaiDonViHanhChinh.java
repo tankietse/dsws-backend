@@ -1,5 +1,8 @@
 package com.webgis.dsws.model;
 
+import lombok.Getter;
+
+@Getter
 public enum PhanLoaiDonViHanhChinh {
     THANH_PHO_TRUNG_UONG("Thành phố trực thuộc Trung ương", 4),
     TINH("Tỉnh", 4),
@@ -20,11 +23,4 @@ public enum PhanLoaiDonViHanhChinh {
         this.defaultAdminLevel = defaultAdminLevel;
     }
 
-    public String getMoTa() {
-        return moTa;
-    }
-
-    public Integer getDefaultAdminLevel() {
-        return defaultAdminLevel;
-    }
 }
