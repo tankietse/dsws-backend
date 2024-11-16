@@ -192,9 +192,8 @@ public class DonViHanhChinhImporter implements GeoJsonDataImporter {
 
         // Lấy và xử lý adminLevel
         String adminLevelStr = getJsonNodeText(properties, "admin_level");
-        entity.setCapHanhChinh(adminLevelStr); // Gán giá trị gốc vào capHanhChinh
+        entity.setCapHanhChinh(adminLevelStr);
 
-        // Chuyển đổi sang AdminLevel enum
         if (adminLevelStr != null) {
             try {
                 Integer adminLevelValue = Integer.parseInt(adminLevelStr);
@@ -208,19 +207,36 @@ public class DonViHanhChinhImporter implements GeoJsonDataImporter {
         entity.setTen(getJsonNodeText(properties, "name"));
         entity.setTenTiengAnh(getJsonNodeText(properties, "name:en"));
 
-        String tenDonViCha = getJsonNodeText(properties, "is_in:town");
-        if (tenDonViCha == null) {
-            tenDonViCha = getJsonNodeText(properties, "is_in:city");
-        }
-        if (tenDonViCha == null) {
-            tenDonViCha = getJsonNodeText(properties, "is_in:country_code");
-        }
-        if (tenDonViCha != null) {
-            DonViHanhChinh parentEntity = repository.findByTenTiengAnh(tenDonViCha);
-            if (parentEntity == null) {
-                parentEntity = repository.findByTen(tenDonViCha);
+        // Tìm đơn vị cha từ relations
+        JsonNode relations = properties.get("@relations");
+        if (relations != null && relations.isArray() && relations.size() > 0) {
+            // Lấy relation đầu tiên
+            JsonNode firstRelation = relations.get(0);
+            if (firstRelation.has("reltags")) {
+                JsonNode relTags = firstRelation.get("reltags");
+                String parentName = getJsonNodeText(relTags, "name");
+                if (parentName != null) {
+                    DonViHanhChinh parentEntity = repository.findByTen(parentName);
+                    if (parentEntity == null) {
+                        // Thử tìm bằng tên tiếng Anh
+                        String parentNameEn = getJsonNodeText(relTags, "name:en");
+                        if (parentNameEn != null) {
+                            parentEntity = repository.findByTenTiengAnh(parentNameEn);
+                        }
+                    }
+                    entity.setDonViCha(parentEntity);
+                }
             }
-            entity.setDonViCha(parentEntity);
+        } else {
+            // Fallback: Nếu không có relations, thử dùng is_in:city
+            String tenDonViCha = getJsonNodeText(properties, "is_in:city");
+            if (tenDonViCha != null) {
+                DonViHanhChinh parentEntity = repository.findByTenTiengAnh(tenDonViCha);
+                if (parentEntity == null) {
+                    parentEntity = repository.findByTen(tenDonViCha);
+                }
+                entity.setDonViCha(parentEntity);
+            }
         }
 
         if (geometryNode != null) {
