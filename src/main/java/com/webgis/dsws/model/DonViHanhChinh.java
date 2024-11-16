@@ -1,4 +1,5 @@
 package com.webgis.dsws.model;
+
 import com.webgis.dsws.model.AdminLevel;
 
 import jakarta.persistence.*;
@@ -17,8 +18,8 @@ public class DonViHanhChinh {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer id;
 
-//    @Column(name = "ma", unique = true)
-//    private String code;
+    // @Column(name = "ma", unique = true)
+    // private String code;
 
     @Column(name = "ten")
     private String ten;
@@ -29,18 +30,18 @@ public class DonViHanhChinh {
     @Column(name = "cap_hanh_chinh")
     private String capHanhChinh;
 
-//    @Column(name = "dien_tich")
-//    private Double dienTich;
+    // @Column(name = "dien_tich")
+    // private Double dienTich;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private AdminLevel adminLevel;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY) // Thêm LAZY loading
     @JoinColumn(name = "id_cha")
     private DonViHanhChinh donViCha;
 
-    @OneToMany(mappedBy = "donViCha")
+    @OneToMany(mappedBy = "donViCha", fetch = FetchType.LAZY)
     private List<DonViHanhChinh> dsDonViCon;
 
     @Column(name = "ranh_gioi", columnDefinition = "geometry")

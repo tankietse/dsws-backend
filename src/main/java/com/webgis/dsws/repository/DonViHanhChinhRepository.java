@@ -18,13 +18,15 @@ public interface DonViHanhChinhRepository extends JpaRepository<DonViHanhChinh, 
     // Thay đổi findByType thành findByCapHanhChinh vì trong entity là capHanhChinh
     List<DonViHanhChinh> findByCapHanhChinh(String capHanhChinh);
 
-//    @Query("SELECT d FROM DonViHanhChinh d WHERE LOWER(d.ten) LIKE LOWER(CONCAT('%', :pattern, '%'))")
-//    List<DonViHanhChinh> findByNameContainingIgnoreCase(String pattern);
+    // @Query("SELECT d FROM DonViHanhChinh d WHERE LOWER(d.ten) LIKE
+    // LOWER(CONCAT('%', :pattern, '%'))")
+    // List<DonViHanhChinh> findByNameContainingIgnoreCase(String pattern);
 
     boolean existsById(Integer id);
 
     boolean existsByTenAndAdminLevelAndRanhGioi(String ten, AdminLevel adminLevel, Geometry ranhGioi);
 
     DonViHanhChinh findByTen(String tenDonViCha);
+
     DonViHanhChinh findByTenTiengAnh(String tenTiengAnh);
 }
