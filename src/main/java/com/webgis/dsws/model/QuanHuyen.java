@@ -1,12 +1,11 @@
-package com.webgis.dsws.Model;
+package com.webgis.dsws.model;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.AllArgsConstructor;
-import org.locationtech.jts.geom.Geometry;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.*;
-import java.time.LocalDateTime;
+
 import java.util.Set;
 
 @Entity

@@ -1,4 +1,4 @@
-package com.webgis.dsws.Model;
+package com.webgis.dsws.model;
 
 public enum TrangThai {
     ACTIVE,
