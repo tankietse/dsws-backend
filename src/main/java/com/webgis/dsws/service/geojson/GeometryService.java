@@ -1,4 +1,3 @@
-
 package com.webgis.dsws.service.geojson;
 
 import org.locationtech.jts.geom.Point;
@@ -29,5 +28,10 @@ public class GeometryService {
             return (Point) geom;
         }
         return null;
+    }
+
+    public Geometry convertToGeometry(String geoJson) throws ParseException {
+        Geometry geom = reader.read(geoJson);
+        return geom;
     }
 }
