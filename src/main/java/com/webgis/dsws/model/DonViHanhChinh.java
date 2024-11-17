@@ -6,11 +6,19 @@ import jakarta.persistence.*;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 
-import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.NoArgsConstructor;
+import lombok.AllArgsConstructor;
+import lombok.ToString;
 
 import java.util.List;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@ToString(exclude = { "donViCha", "dsDonViCon" }) // Thêm exclude để tránh lỗi vòng lặp vô hạn
 @Entity
 @Table(name = "don_vi_hanh_chinh")
 public class DonViHanhChinh {

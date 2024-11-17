@@ -14,8 +14,6 @@ import java.util.List;
 @Repository
 public interface DonViHanhChinhRepository extends JpaRepository<DonViHanhChinh, Integer> {
     List<DonViHanhChinh> findByDonViCha(DonViHanhChinh donViCha);
-
-    // Thay đổi findByType thành findByCapHanhChinh vì trong entity là capHanhChinh
     List<DonViHanhChinh> findByCapHanhChinh(String capHanhChinh);
 
     // @Query("SELECT d FROM DonViHanhChinh d WHERE LOWER(d.ten) LIKE
@@ -29,4 +27,7 @@ public interface DonViHanhChinhRepository extends JpaRepository<DonViHanhChinh, 
     DonViHanhChinh findByTen(String tenDonViCha);
 
     DonViHanhChinh findByTenTiengAnh(String tenTiengAnh);
+
+    @Query("SELECT d FROM DonViHanhChinh d WHERE LOWER(FUNCTION('unaccent', d.ten)) LIKE LOWER(FUNCTION('unaccent', CONCAT('%', :ten, '%')))")
+    List<DonViHanhChinh> findByTenContainingIgnoreCaseAndDiacritics(String ten);
 }

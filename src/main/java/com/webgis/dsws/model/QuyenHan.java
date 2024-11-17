@@ -1,4 +1,4 @@
-package com.webgis.dsws.Model;
+package com.webgis.dsws.model;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
@@ -24,4 +24,3 @@ public class QuyenHan {
     @ManyToMany(mappedBy = "quyenHans")
     private Set<VaiTro> vaiTros;
 }
-

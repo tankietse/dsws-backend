@@ -31,7 +31,6 @@ public class GeometryService {
     }
 
     public Geometry convertToGeometry(String geoJson) throws ParseException {
-        Geometry geom = reader.read(geoJson);
-        return geom;
+        return reader.read(geoJson);
     }
 }

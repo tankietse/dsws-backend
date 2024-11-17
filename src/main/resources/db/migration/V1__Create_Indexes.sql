@@ -1,3 +1,5 @@
+CREATE EXTENSION IF NOT EXISTS unaccent;
+
 -- Regular indexes
 CREATE INDEX IF NOT EXISTS idx_dvhc_ten ON don_vi_hanh_chinh(ten);
 CREATE INDEX IF NOT EXISTS idx_dvhc_cap_hanh_chinh ON don_vi_hanh_chinh(cap_hanh_chinh);
