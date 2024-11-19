@@ -1,7 +1,5 @@
 package com.webgis.dsws.model;
 
-import com.webgis.dsws.model.AdminLevel;
-
 import jakarta.persistence.*;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
