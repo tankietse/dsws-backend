@@ -1,5 +1,7 @@
 package com.webgis.dsws.model;
 
+import java.sql.Date;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -24,5 +26,7 @@ public class TrangTraiVatNuoi {
 
     @NotNull(message = "Số lượng không được để trống")
     private Integer soLuong;
-}
 
+    private Date ngayCapNhat;
+    private String nguonGoc;
+}

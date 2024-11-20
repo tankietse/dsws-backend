@@ -1,59 +1,39 @@
 package com.webgis.dsws.model;
 
 import jakarta.persistence.*;
+import lombok.*;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
+import java.util.Set;
 
-import lombok.Getter;
-import lombok.Setter;
-import lombok.NoArgsConstructor;
-import lombok.AllArgsConstructor;
-import lombok.ToString;
-
-import java.util.List;
-
-@Getter
-@Setter
+@Entity
+@Data
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = { "donViCha", "dsDonViCon" }) // Thêm exclude để tránh lỗi vòng lặp vô hạn
-@Entity
 @Table(name = "don_vi_hanh_chinh")
 public class DonViHanhChinh {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Integer id;
+    private Long id;
 
-    // @Column(name = "ma", unique = true)
-    // private String code;
-
-    @Column(name = "ten")
     private String ten;
-
-    @Column(name = "ten_tieng_anh")
     private String tenTiengAnh;
-
-    @Column(name = "cap_hanh_chinh")
     private String capHanhChinh;
+    private String adminLevel;
 
-    // @Column(name = "dien_tich")
-    // private Double dienTich;
-
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private AdminLevel adminLevel;
-
-    @ManyToOne(fetch = FetchType.LAZY) // Thêm LAZY loading
-    @JoinColumn(name = "id_cha")
-    private DonViHanhChinh donViCha;
-
-    @OneToMany(mappedBy = "donViCha", fetch = FetchType.LAZY)
-    private List<DonViHanhChinh> dsDonViCon;
-
-    @Column(name = "ranh_gioi", columnDefinition = "geometry")
+    @Column(columnDefinition = "geometry")
     private Geometry ranhGioi;
 
-    @Column(name = "diem_trung_tam", columnDefinition = "geometry")
+    @Column(columnDefinition = "geometry(Point,4326)")
     private Point centerPoint;
 
+    @ManyToOne
+    @JoinColumn(name = "don_vi_cha_id")
+    private DonViHanhChinh donViCha;
+
+    @OneToMany(mappedBy = "donViCha")
+    private Set<DonViHanhChinh> dsDonViCon;
+
+    @OneToMany(mappedBy = "donViHanhChinh")
+    private Set<TrangTrai> trangTrais;
 }

@@ -18,29 +18,40 @@ public class NguoiDung {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @NotBlank(message = "Tên đăng nhập không được để trống")
+    private String maNguoiDung;
     private String tenDangNhap;
-
-    @NotBlank(message = "Mật khẩu không được để trống")
     private String matKhauHash;
-
-    @Email(message = "Email không hợp lệ")
     private String email;
-
-    @NotBlank(message = "Họ tên không được để trống")
     private String hoTen;
+    private String soDienThoai;
+    private String chucVu;
+    
+    @ManyToOne
+    @JoinColumn(name = "don_vi_id")
+    private DonVi donVi;
 
     private LocalDateTime ngayTao;
-    private boolean trangThaiHoatDong;
+    private LocalDateTime lanDangNhapCuoi;
+    private Boolean trangThaiHoatDong;
 
     @OneToMany(mappedBy = "nguoiDung")
-    private Set<TrangTrai> trangTrais;
+    private Set<NguoiDungVaiTro> vaiTros;
 
-    @ManyToMany
-    @JoinTable(
-            name = "nguoi_dung_vai_tro",
-            joinColumns = @JoinColumn(name = "nguoi_dung_id"),
-            inverseJoinColumns = @JoinColumn(name = "vai_tro_id")
-    )
-    private Set<VaiTro> vaiTros;
+    @OneToMany(mappedBy = "nguoiTao")
+    private Set<CaBenh> caBenhTao;
+
+    @OneToMany(mappedBy = "nguoiDuyet")
+    private Set<CaBenh> caBenhDuyet;
+
+    @OneToMany(mappedBy = "nguoiCapNhat")
+    private Set<DienBienCaBenh> dienBienCapNhat;
+
+    @OneToMany(mappedBy = "nguoiTao")
+    private Set<VungDich> vungDichTao;
+
+    @OneToMany(mappedBy = "nguoiThucHien")
+    private Set<VungDichBienPhap> bienPhapThucHien;
+
+    @OneToMany(mappedBy = "nguoiTao")
+    private Set<CanhBao> canhBaoTao;
 }
