@@ -4,7 +4,6 @@ import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.mapper.TrangTraiMapper;
 import com.webgis.dsws.model.TrangTrai;
 import com.webgis.dsws.repository.TrangTraiRepository;
-import jakarta.persistence.EntityManager;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

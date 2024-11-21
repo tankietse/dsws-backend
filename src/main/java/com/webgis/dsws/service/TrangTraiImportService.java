@@ -2,20 +2,28 @@ package com.webgis.dsws.service;
 
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.exception.DataImportException;
+import com.webgis.dsws.mapper.TrangTraiMapper;
+import com.webgis.dsws.model.TrangTrai;
+import com.webgis.dsws.repository.TrangTraiRepository;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class TrangTraiImportService {
+    private final TrangTraiMapper trangTraiMapper;
+    private final TrangTraiRepository trangTraiRepository;
     private final TrangTraiImportBatchProcessor batchProcessor;
     
+    @Transactional
     public void importTrangTrai(List<TrangTraiImportDTO> dtos) {
         StringBuilder errors = new StringBuilder();
         List<TrangTraiImportDTO> currentBatch = new ArrayList<>();
@@ -36,6 +44,11 @@ public class TrangTraiImportService {
 
         processRemainingBatch(currentBatch, errors);
         throwIfErrors(errors);
+
+        List<TrangTrai> trangTrais = dtos.stream()
+                .map(trangTraiMapper::toEntity)
+                .collect(Collectors.toList());
+        trangTraiRepository.saveAll(trangTrais);
     }
 
     private void logImportError(TrangTraiImportDTO dto, int count, Exception e, StringBuilder errors) {

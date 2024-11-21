@@ -35,7 +35,8 @@ public class DienBienCaBenh {
 
     // TODO: Figure out how to store file in database
     @Lob
-    @Column(columnDefinition = "BLOB")
+    // @Column(columnDefinition = "BLOB") Hibernate tự động ánh xạ trường kiểu
+    // byte[] (khi có @Lob)
     private byte[] fileDinhKem;
 
     @ManyToOne

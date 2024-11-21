@@ -1,6 +1,6 @@
 package com.webgis.dsws.model;
 
-public enum TrangThai {
+public enum TrangThaiEnum {
     ACTIVE,
     INACTIVE,
     PENDING,

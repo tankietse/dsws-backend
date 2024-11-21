@@ -2,22 +2,27 @@ package com.webgis.dsws.mapper;
 
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.exception.DataImportException;
-import com.webgis.dsws.model.DonViHanhChinh;
-import com.webgis.dsws.model.TrangTrai;
-import com.webgis.dsws.model.TrangTraiBenh;
+import com.webgis.dsws.model.*;
 import com.webgis.dsws.repository.DonViHanhChinhRepository;
 import com.webgis.dsws.service.AddressService;
 import com.webgis.dsws.service.impl.BenhServiceImpl;
 import com.webgis.dsws.util.StringUtils;
+import com.webgis.dsws.service.LoaiVatNuoiImportProcessor;
 
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.io.WKBReader;
 import org.locationtech.jts.io.WKTReader;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Set;
+import java.util.HashSet;
+import java.util.Collections;
+import java.util.Arrays;
+import java.util.stream.Collectors;
+import java.time.LocalDateTime;
 
 @Component
 @RequiredArgsConstructor
@@ -27,24 +32,41 @@ public class TrangTraiMapper {
     private final WKBReader wkbReader = new WKBReader();
     private final AddressService addressService;
     private final BenhServiceImpl benhService;
+    private final LoaiVatNuoiImportProcessor loaiVatNuoiImportProcessor;
 
+    @Transactional
     public TrangTrai toEntity(TrangTraiImportDTO dto) {
-        TrangTrai entity = new TrangTrai();
+        TrangTrai trangTraiEntity = new TrangTrai();
+        // TrangTraiBenh trangTraiBenhEntity = new TrangTraiBenh();
+        // Benh benhEntity = new Benh();
+
         // ID được sinh tự động
-        entity.setTenChu(dto.getChuCoSo());
-        entity.setSoDienThoai(dto.getDienThoai());
-        entity.setSoNha(dto.getSoNha());
-        entity.setKhuPho(dto.getKhuPho());
-        entity.setDiaChiDayDu(dto.getDiaChi());
-        entity.setTongDan(dto.getTongDan());
+
+        // TODO: Cập nhật thông tin từ DTO vào entity
+        trangTraiEntity.setMaTrangTrai(dto.getMaSo());
+        trangTraiEntity.setTenChu(dto.getChuCoSo());
+        trangTraiEntity.setSoDienThoai(dto.getDienThoai());
+        trangTraiEntity.setSoNha(dto.getSoNha());
+        trangTraiEntity.setKhuPho(dto.getKhuPho());
+        trangTraiEntity.setDiaChiDayDu(dto.getDiaChi());
+        trangTraiEntity.setTongDan(dto.getSoLuong());
+        // trangTraiEntity.setTenTrangTrai(dto.getTenTrangTrai());
+        // trangTraiEntity.setEmail(dto.getEmail());
+        trangTraiEntity.setTenDuong(dto.getTenDuong());
+        // trangTraiEntity.setDienTich(dto.getDienTich());
+        // trangTraiEntity.setPhuongThucChanNuoi(dto.getPhuongThucChanNuoi());
+        // trangTraiEntity.setNguoiQuanLy(dto.getNguoiQuanLy());
+        trangTraiEntity.setNgayTao(LocalDateTime.now());
+        trangTraiEntity.setNgayCapNhat(LocalDateTime.now());
+        trangTraiEntity.setTrangThaiHoatDong(true);
 
         // Handle geometry conversion
         Point point = convertGeometry(dto.getGeomWKB());
-        entity.setPoint(point);
+        trangTraiEntity.setPoint(point);
 
         // Find and set administrative unit
         DonViHanhChinh donViHanhChinh = findDonViHanhChinh(dto.getTenXaPhuong());
-        entity.setDonViHanhChinh(donViHanhChinh);
+        trangTraiEntity.setDonViHanhChinh(donViHanhChinh);
 
         // Generate full address
         String fullAddress = addressService.generateFullAddress(
@@ -55,13 +77,37 @@ public class TrangTraiMapper {
 
         // Update address with point information if needed
         fullAddress = addressService.updateAddressWithPoint(fullAddress, point, donViHanhChinh);
-        entity.setDiaChiDayDu(fullAddress);
+        trangTraiEntity.setDiaChiDayDu(fullAddress);
 
-        // Set<TrangTraiBenh> trangTraiBenhs =
-        // benhService.processBenhList(dto.getLoaiBenh(), entity);
-        // entity.setTrangTraiBenhs(trangTraiBenhs);
+        // Process LoaiVatNuoi
+        Set<String> loaiVatNuoiNames = parseNames(dto.getChungLoai());
+        Set<LoaiVatNuoi> loaiVatNuois = loaiVatNuoiImportProcessor.processAndSave(loaiVatNuoiNames);
 
-        return entity;
+        // Get total number of animals
+        Integer totalAnimals = trangTraiEntity.getTongDan();
+        int numAnimalTypes = loaiVatNuois.size();
+
+        // Distribute animals equally if possible
+        int averageSoLuong = (totalAnimals != null && numAnimalTypes > 0) ? totalAnimals / numAnimalTypes : 0;
+        int remainder = (totalAnimals != null && numAnimalTypes > 0) ? totalAnimals % numAnimalTypes : 0;
+
+        Set<TrangTraiVatNuoi> trangTraiVatNuois = new HashSet<>();
+        int index = 0;
+        for (LoaiVatNuoi loaiVatNuoi : loaiVatNuois) {
+            TrangTraiVatNuoi trangTraiVatNuoi = new TrangTraiVatNuoi();
+            trangTraiVatNuoi.setTrangTrai(trangTraiEntity);
+            trangTraiVatNuoi.setLoaiVatNuoi(loaiVatNuoi);
+            trangTraiVatNuoi.setSoLuong(averageSoLuong + (index < remainder ? 1 : 0)); 
+            trangTraiVatNuois.add(trangTraiVatNuoi);
+            index++;
+        }
+        trangTraiEntity.setTrangTraiVatNuois(trangTraiVatNuois);
+
+        // Process Benh
+        Set<CaBenh> danhSachCaBenh = benhService.processBenhList(dto.getLoaiBenh(), trangTraiEntity);
+        trangTraiEntity.setCaBenhs(danhSachCaBenh);
+
+        return trangTraiEntity;
     }
 
     private Point convertGeometry(String geomWKT) {
@@ -141,5 +187,15 @@ public class TrangTraiMapper {
         }
 
         return dp[s1.length()][s2.length()];
+    }
+
+    private Set<String> parseNames(String namesStr) {
+        if (namesStr == null || namesStr.trim().isEmpty()) {
+            return Collections.emptySet();
+        }
+        return Arrays.stream(namesStr.split(","))
+                .map(String::trim)
+                .filter(name -> !name.isEmpty())
+                .collect(Collectors.toSet());
     }
 }

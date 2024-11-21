@@ -22,5 +22,5 @@ public class NguoiDungTrangTrai {
     private TrangTrai trangTrai;
 
     @Enumerated(EnumType.STRING)
-    private TrangThai trangThai;
+    private TrangThaiEnum trangThai;
 }

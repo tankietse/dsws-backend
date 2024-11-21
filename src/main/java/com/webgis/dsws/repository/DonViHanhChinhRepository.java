@@ -1,6 +1,6 @@
 package com.webgis.dsws.repository;
 
-import com.webgis.dsws.model.AdminLevel;
+import com.webgis.dsws.model.AdminLevelEnum;
 import com.webgis.dsws.model.DonViHanhChinh;
 
 import org.locationtech.jts.geom.Geometry;
@@ -24,7 +24,7 @@ public interface DonViHanhChinhRepository extends JpaRepository<DonViHanhChinh, 
 
     boolean existsById(Integer id);
 
-    boolean existsByTenAndAdminLevelAndRanhGioi(String ten, AdminLevel adminLevel, Geometry ranhGioi);
+    boolean existsByTenAndAdminLevelAndRanhGioi(String ten, AdminLevelEnum adminLevel, Geometry ranhGioi);
 
     DonViHanhChinh findByTen(String tenDonViCha);
 

@@ -1,10 +1,10 @@
 package com.webgis.dsws.service.impl;
 
 import com.webgis.dsws.model.Benh;
+import com.webgis.dsws.model.CaBenh;
 import com.webgis.dsws.model.TrangTrai;
-import com.webgis.dsws.model.TrangTraiBenh;
 import com.webgis.dsws.repository.BenhRepository;
-import com.webgis.dsws.repository.TrangTraiCaBenhRepository;
+// import com.webgis.dsws.repository.TrangTraiCaBenhRepository;
 import com.webgis.dsws.service.BenhService;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class BenhServiceImpl implements BenhService {
     private final BenhRepository benhRepository;
-    private final TrangTraiCaBenhRepository trangTraiCaBenhRepository;
+    // private final TrangTraiCaBenhRepository trangTraiCaBenhRepository;
 
     @Override
     public List<Benh> findAll() {
@@ -36,28 +36,32 @@ public class BenhServiceImpl implements BenhService {
         return benhRepository.save(benh);
     }
 
-    public Set<TrangTraiBenh> processBenhList(String benhListStr, TrangTrai trangTrai) {
+    public Set<CaBenh> processBenhList(String benhListStr, TrangTrai trangTrai) {
         if (benhListStr == null || benhListStr.trim().isEmpty()) {
             return Collections.emptySet();
         }
 
-        Set<TrangTraiBenh> trangTraiBenhs = new HashSet<>();
+        Set<CaBenh> danhSachCaBenh = new HashSet<>();
         String[] benhNames = benhListStr.split(",");
 
         for (String benhName : benhNames) {
             String cleanBenhName = benhName.trim();
             if (!cleanBenhName.isEmpty()) {
-                Benh benh = benhRepository.findByTenBenh(cleanBenhName)
-                        .orElseGet(() -> save(new Benh(null, cleanBenhName)));
+                Benh benh = findOrCreateBenh(cleanBenhName);
 
-                TrangTraiBenh trangTraiBenh = new TrangTraiBenh();
-                trangTraiBenh.setBenh(benh);
-                trangTraiBenh.setTrangTrai(trangTrai);
-                trangTraiBenhs.add(trangTraiBenh);
+                CaBenh newCabenh = new CaBenh();
+                newCabenh.setBenh(benh);
+                newCabenh.setTrangTrai(trangTrai);
+                danhSachCaBenh.add(newCabenh);
             }
         }
 
-        return trangTraiBenhs;
+        return danhSachCaBenh;
+    }
+
+    private Benh findOrCreateBenh(String tenBenh) {
+        return benhRepository.findByTenBenh(tenBenh)
+                .orElseGet(() -> save(new Benh(null, tenBenh)));
     }
 
     @Override

@@ -2,7 +2,8 @@ package com.webgis.dsws.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.webgis.dsws.model.AdminLevel;
+//import com.webgis.dsws.model.AdminLevelEnum;
+import com.webgis.dsws.model.AdminLevelEnum;
 import com.webgis.dsws.model.DonViHanhChinh;
 import com.webgis.dsws.repository.DonViHanhChinhRepository;
 import com.webgis.dsws.service.geojson.GeoJsonDataImporter;
@@ -74,8 +75,8 @@ public class DonViHanhChinhImporter implements GeoJsonDataImporter {
             if (isPointWithRelations(feature)) {
                 pointFeatures.add(feature);
             } else {
-                int adminLevel = getAdminLevel(feature);
-                featuresByLevel.computeIfAbsent(adminLevel, k -> new ArrayList<>())
+                int AdminLevelEnum = getAdminLevelEnum(feature);
+                featuresByLevel.computeIfAbsent(AdminLevelEnum, k -> new ArrayList<>())
                         .add(feature);
             }
         });
@@ -91,21 +92,21 @@ public class DonViHanhChinhImporter implements GeoJsonDataImporter {
         pointFeatures.forEach(this::processFeature);
     }
 
-    private int getAdminLevel(JsonNode feature) {
+    private int getAdminLevelEnum(JsonNode feature) {
         JsonNode properties = feature.get("properties");
-        String adminLevelStr = getJsonNodeText(properties, "admin_level");
+        String AdminLevelEnumStr = getJsonNodeText(properties, "admin_level");
         try {
-            return adminLevelStr != null ? Integer.parseInt(adminLevelStr) : Integer.MAX_VALUE;
+            return AdminLevelEnumStr != null ? Integer.parseInt(AdminLevelEnumStr) : Integer.MAX_VALUE;
         } catch (NumberFormatException e) {
-            logger.warn("Giá trị admin_level không hợp lệ: {}, xử lý như cấp cao nhất", adminLevelStr);
+            logger.warn("Giá trị admin_level không hợp lệ: {}, xử lý như cấp cao nhất", AdminLevelEnumStr);
             return Integer.MAX_VALUE;
         }
     }
 
     private void processFeature(JsonNode feature) {
         try {
-            JsonNode properties = feature.get("properties");
-            JsonNode geometryNode = feature.get("geometry");
+            // JsonNode properties = feature.get("properties");
+            // JsonNode geometryNode = feature.get("geometry");
 
             // Kiểm tra nếu là điểm và có relations
             if (isPointWithRelations(feature)) {
@@ -190,17 +191,17 @@ public class DonViHanhChinhImporter implements GeoJsonDataImporter {
 
         DonViHanhChinh entity = new DonViHanhChinh();
 
-        // Lấy và xử lý adminLevel
-        String adminLevelStr = getJsonNodeText(properties, "admin_level");
-        entity.setCapHanhChinh(adminLevelStr);
+        // Lấy và xử lý AdminLevelEnum
+        String AdminLevelEnumStr = getJsonNodeText(properties, "admin_level");
+        entity.setCapHanhChinh(AdminLevelEnumStr);
 
-        if (adminLevelStr != null) {
+        if (AdminLevelEnumStr != null) {
             try {
-                int adminLevelValue = Integer.parseInt(adminLevelStr);
-                AdminLevel adminLevel = AdminLevel.fromLevel(adminLevelValue);
-                entity.setAdminLevel(adminLevel);
+                int AdminLevelEnumValue = Integer.parseInt(AdminLevelEnumStr);
+                AdminLevelEnum AdminLevel = AdminLevelEnum.fromLevel(AdminLevelEnumValue);
+                entity.setAdminLevel(AdminLevel);
             } catch (NumberFormatException e) {
-                logger.warn("Invalid admin_level value: {}", adminLevelStr);
+                logger.warn("Invalid admin_level value: {}", AdminLevelEnumStr);
             }
         }
 

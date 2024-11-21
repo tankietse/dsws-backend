@@ -9,8 +9,4 @@ import java.util.Optional;
 @Repository
 public interface LoaiVatNuoiRepository extends JpaRepository<LoaiVatNuoi, Long> {
     Optional<LoaiVatNuoi> findByTenLoai(String tenLoai);
-
-    boolean existsByTenLoai(String tenLoai);
-
-    boolean existsById(Long maLoai);
 }

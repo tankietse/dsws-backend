@@ -38,8 +38,8 @@ public class CaBenh {
 
     private String nguyenNhanDuDoan;
 
-    @Column(columnDefinition = "geometry")
-    private Geometry viTriPhatHien;
+    // @Column(columnDefinition = "geometry")
+    // private Geometry viTriPhatHien;
 
     @ManyToOne
     @JoinColumn(name = "nguoi_tao_id")
@@ -57,4 +57,14 @@ public class CaBenh {
 
     @OneToMany(mappedBy = "caBenh")
     private Set<DienBienCaBenh> dienBienCaBenhs;
+
+    @PrePersist
+    protected void onCreate() {
+        ngayTao = new Date(System.currentTimeMillis());
+        if (ngayPhatHien == null) {
+            ngayPhatHien = ngayTao;
+        }
+        daKetThuc = false;
+    }
+
 }

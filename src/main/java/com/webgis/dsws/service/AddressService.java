@@ -4,11 +4,13 @@ import com.webgis.dsws.model.DonViHanhChinh;
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @RequiredArgsConstructor
 public class AddressService {
 
+    @Transactional
     public String generateFullAddress(String soNha, String tenDuong, String khuPho, DonViHanhChinh donViHanhChinh) {
         StringBuilder address = new StringBuilder();
 

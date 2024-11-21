@@ -41,7 +41,7 @@ public class DonViHanhChinh {
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private AdminLevel adminLevel;
+    private AdminLevelEnum adminLevel;
 
     @ManyToOne(fetch = FetchType.LAZY) // Thêm LAZY loading
     @JoinColumn(name = "id_cha")

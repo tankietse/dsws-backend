@@ -67,7 +67,7 @@ public class TrangtraiDataImporter {
         dto.setTenXaPhuong(dataValidator.getCellValueAsString(row.getCell(12), "Tên phường", row.getRowNum()));
         dto.setTenQuan(dataValidator.getOptionalCellValueAsString(row.getCell(13)));
         dto.setChungLoai(dataValidator.getCellValueAsString(row.getCell(14), "Chủng loại", row.getRowNum()));
-        dto.setTongDan(
+        dto.setSoLuong(
                 Integer.valueOf(dataValidator.getCellValueAsString(row.getCell(15), "Tổng đàn", row.getRowNum())));
 
         return dto;

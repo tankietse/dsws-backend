@@ -1,10 +1,11 @@
-
 package com.webgis.dsws.model;
 
 import java.time.LocalDateTime;
 
 import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.Date;
 
 @Entity
 @Data
@@ -26,4 +27,11 @@ public class NguoiDungVaiTro {
 
     private LocalDateTime ngayBatDau;
     private LocalDateTime ngayKetThuc;
+
+    @PrePersist
+    protected void onCreate() {
+        if (ngayBatDau == null) {
+            ngayBatDau = LocalDateTime.now();
+        }
+    }
 }

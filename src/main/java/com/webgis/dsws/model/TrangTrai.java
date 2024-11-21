@@ -5,9 +5,11 @@ import lombok.*;
 import org.locationtech.jts.geom.Point;
 import java.time.LocalDateTime;
 import java.util.Set;
+import java.util.HashSet;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "trang_trai")
@@ -63,4 +65,10 @@ public class TrangTrai {
 
     @OneToMany(mappedBy = "trangTrai")
     private Set<CanhBaoTrangTrai> canhBaos;
+
+    @OneToMany(mappedBy = "trangTrai", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<CaBenh> caBenhs = new HashSet<>();
+
+    @OneToMany(mappedBy = "trangTrai", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<TrangTraiVatNuoi> trangTraiVatNuois = new HashSet<>();
 }
