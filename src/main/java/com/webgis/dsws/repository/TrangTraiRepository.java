@@ -13,6 +13,6 @@ public interface TrangTraiRepository extends JpaRepository<TrangTrai, Long> {
     @Query(value = "SELECT t FROM TrangTrai t LEFT JOIN FETCH t.donViHanhChinh WHERE t.id = ?1")
     TrangTrai findByIdWithDonViHanhChinh(Long id);
 
-    @Query("SELECT t.maSo FROM TrangTrai t WHERE t.maSo IN :maSoList")
-    List<String> findExistingMaSo(List<String> maSoList);
+    @Query("SELECT t.maTrangTrai FROM TrangTrai t WHERE t.maTrangTrai IN :maSoList")
+    List<String> findExistingMaTrangTrai(List<String> maSoList);
 }

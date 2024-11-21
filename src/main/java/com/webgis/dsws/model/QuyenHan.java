@@ -21,6 +21,6 @@ public class QuyenHan {
 
     private String moTa;
 
-    @ManyToMany(mappedBy = "quyenHans")
-    private Set<VaiTro> vaiTros;
+    @ManyToMany(mappedBy = "quyenHan")
+    private Set<VaiTro> danhSachVaiTro;
 }

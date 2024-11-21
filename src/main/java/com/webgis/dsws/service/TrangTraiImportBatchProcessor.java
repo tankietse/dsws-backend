@@ -31,7 +31,7 @@ public class TrangTraiImportBatchProcessor implements BatchProcessor<TrangTraiIm
                 .map(TrangTraiImportDTO::getMaSo)
                 .collect(Collectors.toList());
 
-        List<String> existingMaSo = trangTraiRepository.findExistingMaSo(maSoList);
+        List<String> existingMaSo = trangTraiRepository.findExistingMaTrangTrai(maSoList);
 
         transactionService.executeInTransaction(batch, dtos -> {
             for (TrangTraiImportDTO dto : dtos) {

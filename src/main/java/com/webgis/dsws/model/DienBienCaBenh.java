@@ -1,4 +1,3 @@
-
 package com.webgis.dsws.model;
 
 import java.sql.Date;

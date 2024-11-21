@@ -14,12 +14,13 @@ public class BenhVatNuoi {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "id_benh")
+    // Sử dụng FetchType.LAZY để tránh việc load dữ liệu không cần thiết
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_benh", nullable = false)
     private Benh benh;
 
-    @ManyToOne
-    @JoinColumn(name = "id_loai_vat_nuoi")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_loai_vat_nuoi", nullable = false)
     private LoaiVatNuoi loaiVatNuoi;
 
     private Float tiLeLayNhiem;

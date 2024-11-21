@@ -8,3 +8,6 @@ CREATE INDEX IF NOT EXISTS idx_dvhc_admin_level ON don_vi_hanh_chinh(admin_level
 -- Spatial indexes
 CREATE INDEX IF NOT EXISTS idx_dvhc_ranh_gioi_gist ON don_vi_hanh_chinh USING GIST (ranh_gioi);
 CREATE INDEX IF NOT EXISTS idx_dvhc_diem_trung_tam_gist ON don_vi_hanh_chinh USING GIST (diem_trung_tam);
+
+-- JSONB
+CREATE INDEX idx_du_lieu_cu ON lich_su_cap_nhat USING gin (du_lieu_cu);

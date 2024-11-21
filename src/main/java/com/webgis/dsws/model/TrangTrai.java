@@ -22,6 +22,10 @@ public class TrangTrai {
     private String soDienThoai;
     private String email;
 
+    private String soNha;
+    private String tenDuong;
+    private String khuPho;
+    private String diaChiDayDu;
     @Column(columnDefinition = "geometry(Point,4326)")
     private Point point;
 
@@ -41,6 +45,7 @@ public class TrangTrai {
     private LocalDateTime ngayCapNhat;
     private Boolean trangThaiHoatDong;
 
+    // Relationships
     @OneToMany(mappedBy = "trangTrai")
     private Set<TrangTraiVatNuoi> danhSachVatNuoi;
 
@@ -52,4 +57,10 @@ public class TrangTrai {
 
     @OneToMany(mappedBy = "trangTrai")
     private Set<CanhBaoTrangTrai> danhSachCanhBao;
+
+    @OneToMany(mappedBy = "trangTrai")
+    private Set<VungDichTrangTrai> vungDichs;
+
+    @OneToMany(mappedBy = "trangTrai")
+    private Set<CanhBaoTrangTrai> canhBaos;
 }

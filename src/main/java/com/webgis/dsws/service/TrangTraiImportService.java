@@ -2,21 +2,13 @@ package com.webgis.dsws.service;
 
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.exception.DataImportException;
-import com.webgis.dsws.mapper.TrangTraiMapper;
-import com.webgis.dsws.model.TrangTrai;
-import com.webgis.dsws.repository.TrangTraiRepository;
-import com.webgis.dsws.util.DataValidator;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.support.TransactionTemplate;
 
-import jakarta.persistence.EntityManager;
 import java.util.List;
 import java.util.ArrayList;
-
-import com.google.common.collect.Lists;
 
 @Service
 @RequiredArgsConstructor
@@ -59,7 +51,7 @@ public class TrangTraiImportService {
     }
 
     private void throwIfErrors(StringBuilder errors) {
-        if (errors.length() > 0) {
+        if (!errors.isEmpty()) {
             throw new DataImportException("Lỗi khi import dữ liệu:\n" + errors);
         }
     }

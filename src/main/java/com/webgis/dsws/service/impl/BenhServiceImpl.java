@@ -4,7 +4,7 @@ import com.webgis.dsws.model.Benh;
 import com.webgis.dsws.model.TrangTrai;
 import com.webgis.dsws.model.TrangTraiBenh;
 import com.webgis.dsws.repository.BenhRepository;
-import com.webgis.dsws.repository.TrangTraiBenhRepository;
+import com.webgis.dsws.repository.TrangTraiCaBenhRepository;
 import com.webgis.dsws.service.BenhService;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
@@ -19,7 +19,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class BenhServiceImpl implements BenhService {
     private final BenhRepository benhRepository;
-    private final TrangTraiBenhRepository trangTraiBenhRepository;
+    private final TrangTraiCaBenhRepository trangTraiCaBenhRepository;
 
     @Override
     public List<Benh> findAll() {

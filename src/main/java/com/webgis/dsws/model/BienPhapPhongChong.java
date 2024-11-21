@@ -1,8 +1,8 @@
-
 package com.webgis.dsws.model;
 
 import jakarta.persistence.*;
 import lombok.*;
+import java.util.Set;
 
 @Entity
 @Data
@@ -30,4 +30,7 @@ public class BienPhapPhongChong {
     private Float chiPhiDuKien;
 
     private Boolean trangThaiHoatDong;
+
+    @ManyToMany(mappedBy = "bienPhapPhongChongs")
+    private Set<VungDich> vungDichs;
 }

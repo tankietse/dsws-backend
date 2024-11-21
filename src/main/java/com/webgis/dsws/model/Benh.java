@@ -4,8 +4,8 @@ import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import lombok.*;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Data
@@ -25,8 +25,21 @@ public class Benh {
     private Integer thoiGianUBenh;
     private String phuongPhapChanDoan;
     private String bienPhapPhongNgua;
-//    private Boolean trangThaiHoatDong;
+    // private Boolean trangThaiHoatDong;
 
-    @OneToMany(mappedBy = "benh")
-    private List<BenhVatNuoi> benhVatNuoi = new ArrayList<>();
+    // Sử dụng Set thay vì List để tránh trường hợp trùng lặp
+    // cascade = CascadeType.ALL: Khi thêm, sửa, xóa bệnh thì các bệnh vật nuôi liên
+    // quan cũng thay đổi theo
+    @OneToMany(mappedBy = "benh", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<BenhVatNuoi> benhVatNuois = new HashSet<>();
+
+    // Tương tự
+    @OneToMany(mappedBy = "benh", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<VungDich> vungDichs = new HashSet<>();
+
+    // Constructor
+    public Benh(Long id, String tenBenh) {
+        this.id = id;
+        this.tenBenh = tenBenh;
+    }
 }

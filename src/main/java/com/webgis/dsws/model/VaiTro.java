@@ -21,5 +21,9 @@ public class VaiTro {
     private Boolean trangThaiHoatDong;
 
     @OneToMany(mappedBy = "vaiTro")
-    private Set<NguoiDungVaiTro> nguoiDungs;
+    private Set<NguoiDungVaiTro> danhSachNguoiDung;
+
+    @ManyToMany
+    @JoinTable(name = "vai_tro_quyen_han", joinColumns = @JoinColumn(name = "vai_tro_id"), inverseJoinColumns = @JoinColumn(name = "quyen_han_id"))
+    private Set<QuyenHan> quyenHan;
 }

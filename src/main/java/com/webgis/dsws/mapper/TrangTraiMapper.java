@@ -31,7 +31,7 @@ public class TrangTraiMapper {
     public TrangTrai toEntity(TrangTraiImportDTO dto) {
         TrangTrai entity = new TrangTrai();
         // ID được sinh tự động
-        entity.setTenChuTrangTrai(dto.getChuCoSo());
+        entity.setTenChu(dto.getChuCoSo());
         entity.setSoDienThoai(dto.getDienThoai());
         entity.setSoNha(dto.getSoNha());
         entity.setKhuPho(dto.getKhuPho());
@@ -40,7 +40,7 @@ public class TrangTraiMapper {
 
         // Handle geometry conversion
         Point point = convertGeometry(dto.getGeomWKB());
-        entity.setGeom(point);
+        entity.setPoint(point);
 
         // Find and set administrative unit
         DonViHanhChinh donViHanhChinh = findDonViHanhChinh(dto.getTenXaPhuong());
@@ -57,8 +57,9 @@ public class TrangTraiMapper {
         fullAddress = addressService.updateAddressWithPoint(fullAddress, point, donViHanhChinh);
         entity.setDiaChiDayDu(fullAddress);
 
-        Set<TrangTraiBenh> trangTraiBenhs = benhService.processBenhList(dto.getLoaiBenh(), entity);
-        entity.setTrangTraiBenhs(trangTraiBenhs);
+        // Set<TrangTraiBenh> trangTraiBenhs =
+        // benhService.processBenhList(dto.getLoaiBenh(), entity);
+        // entity.setTrangTraiBenhs(trangTraiBenhs);
 
         return entity;
     }

@@ -18,14 +18,20 @@ public class NguoiDung {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String maNguoiDung;
+    // private String maNguoiDung;
+    @NotBlank
     private String tenDangNhap;
+    @NotBlank
     private String matKhauHash;
+    @Email
+    @NotBlank
     private String email;
+    @NotBlank
     private String hoTen;
+    @NotBlank
     private String soDienThoai;
     private String chucVu;
-    
+
     @ManyToOne
     @JoinColumn(name = "don_vi_id")
     private DonVi donVi;

@@ -1,4 +1,3 @@
-
 package com.webgis.dsws.model;
 
 import java.sql.Date;
@@ -6,9 +5,11 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
+@IdClass(VungDichTrangTraiId.class) // Khóa chính phức hợp
 @Table(name = "vung_dich_trang_trai")
 public class VungDichTrangTrai {
     @Id
@@ -18,7 +19,9 @@ public class VungDichTrangTrai {
 
     @Id
     @ManyToOne
-    @JoinColumn(name = "trang_trai_id")
+    // @JoinColumn(name = "trang_trai_id")
+    // @ToString.Exclude
+    // @EqualsAndHashCode.Exclude
     private TrangTrai trangTrai;
 
     private Float khoangCach;
