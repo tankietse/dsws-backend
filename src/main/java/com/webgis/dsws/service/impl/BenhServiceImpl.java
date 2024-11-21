@@ -15,6 +15,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * Triển khai dịch vụ cho Benh.
+ */
 @Service
 @RequiredArgsConstructor
 public class BenhServiceImpl implements BenhService {
@@ -36,6 +39,13 @@ public class BenhServiceImpl implements BenhService {
         return benhRepository.save(benh);
     }
 
+    /**
+     * Xử lý danh sách bệnh từ chuỗi và gán cho trang trại.
+     *
+     * @param benhListStr chuỗi danh sách bệnh
+     * @param trangTrai   trang trại cần gán bệnh
+     * @return tập hợp các ca bệnh
+     */
     public Set<CaBenh> processBenhList(String benhListStr, TrangTrai trangTrai) {
         if (benhListStr == null || benhListStr.trim().isEmpty()) {
             return Collections.emptySet();

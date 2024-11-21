@@ -1,7 +1,7 @@
 package com.webgis.dsws.repository;
 
-import com.webgis.dsws.model.AdminLevelEnum;
 import com.webgis.dsws.model.DonViHanhChinh;
+import com.webgis.dsws.model.enums.AdminLevelEnum;
 
 import org.locationtech.jts.geom.Geometry;
 

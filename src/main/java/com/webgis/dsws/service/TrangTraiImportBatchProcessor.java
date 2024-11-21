@@ -1,5 +1,6 @@
 package com.webgis.dsws.service;
 
+import com.webgis.dsws.common.BatchProcessor;
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.mapper.TrangTraiMapper;
 import com.webgis.dsws.model.TrangTrai;

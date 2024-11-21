@@ -1,4 +1,4 @@
-package com.webgis.dsws.util;
+package com.webgis.dsws.common;
 
 import java.text.Normalizer;
 import java.util.Arrays;

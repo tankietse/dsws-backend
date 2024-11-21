@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 
+import com.webgis.dsws.model.enums.AdminLevelEnum;
+
 import lombok.Getter;
 import lombok.Setter;
 import lombok.NoArgsConstructor;

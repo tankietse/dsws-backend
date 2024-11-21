@@ -2,9 +2,8 @@ package com.webgis.dsws.util;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-//import com.webgis.dsws.model.AdminLevelEnum;
-import com.webgis.dsws.model.AdminLevelEnum;
 import com.webgis.dsws.model.DonViHanhChinh;
+import com.webgis.dsws.model.enums.AdminLevelEnum;
 import com.webgis.dsws.repository.DonViHanhChinhRepository;
 import com.webgis.dsws.service.geojson.GeoJsonDataImporter;
 import com.webgis.dsws.service.geojson.GeometryService;
@@ -23,6 +22,9 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.core.JsonParseException;
 
+/**
+ * Bộ nhập dữ liệu đơn vị hành chính từ GeoJSON.
+ */
 @Component
 public class DonViHanhChinhImporter implements GeoJsonDataImporter {
     private static final Logger logger = LoggerFactory.getLogger(DonViHanhChinhImporter.class);

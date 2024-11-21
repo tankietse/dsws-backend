@@ -2,6 +2,10 @@ package com.webgis.dsws.model;
 
 import java.sql.Date;
 import org.locationtech.jts.geom.Geometry;
+
+import com.webgis.dsws.model.enums.MucDoVungDichEnum;
+import com.webgis.dsws.model.enums.TrangThaiVungDichEnum;
+
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Set;
@@ -30,9 +34,11 @@ public class VungDich {
     private Date ngayBatDau;
     private Date ngayKetThuc;
 
-    @ManyToOne
-    @JoinColumn(name = "trang_thai_id")
-    private TrangThaiVungDich trangThai;
+    @Enumerated(EnumType.STRING)
+    private TrangThaiVungDichEnum trangThai;
+
+    @Enumerated(EnumType.STRING)
+    private MucDoVungDichEnum mucDo;
 
     private Integer mucDoNghiemTrong;
     private String bienPhapXuLy;

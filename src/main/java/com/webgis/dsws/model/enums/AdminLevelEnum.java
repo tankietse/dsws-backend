@@ -1,5 +1,5 @@
 
-package com.webgis.dsws.model;
+package com.webgis.dsws.model.enums;
 
 import lombok.Getter;
 

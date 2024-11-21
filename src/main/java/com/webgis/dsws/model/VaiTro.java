@@ -2,6 +2,8 @@ package com.webgis.dsws.model;
 
 import java.util.Set;
 
+import com.webgis.dsws.model.enums.QuyenHanEnum;
+
 import jakarta.persistence.*;
 import lombok.*;
 

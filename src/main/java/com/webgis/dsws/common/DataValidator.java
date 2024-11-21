@@ -1,4 +1,4 @@
-package com.webgis.dsws.util;
+package com.webgis.dsws.common;
 
 import com.webgis.dsws.exception.DataImportException;
 import org.apache.poi.ss.usermodel.Cell;
@@ -15,23 +15,42 @@ public class DataValidator {
     // Độ dài tối đa cho tên
     private static final int MAX_NAME_LENGTH = 100;
 
-    // Kiểm tra số điện thoại hợp lệ
-    // public void validatePhoneNumber(String phone, int rowNum) throws
-    // DataImportException {
-    // if (!PHONE_PATTERN.matcher(phone).matches()) {
-    // throw new DataImportException("Số điện thoại không hợp lệ tại dòng " +
-    // rowNum);
-    // }
-    // }
+    /**
+     * Kiểm tra số điện thoại dựa vào regex.
+     *
+     * @param phone  số điện thoại cần kiểm tra
+     * @param rowNum số dòng trong file Excel
+     * @throws DataImportException nếu tên quá dài
+     */
+    public void validatePhoneNumber(String phone, int rowNum) throws DataImportException {
+        if (!PHONE_PATTERN.matcher(phone).matches()) {
+            throw new DataImportException("Số điện thoại không hợp lệ tại dòng " +
+                    rowNum);
+        }
+    }
 
-    // Kiểm tra tên không quá dài
+    /**
+     * Kiểm tra tên không quá dài.
+     *
+     * @param name   tên cần kiểm tra
+     * @param rowNum số dòng trong file Excel
+     * @throws DataImportException nếu tên quá dài
+     */
     public void validateName(String name, int rowNum) throws DataImportException {
         if (name.length() > MAX_NAME_LENGTH) {
             throw new DataImportException("Tên quá dài tại dòng " + rowNum);
         }
     }
 
-    // Chuyển đổi giá trị ô Excel sang String, có kiểm tra hợp lệ
+    /**
+     * Chuyển đổi giá trị ô Excel sang String, có kiểm tra hợp lệ.
+     *
+     * @param cell      ô Excel
+     * @param fieldName tên trường
+     * @param rowNum    số dòng trong file Excel
+     * @return giá trị của ô dưới dạng String
+     * @throws DataImportException nếu giá trị không hợp lệ
+     */
     public String getCellValueAsString(Cell cell, String fieldName, int rowNum) {
         if (cell == null) {
             throw new DataImportException(fieldName + " không được để trống tại dòng " + rowNum);
@@ -57,7 +76,12 @@ public class DataValidator {
         return value;
     }
 
-    // Dành cho các ô Excel không bắt buộc (có thể để trống)
+    /**
+     * Chuyển đổi giá trị ô Excel không bắt buộc sang String.
+     *
+     * @param cell ô Excel
+     * @return giá trị của ô dưới dạng String hoặc null nếu ô trống
+     */
     public String getOptionalCellValueAsString(Cell cell) {
         if (cell == null) {
             return null;

@@ -1,12 +1,12 @@
 package com.webgis.dsws.mapper;
 
+import com.webgis.dsws.common.StringUtils;
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.exception.DataImportException;
 import com.webgis.dsws.model.*;
 import com.webgis.dsws.repository.DonViHanhChinhRepository;
 import com.webgis.dsws.service.AddressService;
 import com.webgis.dsws.service.impl.BenhServiceImpl;
-import com.webgis.dsws.util.StringUtils;
 import com.webgis.dsws.service.LoaiVatNuoiImportProcessor;
 
 import lombok.RequiredArgsConstructor;
