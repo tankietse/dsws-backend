@@ -19,12 +19,13 @@ public class VungDichTrangTrai {
 
     @Id
     @ManyToOne
-    // @JoinColumn(name = "trang_trai_id")
-    // @ToString.Exclude
-    // @EqualsAndHashCode.Exclude
+    @JoinColumn(name = "trang_trai_id")
     private TrangTrai trangTrai;
 
     private Float khoangCach;
+    /**
+     * Mức độ ảnh hưởng của vùng dịch đến trang trại
+     */
     private String mucDoAnhHuong;
     private Date ngayBatDauAnhHuong;
     private Date ngayKetThucAnhHuong;

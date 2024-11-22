@@ -12,4 +12,6 @@ public interface BenhService {
     Benh save(Benh benh);
 
     void deleteById(Long id);
+
+    Benh update(Long id, Benh benh);
 }

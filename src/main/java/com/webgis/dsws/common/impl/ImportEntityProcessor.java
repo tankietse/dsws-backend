@@ -1,9 +1,9 @@
-
-package com.webgis.dsws.service;
+package com.webgis.dsws.common.impl;
 
 import java.util.Set;
 
 public interface ImportEntityProcessor<T> {
     Set<T> processAndSave(Set<String> names);
+
     T findOrCreate(String name);
 }

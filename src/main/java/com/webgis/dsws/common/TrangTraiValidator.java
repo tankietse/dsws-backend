@@ -1,5 +1,5 @@
 
-package com.webgis.dsws.service;
+package com.webgis.dsws.common;
 
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import org.springframework.stereotype.Component;

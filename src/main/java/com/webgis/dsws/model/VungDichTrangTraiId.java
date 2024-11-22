@@ -3,7 +3,8 @@ package com.webgis.dsws.model;
 import java.io.Serializable;
 import lombok.*;
 
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class VungDichTrangTraiId implements Serializable {

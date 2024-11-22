@@ -6,6 +6,7 @@ import com.webgis.dsws.model.TrangTrai;
 import com.webgis.dsws.repository.BenhRepository;
 // import com.webgis.dsws.repository.TrangTraiCaBenhRepository;
 import com.webgis.dsws.service.BenhService;
+import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
 import lombok.RequiredArgsConstructor;
 
@@ -37,6 +38,23 @@ public class BenhServiceImpl implements BenhService {
     @Override
     public Benh save(Benh benh) {
         return benhRepository.save(benh);
+    }
+
+    @Override
+    public Benh update(Long id, Benh benhDetails) {
+        Benh existing = findById(id)
+            .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bệnh với ID: " + id));
+        
+        existing.setTenBenh(benhDetails.getTenBenh());
+        existing.setMoTa(benhDetails.getMoTa());
+        existing.setTacNhanGayBenh(benhDetails.getTacNhanGayBenh());
+        existing.setTrieuChung(benhDetails.getTrieuChung());
+        existing.setThoiGianUBenh(benhDetails.getThoiGianUBenh());
+        existing.setPhuongPhapChanDoan(benhDetails.getPhuongPhapChanDoan());
+        existing.setBienPhapPhongNgua(benhDetails.getBienPhapPhongNgua());
+//        existing.setTrangThaiHoatDong(benhDetails.getTrangThaiHoatDong());
+
+        return benhRepository.save(existing);
     }
 
     /**

@@ -1,4 +1,4 @@
-package com.webgis.dsws.service;
+package com.webgis.dsws.service.importer;
 
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.exception.DataImportException;

@@ -4,6 +4,8 @@ import com.webgis.dsws.exception.DataImportException;
 import com.webgis.dsws.util.DonViHanhChinhImporter;
 import com.webgis.dsws.util.TrangtraiDataImporter;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.ApplicationRunner;
 import org.springframework.boot.SpringApplication;
@@ -15,23 +17,25 @@ import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import org.springframework.context.annotation.Profile;
 
 @SpringBootApplication
 @EntityScan(basePackages = { "com.webgis.dsws.model" })
 @EnableJpaRepositories(basePackages = { "com.webgis.dsws.repository" })
 public class DswsApplication {
-
-    @Value("${app.hochiminh-boundary-path}")
-    private String hoChiMinhBoundaryPath;
-
-    @Value("${app.farm-path}")
-    private String farmPath;
+    private static final Logger log = LoggerFactory.getLogger(DswsApplication.class);
 
     private final DonViHanhChinhImporter boundaryImporter;
-    private final TrangtraiDataImporter farmImporter; // Add this
+    private final TrangtraiDataImporter farmImporter;
+
+    @Value("${app.hochiminh-boundary-path:}")
+    private String hoChiMinhBoundaryPath;
+
+    @Value("${app.farm-path:}")
+    private String farmPath;
 
     public DswsApplication(DonViHanhChinhImporter boundaryImporter,
-            TrangtraiDataImporter farmImporter) { // Update constructor
+            TrangtraiDataImporter farmImporter) {
         this.boundaryImporter = boundaryImporter;
         this.farmImporter = farmImporter;
     }
@@ -41,28 +45,31 @@ public class DswsApplication {
     }
 
     @Bean
-    public ApplicationRunner importData() {
+    @Profile("!prod")
+    public ApplicationRunner dataImporter() {
         return args -> {
-            try {
-                // Import dữ liệu ranh giới hành chính
-                try (InputStream inputStream = new FileInputStream(hoChiMinhBoundaryPath)) {
-                    boundaryImporter.importData(inputStream);
-                    System.out.println("Đã import thành công dữ liệu ranh giới hành chính");
-                }
-
-                // Import dữ liệu trang trại
-                try {
-                    farmImporter.importData(farmPath);
-                    System.out.println("Đã import thành công dữ liệu trang trại");
-                } catch (DataImportException e) {
-                    System.err.println("Chi tiết lỗi import dữ liệu trang trại:");
-                    System.err.println(e.getMessage());
-                    e.printStackTrace();
-                }
-            } catch (IOException e) {
-                System.err.println("Lỗi khi đọc file: " + e.getMessage());
-                e.printStackTrace();
-            }
+//             if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
+//             importBoundaryData();
+//             importFarmData();
+//             }
         };
+    }
+
+    private void importBoundaryData() {
+        try (InputStream inputStream = new FileInputStream(hoChiMinhBoundaryPath)) {
+            boundaryImporter.importData(inputStream);
+            log.info("Đã import thành công dữ liệu ranh giới hành chính");
+        } catch (IOException e) {
+            log.error("Lỗi khi import dữ liệu ranh giới: {}", e.getMessage(), e);
+        }
+    }
+
+    private void importFarmData() {
+        try {
+            farmImporter.importData(farmPath);
+            log.info("Đã import thành công dữ liệu trang trại");
+        } catch (DataImportException e) {
+            log.error("Lỗi khi import dữ liệu trang trại: {}", e.getMessage(), e);
+        }
     }
 }

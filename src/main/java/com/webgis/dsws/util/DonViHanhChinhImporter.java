@@ -5,8 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.webgis.dsws.model.DonViHanhChinh;
 import com.webgis.dsws.model.enums.AdminLevelEnum;
 import com.webgis.dsws.repository.DonViHanhChinhRepository;
-import com.webgis.dsws.service.geojson.GeoJsonDataImporter;
-import com.webgis.dsws.service.geojson.GeometryService;
+import com.webgis.dsws.service.GeometryService;
 
 import java.io.File;
 import java.io.IOException;

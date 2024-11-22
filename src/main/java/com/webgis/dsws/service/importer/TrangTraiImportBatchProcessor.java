@@ -1,10 +1,12 @@
-package com.webgis.dsws.service;
+package com.webgis.dsws.service.importer;
 
-import com.webgis.dsws.common.BatchProcessor;
+import com.webgis.dsws.common.impl.BatchProcessor;
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.mapper.TrangTraiMapper;
 import com.webgis.dsws.model.TrangTrai;
 import com.webgis.dsws.repository.TrangTraiRepository;
+import com.webgis.dsws.service.TransactionService;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;

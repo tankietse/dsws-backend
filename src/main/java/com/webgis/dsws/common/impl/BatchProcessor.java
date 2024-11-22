@@ -1,4 +1,4 @@
-package com.webgis.dsws.common;
+package com.webgis.dsws.common.impl;
 
 import java.util.List;
 

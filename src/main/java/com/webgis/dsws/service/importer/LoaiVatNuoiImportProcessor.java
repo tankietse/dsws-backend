@@ -1,5 +1,6 @@
-package com.webgis.dsws.service;
+package com.webgis.dsws.service.importer;
 
+import com.webgis.dsws.common.impl.ImportEntityProcessor;
 import com.webgis.dsws.model.LoaiVatNuoi;
 import com.webgis.dsws.repository.LoaiVatNuoiRepository;
 import lombok.RequiredArgsConstructor;

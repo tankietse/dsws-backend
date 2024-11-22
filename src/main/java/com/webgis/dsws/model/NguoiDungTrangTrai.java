@@ -1,10 +1,12 @@
 package com.webgis.dsws.model;
 
+import com.webgis.dsws.model.enums.TrangThaiEnum;
 import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "nguoi_dung_trang_trai")

@@ -3,6 +3,9 @@ package com.webgis.dsws.model;
 import jakarta.persistence.*;
 import lombok.*;
 import org.locationtech.jts.geom.Point;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 import java.time.LocalDateTime;
 import java.util.Set;
 import java.util.HashSet;
@@ -43,7 +46,9 @@ public class TrangTrai {
     @JoinColumn(name = "nguoi_quan_ly_id")
     private NguoiDung nguoiQuanLy;
 
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime ngayTao;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime ngayCapNhat;
     private Boolean trangThaiHoatDong;
 

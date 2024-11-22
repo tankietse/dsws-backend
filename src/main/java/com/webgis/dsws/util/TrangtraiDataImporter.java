@@ -3,7 +3,8 @@ package com.webgis.dsws.util;
 import com.webgis.dsws.common.DataValidator;
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.exception.DataImportException;
-import com.webgis.dsws.service.TrangTraiImportService;
+import com.webgis.dsws.service.importer.TrangTraiImportService;
+
 import org.apache.poi.ss.usermodel.*;
 import org.springframework.stereotype.Component;
 import lombok.RequiredArgsConstructor;

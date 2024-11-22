@@ -1,4 +1,4 @@
-package com.webgis.dsws.service.geojson;
+package com.webgis.dsws.service;
 
 import org.locationtech.jts.geom.Point;
 import org.locationtech.jts.geom.Geometry;
@@ -32,5 +32,15 @@ public class GeometryService {
 
     public Geometry convertToGeometry(String geoJson) throws ParseException {
         return reader.read(geoJson);
+    }
+
+    /**
+     * Tính khoảng cách giữa hai đối tượng Geometry
+     * @param geom1 Đối tượng Geometry thứ nhất
+     * @param geom2 Đối tượng Geometry thứ hai
+     * @return Khoảng cách giữa hai Geometry
+     */
+    public double calculateDistance(Geometry geom1, Geometry geom2) {
+        return geom1.distance(geom2);
     }
 }

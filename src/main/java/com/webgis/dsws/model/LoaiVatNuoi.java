@@ -8,7 +8,8 @@ import java.util.Set;
 import java.util.HashSet;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "loai_vat_nuoi")

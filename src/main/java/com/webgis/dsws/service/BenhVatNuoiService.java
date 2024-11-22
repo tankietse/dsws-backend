@@ -12,4 +12,6 @@ public interface BenhVatNuoiService {
     BenhVatNuoi save(BenhVatNuoi benhVatNuoi);
 
     void deleteById(Long id);
+
+    BenhVatNuoi update(Long id, BenhVatNuoi benhVatNuoi);
 }

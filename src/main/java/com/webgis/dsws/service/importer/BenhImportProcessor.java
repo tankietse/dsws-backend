@@ -1,6 +1,7 @@
 
-package com.webgis.dsws.service;
+package com.webgis.dsws.service.importer;
 
+import com.webgis.dsws.common.impl.ImportEntityProcessor;
 import com.webgis.dsws.model.Benh;
 import com.webgis.dsws.repository.BenhRepository;
 import lombok.RequiredArgsConstructor;

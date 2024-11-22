@@ -1,6 +1,7 @@
 package com.webgis.dsws.model;
 
 import java.sql.Date;
+
 import org.locationtech.jts.geom.Geometry;
 
 import com.webgis.dsws.model.enums.MucDoVungDichEnum;
@@ -11,7 +12,8 @@ import lombok.*;
 import java.util.Set;
 
 @Entity
-@Data
+@Getter
+@Setter
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "vung_dich")

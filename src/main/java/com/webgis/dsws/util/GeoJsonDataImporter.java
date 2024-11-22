@@ -1,4 +1,4 @@
-package com.webgis.dsws.service.geojson;
+package com.webgis.dsws.util;
 
 import java.io.IOException;
 import java.io.InputStream;
