@@ -20,7 +20,7 @@ import java.io.InputStream;
 import org.springframework.context.annotation.Profile;
 
 @SpringBootApplication
-@EntityScan(basePackages = { "com.webgis.dsws.model" })
+@EntityScan(basePackages = { "com.webgis.dsws.domain.model" })
 @EnableJpaRepositories(basePackages = { "com.webgis.dsws.domain.repository" })
 public class DswsApplication {
     private static final Logger log = LoggerFactory.getLogger(DswsApplication.class);
@@ -48,10 +48,10 @@ public class DswsApplication {
     @Profile("!prod")
     public ApplicationRunner dataImporter() {
         return args -> {
-//             if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
-//             importBoundaryData();
-//             importFarmData();
-//             }
+            if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
+                importBoundaryData();
+                importFarmData();
+            }
         };
     }
 

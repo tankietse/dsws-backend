@@ -4,10 +4,11 @@ import com.webgis.dsws.domain.model.Benh;
 import com.webgis.dsws.domain.model.CaBenh;
 import com.webgis.dsws.domain.model.TrangTrai;
 import com.webgis.dsws.domain.repository.BenhRepository;
-// import com.webgis.dsws.repository.TrangTraiCaBenhRepository;
 import com.webgis.dsws.domain.service.BenhService;
+import com.webgis.dsws.domain.service.processor.BenhProcessor;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Collections;
@@ -23,7 +24,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class BenhServiceImpl implements BenhService {
     private final BenhRepository benhRepository;
-    // private final TrangTraiCaBenhRepository trangTraiCaBenhRepository;
+    private final BenhProcessor benhProcessor;
 
     @Override
     public List<Benh> findAll() {
@@ -36,25 +37,21 @@ public class BenhServiceImpl implements BenhService {
     }
 
     @Override
+    @Transactional
     public Benh save(Benh benh) {
+        benhProcessor.processBenh(benh);
         return benhRepository.save(benh);
     }
 
     @Override
+    @Transactional
     public Benh update(Long id, Benh benhDetails) {
         Benh existing = findById(id)
             .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bệnh với ID: " + id));
         
-        existing.setTenBenh(benhDetails.getTenBenh());
-        existing.setMoTa(benhDetails.getMoTa());
-        existing.setTacNhanGayBenh(benhDetails.getTacNhanGayBenh());
-        existing.setTrieuChung(benhDetails.getTrieuChung());
-        existing.setThoiGianUBenh(benhDetails.getThoiGianUBenh());
-        existing.setPhuongPhapChanDoan(benhDetails.getPhuongPhapChanDoan());
-        existing.setBienPhapPhongNgua(benhDetails.getBienPhapPhongNgua());
-//        existing.setTrangThaiHoatDong(benhDetails.getTrangThaiHoatDong());
-
-        return benhRepository.save(existing);
+        benhDetails.setId(id);
+        benhProcessor.processBenh(benhDetails);
+        return benhRepository.save(benhDetails);
     }
 
     /**
@@ -93,6 +90,7 @@ public class BenhServiceImpl implements BenhService {
     }
 
     @Override
+    @Transactional
     public void deleteById(Long id) {
         benhRepository.deleteById(id);
     }

@@ -177,7 +177,7 @@ public class DonViHanhChinhImporter implements GeoJsonDataImporter {
                 if (geometry instanceof Point) {
                     existingEntity.setCenterPoint((Point) geometry);
                     repository.save(existingEntity);
-                    logger.info("Updated center point for: {}", name);
+//                    logger.info("Updated center point for: {}", name);
                 }
             } else {
                 logger.warn("Cannot find matching administrative unit for center point: {}", name);

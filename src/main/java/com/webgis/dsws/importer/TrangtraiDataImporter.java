@@ -60,7 +60,7 @@ public class TrangtraiDataImporter {
         dto.setTenDuong(dataValidator.getOptionalCellValueAsString(row.getCell(5)));
         dto.setKhuPho(dataValidator.getOptionalCellValueAsString(row.getCell(6)));
         dto.setDiaChi(dataValidator.getOptionalCellValueAsString(row.getCell(9)));
-        dto.setLoaiBenh(dataValidator.getOptionalCellValueAsString(row.getCell(11)));
+        dto.setLoaiBenh(dataValidator.getOptionalCellValueAsString(row.getCell(11))); // Dữ liệu bệnh
 
         // Lấy geometry WKT thay vì lat/long
         dto.setGeomWKB(dataValidator.getCellValueAsString(row.getCell(10), "Geometry", row.getRowNum()));

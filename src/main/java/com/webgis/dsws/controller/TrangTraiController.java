@@ -6,9 +6,12 @@ import com.webgis.dsws.domain.service.TrangTraiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.locationtech.jts.geom.Point;
+import com.webgis.dsws.domain.model.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 import java.util.List;
 import java.util.Set;
@@ -24,12 +27,35 @@ public class TrangTraiController {
         this.trangTraiService = trangTraiService;
     }
 
+    /**
+     * Lấy danh sách tất cả trang trại
+     *
+     * @return ResponseEntity chứa danh sách các trang trại
+     */
     @GetMapping
     @Operation(summary = "Lấy danh sách tất cả trang trại")
     public ResponseEntity<List<TrangTrai>> getAllTrangTrai() {
         return ResponseEntity.ok(trangTraiService.findAll());
     }
 
+    /**
+     * Lấy danh sách trang trại phân trang
+     *
+     * @param pageable Thông tin phân trang (số trang, kích thước trang, sắp xếp)
+     * @return ResponseEntity chứa trang kết quả bao gồm danh sách trang trại
+     */
+    @GetMapping("/paged")
+    @Operation(summary = "Lấy danh sách trang trại phân trang")
+    public ResponseEntity<Page<TrangTrai>> getTrangTraiPaged(Pageable pageable) {
+        return ResponseEntity.ok(trangTraiService.getAllTrangTrai(pageable));
+    }
+
+    /**
+     * Lấy thông tin trang trại theo ID
+     *
+     * @param id ID của trang trại cần lấy thông tin
+     * @return ResponseEntity chứa thông tin trang trại hoặc thông báo lỗi
+     */
     @GetMapping("/{id}")
     @Operation(summary = "Lấy thông tin trang trại theo ID")
     public ResponseEntity<?> getTrangTraiById(@PathVariable Long id) {
@@ -48,12 +74,25 @@ public class TrangTraiController {
         }
     }
 
+    /**
+     * Thêm mới một trang trại
+     *
+     * @param trangTrai Thông tin trang trại cần thêm mới
+     * @return ResponseEntity chứa trang trại vừa được thêm
+     */
     @PostMapping
     @Operation(summary = "Thêm mới trang trại")
     public ResponseEntity<TrangTrai> createTrangTrai(@RequestBody TrangTrai trangTrai) {
         return ResponseEntity.ok(trangTraiService.save(trangTrai));
     }
 
+    /**
+     * Cập nhật thông tin trang trại
+     *
+     * @param id               ID của trang trại cần cập nhật
+     * @param trangTraiDetails Thông tin cập nhật cho trang trại
+     * @return ResponseEntity chứa trang trại đã được cập nhật
+     */
     @PutMapping("/{id}")
     @Operation(summary = "Cập nhật thông tin trang trại")
     public ResponseEntity<TrangTrai> updateTrangTrai(
@@ -62,6 +101,12 @@ public class TrangTraiController {
         return ResponseEntity.ok(trangTraiService.updateTrangTrai(id, trangTraiDetails));
     }
 
+    /**
+     * Xóa một trang trại
+     *
+     * @param id ID của trang trại cần xóa
+     * @return ResponseEntity với mã trạng thái HTTP
+     */
     @DeleteMapping("/{id}")
     @Operation(summary = "Xóa trang trại")
     public ResponseEntity<Void> deleteTrangTrai(@PathVariable Long id) {
@@ -69,6 +114,13 @@ public class TrangTraiController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * Tìm các trang trại trong bán kính từ một điểm trung tâm
+     *
+     * @param center Điểm trung tâm (tọa độ Point)
+     * @param radius Bán kính tìm kiếm (đơn vị mét)
+     * @return ResponseEntity chứa danh sách trang trại trong bán kính
+     */
     @GetMapping("/radius")
     @Operation(summary = "Tìm trang trại trong bán kính")
     public ResponseEntity<List<TrangTrai>> findTrangTraiInRadius(
@@ -77,6 +129,12 @@ public class TrangTraiController {
         return ResponseEntity.ok(trangTraiService.findTrangTraiInRadius(center, radius));
     }
 
+    /**
+     * Lấy danh sách vùng dịch ảnh hưởng đến trang trại
+     *
+     * @param id ID của trang trại
+     * @return ResponseEntity chứa tập hợp các vùng dịch ảnh hưởng
+     */
     @GetMapping("/{id}/vung-dich")
     @Operation(summary = "Lấy danh sách vùng dịch ảnh hưởng đến trang trại")
     public ResponseEntity<Set<VungDichTrangTrai>> getAffectedZones(@PathVariable Long id) {
@@ -86,19 +144,4 @@ public class TrangTraiController {
         }
         return ResponseEntity.ok(trangTrai.getVungDichs());
     }
-}
-
-// Add ApiResponse class for better error handling
-class ApiResponse {
-    private boolean success;
-    private String message;
-    private Object data;
-
-    public ApiResponse(boolean success, String message) {
-        this.success = success;
-        this.message = message;
-    }
-
-    // Getters and setters
-    // ...
 }

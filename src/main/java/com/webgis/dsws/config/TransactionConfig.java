@@ -15,12 +15,14 @@ public class TransactionConfig {
      * Tạo và cấu hình TransactionTemplate.
      * 
      * @param transactionManager PlatformTransactionManager được inject tự động
-     * @return TransactionTemplate đã được cấu hình với mức isolation READ_COMMITTED
+     * @return TransactionTemplate đã được cấu hình v��i mức isolation
+     *         READ_COMMITTED
      */
     @Bean
     public TransactionTemplate transactionTemplate(PlatformTransactionManager transactionManager) {
         TransactionTemplate template = new TransactionTemplate(transactionManager);
         template.setIsolationLevel(TransactionTemplate.ISOLATION_READ_COMMITTED);
+        template.setTimeout(600); // Increase timeout to 600 seconds
         return template;
     }
 }

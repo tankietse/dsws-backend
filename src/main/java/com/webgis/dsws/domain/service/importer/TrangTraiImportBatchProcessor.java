@@ -35,43 +35,39 @@ public class TrangTraiImportBatchProcessor implements BatchProcessor<TrangTraiIm
 
         List<String> existingMaSo = trangTraiRepository.findExistingMaTrangTrai(maSoList);
 
-        transactionService.executeInTransaction(batch, dtos -> {
-            for (TrangTraiImportDTO dto : dtos) {
-                try {
-                    // Skip if maSo already exists
-                    if (existingMaSo.contains(dto.getMaSo())) {
-                        String warning = String.format(
-                                "Bỏ qua record với Mã số: %s - Đã tồn tại trong database",
-                                dto.getMaSo());
-                        log.warn(warning);
-                        errors.append(warning).append("\n");
-                        continue;
-                    }
-
-                    TrangTrai entity = mapper.toEntity(dto);
-                    if (entity.getDonViHanhChinh() == null) {
-                        String warning = String.format(
-                                "Bỏ qua record với Mã số: %s - Không tìm thấy đơn vị hành chính: %s",
-                                dto.getMaSo(), dto.getTenXaPhuong());
-                        log.warn(warning);
-                        errors.append(warning).append("\n");
-                        continue;
-                    }
-
-                    entities.add(entity);
-                } catch (Exception e) {
-                    String error = String.format("Lỗi xử lý record với Mã số: %s - %s",
-                            dto.getMaSo(), e.getMessage());
-                    log.error(error, e);
-                    errors.append(error).append("\n");
+        for (TrangTraiImportDTO dto : batch) {
+            try {
+                // Skip if maSo already exists
+                if (existingMaSo.contains(dto.getMaSo())) {
+                    String warning = String.format(
+                            "Bỏ qua record với Mã số: %s - Đã tồn tại trong database",
+                            dto.getMaSo());
+                    log.warn(warning);
+                    errors.append(warning).append("\n");
+                    continue;
                 }
+
+                TrangTrai entity = mapper.toEntity(dto);
+                if (entity.getDonViHanhChinh() == null) {
+                    String warning = String.format(
+                            "Bỏ qua record với Mã số: %s - Không tìm thấy đơn vị hành chính: %s",
+                            dto.getMaSo(), dto.getTenXaPhuong());
+                    log.warn(warning);
+                    errors.append(warning).append("\n");
+                    continue;
+                }
+
+                entities.add(entity);
+            } catch (Exception e) {
+                String error = String.format("Lỗi xử lý record với Mã số: %s - %s",
+                        dto.getMaSo(), e.getMessage());
+                log.error(error, e);
+                errors.append(error).append("\n");
             }
-            return entities;
-        }, e -> {
-            String error = "Lỗi khi xử lý batch: " + e.getMessage();
-            log.error(error, e);
-            errors.append(error).append("\n");
-        });
+        }
+
+        // Save all entities at once to minimize database calls
+        trangTraiRepository.saveAll(entities);
 
         return entities;
     }

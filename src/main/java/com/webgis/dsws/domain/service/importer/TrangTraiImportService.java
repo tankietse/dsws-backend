@@ -22,8 +22,8 @@ public class TrangTraiImportService {
     private final TrangTraiMapper trangTraiMapper;
     private final TrangTraiRepository trangTraiRepository;
     private final TrangTraiImportBatchProcessor batchProcessor;
-    
-    @Transactional
+    private static final int BATCH_SIZE = 50;
+
     public void importTrangTrai(List<TrangTraiImportDTO> dtos) {
         StringBuilder errors = new StringBuilder();
         List<TrangTraiImportDTO> currentBatch = new ArrayList<>();
@@ -32,8 +32,8 @@ public class TrangTraiImportService {
         for (TrangTraiImportDTO dto : dtos) {
             try {
                 currentBatch.add(dto);
-                if (currentBatch.size() >= batchProcessor.getBatchSize()) {
-                    batchProcessor.processBatch(currentBatch, errors);
+                if (currentBatch.size() >= BATCH_SIZE) {
+                    processBatch(currentBatch, errors);
                     currentBatch = new ArrayList<>();
                 }
                 count++;
@@ -44,11 +44,19 @@ public class TrangTraiImportService {
 
         processRemainingBatch(currentBatch, errors);
         throwIfErrors(errors);
+    }
 
-        List<TrangTrai> trangTrais = dtos.stream()
-                .map(trangTraiMapper::toEntity)
-                .collect(Collectors.toList());
-        trangTraiRepository.saveAll(trangTrais);
+    @Transactional
+    public void processBatch(List<TrangTraiImportDTO> batch, StringBuilder errors) {
+        try {
+            List<TrangTrai> trangTrais = batch.stream()
+                    .map(trangTraiMapper::toEntity)
+                    .collect(Collectors.toList());
+            trangTraiRepository.saveAll(trangTrais);
+        } catch (Exception e) {
+            // ...handle exceptions...
+            errors.append(e.getMessage()).append("\n");
+        }
     }
 
     private void logImportError(TrangTraiImportDTO dto, int count, Exception e, StringBuilder errors) {
@@ -59,7 +67,7 @@ public class TrangTraiImportService {
 
     private void processRemainingBatch(List<TrangTraiImportDTO> batch, StringBuilder errors) {
         if (!batch.isEmpty()) {
-            batchProcessor.processBatch(batch, errors);
+            processBatch(batch, errors);
         }
     }
 

@@ -4,9 +4,14 @@ import com.webgis.dsws.domain.model.LoaiVatNuoi;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+import java.util.Collection;
+import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface LoaiVatNuoiRepository extends JpaRepository<LoaiVatNuoi, Long> {
     Optional<LoaiVatNuoi> findByTenLoai(String tenLoai);
+
+    List<LoaiVatNuoi> findAllByTenLoaiIn(Collection<String> names);
+
 }

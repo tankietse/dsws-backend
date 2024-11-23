@@ -11,7 +11,9 @@ import com.webgis.dsws.domain.model.VungDichTrangTrai;
 import com.webgis.dsws.domain.repository.TrangTraiRepository;
 import com.webgis.dsws.domain.repository.VungDichTrangTraiRepository;
 
+import org.springframework.data.domain.Page;
 import org.locationtech.jts.geom.Point;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import jakarta.persistence.EntityNotFoundException;
@@ -53,6 +55,10 @@ public class TrangTraiService {
 
     public List<TrangTrai> findAll() {
         return trangTraiRepository.findAll();
+    }
+
+    public Page<TrangTrai> getAllTrangTrai(Pageable pageable) {
+        return trangTraiRepository.findAll((org.springframework.data.domain.Pageable) pageable);
     }
 
     public void deleteById(Long id) {
