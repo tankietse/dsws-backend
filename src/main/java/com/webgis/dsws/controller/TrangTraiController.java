@@ -1,8 +1,8 @@
 package com.webgis.dsws.controller;
 
-import com.webgis.dsws.model.TrangTrai;
-import com.webgis.dsws.model.VungDichTrangTrai;
-import com.webgis.dsws.service.TrangTraiService;
+import com.webgis.dsws.domain.model.TrangTrai;
+import com.webgis.dsws.domain.model.VungDichTrangTrai;
+import com.webgis.dsws.domain.service.TrangTraiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import org.locationtech.jts.geom.Point;

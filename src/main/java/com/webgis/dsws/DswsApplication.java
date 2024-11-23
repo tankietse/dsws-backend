@@ -1,8 +1,8 @@
 package com.webgis.dsws;
 
 import com.webgis.dsws.exception.DataImportException;
-import com.webgis.dsws.util.DonViHanhChinhImporter;
-import com.webgis.dsws.util.TrangtraiDataImporter;
+import com.webgis.dsws.importer.DonViHanhChinhImporter;
+import com.webgis.dsws.importer.TrangtraiDataImporter;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +21,7 @@ import org.springframework.context.annotation.Profile;
 
 @SpringBootApplication
 @EntityScan(basePackages = { "com.webgis.dsws.model" })
-@EnableJpaRepositories(basePackages = { "com.webgis.dsws.repository" })
+@EnableJpaRepositories(basePackages = { "com.webgis.dsws.domain.repository" })
 public class DswsApplication {
     private static final Logger log = LoggerFactory.getLogger(DswsApplication.class);
 

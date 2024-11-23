@@ -1,13 +1,13 @@
 package com.webgis.dsws.mapper;
 
-import com.webgis.dsws.common.StringUtils;
+import com.webgis.dsws.util.StringUtils;
+import com.webgis.dsws.domain.model.*;
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.exception.DataImportException;
-import com.webgis.dsws.model.*;
-import com.webgis.dsws.repository.DonViHanhChinhRepository;
-import com.webgis.dsws.service.impl.BenhServiceImpl;
-import com.webgis.dsws.service.importer.AddressService;
-import com.webgis.dsws.service.importer.LoaiVatNuoiImportProcessor;
+import com.webgis.dsws.domain.repository.DonViHanhChinhRepository;
+import com.webgis.dsws.domain.service.impl.BenhServiceImpl;
+import com.webgis.dsws.domain.service.importer.AddressService;
+import com.webgis.dsws.domain.service.importer.LoaiVatNuoiImportProcessor;
 
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
@@ -97,7 +97,7 @@ public class TrangTraiMapper {
             TrangTraiVatNuoi trangTraiVatNuoi = new TrangTraiVatNuoi();
             trangTraiVatNuoi.setTrangTrai(trangTraiEntity);
             trangTraiVatNuoi.setLoaiVatNuoi(loaiVatNuoi);
-            trangTraiVatNuoi.setSoLuong(averageSoLuong + (index < remainder ? 1 : 0)); 
+            trangTraiVatNuoi.setSoLuong(averageSoLuong + (index < remainder ? 1 : 0));
             trangTraiVatNuois.add(trangTraiVatNuoi);
             index++;
         }
