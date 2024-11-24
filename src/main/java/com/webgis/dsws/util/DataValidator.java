@@ -7,6 +7,10 @@ import org.springframework.stereotype.Component;
 
 import java.util.regex.Pattern;
 
+/**
+ * Lớp tiện ích để kiểm tra và xác thực dữ liệu nhập vào.
+ * Cung cấp các phương thức để kiểm tra tính hợp lệ của các loại dữ liệu khác nhau.
+ */
 @Component
 public class DataValidator {
     // Định dạng số điện thoại: 10-11 số
@@ -16,25 +20,24 @@ public class DataValidator {
     private static final int MAX_NAME_LENGTH = 100;
 
     /**
-     * Kiểm tra số điện thoại dựa vào regex.
+     * Kiểm tra tính hợp lệ của số điện thoại theo định dạng yêu cầu.
      *
-     * @param phone  số điện thoại cần kiểm tra
-     * @param rowNum số dòng trong file Excel
-     * @throws DataImportException nếu tên quá dài
+     * @param phone Số điện thoại cần kiểm tra
+     * @param rowNum Số thứ tự dòng trong tệp dữ liệu
+     * @throws DataImportException khi số điện thoại không hợp lệ
      */
     public void validatePhoneNumber(String phone, int rowNum) throws DataImportException {
         if (!PHONE_PATTERN.matcher(phone).matches()) {
-            throw new DataImportException("Số điện thoại không hợp lệ tại dòng " +
-                    rowNum);
+            throw new DataImportException("Số điện thoại không hợp lệ tại dòng " + rowNum);
         }
     }
 
     /**
-     * Kiểm tra tên không quá dài.
+     * Kiểm tra độ dài của tên theo giới hạn cho phép.
      *
-     * @param name   tên cần kiểm tra
-     * @param rowNum số dòng trong file Excel
-     * @throws DataImportException nếu tên quá dài
+     * @param name Tên cần kiểm tra
+     * @param rowNum Số thứ tự dòng trong tệp dữ liệu
+     * @throws DataImportException khi tên vượt quá độ dài cho phép
      */
     public void validateName(String name, int rowNum) throws DataImportException {
         if (name.length() > MAX_NAME_LENGTH) {
@@ -101,5 +104,34 @@ public class DataValidator {
             case BOOLEAN -> String.valueOf(cell.getBooleanCellValue());
             default -> null;
         };
+    }
+
+    /**
+     * Xác thực và lấy giá trị từ một trường bắt buộc.
+     *
+     * @param value     giá trị của trường
+     * @param fieldName tên trường
+     * @param rowNum    số dòng trong file CSV
+     * @return giá trị đã xác thực
+     * @throws DataImportException nếu giá trị không hợp lệ
+     */
+    public String validateAndGetValue(String value, String fieldName, int rowNum) throws DataImportException {
+        if (value == null || value.trim().isEmpty()) {
+            throw new DataImportException(fieldName + " không được để trống tại dòng " + rowNum);
+        }
+        return value.trim();
+    }
+
+    /**
+     * Lấy giá trị từ một trường không bắt buộc.
+     *
+     * @param value giá trị của trường
+     * @return giá trị đã xác thực hoặc null nếu trống
+     */
+    public String getOptionalValue(String value) {
+        if (value == null || value.trim().isEmpty()) {
+            return null;
+        }
+        return value.trim();
     }
 }
