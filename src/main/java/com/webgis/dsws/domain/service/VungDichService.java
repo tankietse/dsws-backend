@@ -17,6 +17,10 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.locationtech.jts.geom.Geometry;
+import java.util.*;
+import java.sql.Timestamp;
+import java.util.stream.Collectors;
 
 @Service
 @Validated
@@ -29,6 +33,13 @@ public class VungDichService {
         this.vungDichRepository = vungDichRepository;
         this.geometryFactory = new GeometryFactory();
     }
+
+    private static final Map<MucDoVungDichEnum, String> SYMBOL_COLORS = Map.of(
+            MucDoVungDichEnum.CAP_DO_1, "#ffd700", // Vàng
+            MucDoVungDichEnum.CAP_DO_2, "#ff8c00", // Cam
+            MucDoVungDichEnum.CAP_DO_3, "#ff4500", // Đỏ cam
+            MucDoVungDichEnum.CAP_DO_4, "#ff0000" // Đỏ
+    );
 
     /**
      * Kiểm tra xem một tọa độ có nằm trong vùng dịch hay không.
@@ -128,7 +139,7 @@ public class VungDichService {
     /**
      * Cập nhật thông tin vùng dịch.
      * 
-     * @param id ID của vùng dịch cần cập nhật.
+     * @param id              ID của vùng dịch cần cập nhật.
      * @param vungDichDetails Thông tin mới của vùng dịch.
      * @return Vùng dịch đã được cập nhật.
      */
@@ -151,7 +162,7 @@ public class VungDichService {
     @Transactional
     public void deleteById(Long id) {
         VungDich vungDich = vungDichRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Vùng dịch không tồn tại với ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Vùng dịch không tồn tại với ID: " + id));
         vungDichRepository.delete(vungDich);
     }
 
@@ -176,17 +187,113 @@ public class VungDichService {
 
     public Page<VungDich> findAll(Pageable pageable, String tenVung, MucDoVungDichEnum mucDo) {
         Specification<VungDich> spec = Specification.where(null);
-        
+
         if (tenVung != null) {
-            spec = spec.and((root, query, cb) -> 
-                cb.like(cb.lower(root.get("tenVung")), "%" + tenVung.toLowerCase() + "%"));
+            spec = spec.and(
+                    (root, query, cb) -> cb.like(cb.lower(root.get("tenVung")), "%" + tenVung.toLowerCase() + "%"));
         }
-        
+
         if (mucDo != null) {
-            spec = spec.and((root, query, cb) -> 
-                cb.equal(root.get("mucDo"), mucDo));
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("mucDo"), mucDo));
         }
-        
+
         return vungDichRepository.findAll(spec, pageable);
+    }
+
+    /**
+     * Lấy dữ liệu cho bản đồ nhiệt hiển thị mật độ vùng dịch
+     */
+    public List<Map<String, Object>> getHeatmapData(Date fromDate, Date toDate) {
+        // Tạo specification để lọc theo thời gian nếu có
+        Specification<VungDich> spec = Specification.where(null);
+        if (fromDate != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("ngayBatDau"), fromDate));
+        }
+        if (toDate != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("ngayBatDau"), toDate));
+        }
+
+        List<VungDich> vungDichs = vungDichRepository.findAll(spec);
+
+        return vungDichs.stream().map(vd -> {
+            Map<String, Object> heatmapPoint = new HashMap<>();
+            Point centroid = vd.getGeom().getCentroid();
+
+            heatmapPoint.put("latitude", centroid.getY());
+            heatmapPoint.put("longitude", centroid.getX());
+            // Cường độ dựa trên mức độ vùng dịch
+            heatmapPoint.put("intensity", vd.getMucDo().ordinal() * 0.25); // Chuẩn hóa về 0-1
+            heatmapPoint.put("radius", vd.getBanKinh());
+
+            return heatmapPoint;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy dữ liệu cho cluster hiển thị nhóm vùng dịch
+     */
+    public List<Map<String, Object>> getClusterData(MucDoVungDichEnum mucDo, double radius) {
+        // Lọc theo mức độ nếu có
+        Specification<VungDich> spec = Specification.where(null);
+        if (mucDo != null) {
+            spec = spec.and((root, query, cb) -> cb.equal(root.get("mucDo"), mucDo));
+        }
+
+        List<VungDich> vungDichs = vungDichRepository.findAll(spec);
+
+        return vungDichs.stream().map(vd -> {
+            Map<String, Object> clusterPoint = new HashMap<>();
+            Point centroid = vd.getGeom().getCentroid();
+
+            clusterPoint.put("id", vd.getId());
+            clusterPoint.put("latitude", centroid.getY());
+            clusterPoint.put("longitude", centroid.getX());
+            clusterPoint.put("mucDo", vd.getMucDo());
+            clusterPoint.put("tenVung", vd.getTenVung());
+            clusterPoint.put("banKinh", radius);
+            clusterPoint.put("color", SYMBOL_COLORS.get(vd.getMucDo()));
+
+            return clusterPoint;
+        }).collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy dữ liệu symbols cho feature layer theo mức độ
+     */
+    public Map<String, Object> getFeatureLayerSymbols(MucDoVungDichEnum mucDo) {
+        Map<String, Object> symbolData = new HashMap<>();
+
+        // Lọc vùng dịch theo mức độ nếu có
+        List<VungDich> vungDichs;
+        if (mucDo != null) {
+            vungDichs = vungDichRepository.findByMucDo(mucDo);
+        } else {
+            vungDichs = vungDichRepository.findAll();
+        }
+
+        // Tạo features cho mỗi vùng dịch
+        List<Map<String, Object>> features = vungDichs.stream().map(vd -> {
+            Map<String, Object> feature = new HashMap<>();
+            feature.put("type", "Feature");
+            feature.put("geometry", vd.getGeom());
+
+            Map<String, Object> properties = new HashMap<>();
+            properties.put("id", vd.getId());
+            properties.put("tenVung", vd.getTenVung());
+            properties.put("mucDo", vd.getMucDo());
+            properties.put("fillColor", SYMBOL_COLORS.get(vd.getMucDo()));
+            properties.put("fillOpacity", 0.5);
+            properties.put("strokeColor", SYMBOL_COLORS.get(vd.getMucDo()));
+            properties.put("strokeWidth", 2);
+
+            feature.put("properties", properties);
+            return feature;
+        }).collect(Collectors.toList());
+
+        // Tạo GeoJSON FeatureCollection
+        symbolData.put("type", "FeatureCollection");
+        symbolData.put("features", features);
+
+        return symbolData;
     }
 }

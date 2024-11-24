@@ -2,7 +2,10 @@ package com.webgis.dsws.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.checkerframework.checker.units.qual.A;
 import org.locationtech.jts.geom.Coordinate;
+
+import com.webgis.dsws.domain.service.VungDichAutoImportService;
 import com.webgis.dsws.domain.service.VungDichService;
 import com.webgis.dsws.domain.model.VungDich;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +21,11 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 
 import jakarta.persistence.EntityNotFoundException;
+import org.locationtech.jts.geom.Point;
+import org.springframework.format.annotation.DateTimeFormat;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/vung-dich")
@@ -26,6 +34,9 @@ public class VungDichController {
 
     @Autowired
     private VungDichService vungDichService;
+
+    @Autowired
+    private VungDichAutoImportService vungDichAutoImportService;
 
     @Value("${springdoc.swagger-ui.path:}")
     private String baseUrl;
@@ -136,5 +147,68 @@ public class VungDichController {
         } catch (EntityNotFoundException e) {
             return ResponseEntity.notFound().build();
         }
+    }
+
+    /**
+     * API lấy dữ liệu cho bản đồ nhiệt (heatmap)
+     * 
+     * @param fromDate Ngày bắt đầu lấy dữ liệu
+     * @param toDate   Ngày kết thúc lấy dữ liệu
+     * @return Dữ liệu cho bản đồ nhiệt
+     */
+    @GetMapping("/heatmap")
+    @Operation(summary = "Lấy dữ liệu cho bản đồ nhiệt")
+    public ResponseEntity<List<Map<String, Object>>> getHeatmapData(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate) {
+        List<Map<String, Object>> heatmapData = vungDichService.getHeatmapData(fromDate, toDate);
+        return ResponseEntity.ok(heatmapData);
+    }
+
+    /**
+     * API lấy dữ liệu cho cluster
+     * 
+     * @param mucDo  Mức độ vùng dịch cần lọc
+     * @param radius Bán kính cluster (mét)
+     * @return Dữ liệu cho cluster
+     */
+    @GetMapping("/cluster")
+    @Operation(summary = "Lấy dữ liệu cho cluster")
+    public ResponseEntity<List<Map<String, Object>>> getClusterData(
+            @RequestParam(required = false) MucDoVungDichEnum mucDo,
+            @RequestParam(defaultValue = "1000") double radius) {
+        List<Map<String, Object>> clusterData = vungDichService.getClusterData(mucDo, radius);
+        return ResponseEntity.ok(clusterData);
+    }
+
+    /**
+     * API lấy dữ liệu biểu tượng cho feature layer
+     * 
+     * @param mucDo Mức độ vùng dịch cần lọc
+     * @return Dữ liệu symbols cho feature layer
+     */
+    @GetMapping("/symbols")
+    @Operation(summary = "Lấy dữ liệu biểu tượng cho feature layer")
+    public ResponseEntity<Map<String, Object>> getFeatureLayerSymbols(
+            @RequestParam(required = false) MucDoVungDichEnum mucDo) {
+        Map<String, Object> symbolData = vungDichService.getFeatureLayerSymbols(mucDo);
+        return ResponseEntity.ok(symbolData);
+    }
+
+    /**
+     * API tự động tạo vùng dịch từ dữ liệu trang trại và ca bệnh
+     */
+    @PostMapping("/auto-import")
+    @Operation(summary = "Tự động tạo vùng dịch từ dữ liệu hiện có")
+    public ResponseEntity<List<VungDich>> autoImportVungDich(
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate,
+            @RequestParam(required = false) String maTinhThanh,
+            @RequestParam(required = false) String loaiBenh,
+            @RequestParam(required = false) Integer minCases) {
+
+        List<VungDich> newZones = vungDichAutoImportService.autoCreateFromData(
+                fromDate, toDate, maTinhThanh, loaiBenh, minCases);
+        return ResponseEntity.ok(newZones);
     }
 }
