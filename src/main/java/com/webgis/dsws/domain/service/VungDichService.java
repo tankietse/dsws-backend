@@ -203,16 +203,9 @@ public class VungDichService {
     /**
      * Lấy dữ liệu cho bản đồ nhiệt hiển thị mật độ vùng dịch
      */
-    public List<Map<String, Object>> getHeatmapData(Date fromDate, Date toDate) {
-        // Tạo specification để lọc theo thời gian nếu có
-        Specification<VungDich> spec = Specification.where(null);
-        if (fromDate != null) {
-            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("ngayBatDau"), fromDate));
-        }
-        if (toDate != null) {
-            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("ngayBatDau"), toDate));
-        }
-
+    public List<Map<String, Object>> getHeatmapData() {
+        // Lọc các vùng dịch có ngày kết thúc là null
+        Specification<VungDich> spec = (root, query, cb) -> cb.isNull(root.get("ngayKetThuc"));
         List<VungDich> vungDichs = vungDichRepository.findAll(spec);
 
         return vungDichs.stream().map(vd -> {
@@ -221,8 +214,7 @@ public class VungDichService {
 
             heatmapPoint.put("latitude", centroid.getY());
             heatmapPoint.put("longitude", centroid.getX());
-            // Cường độ dựa trên mức độ vùng dịch
-            heatmapPoint.put("intensity", vd.getMucDo().ordinal() * 0.25); // Chuẩn hóa về 0-1
+            heatmapPoint.put("intensity", vd.getMucDo().ordinal() * 0.25);
             heatmapPoint.put("radius", vd.getBanKinh());
 
             return heatmapPoint;

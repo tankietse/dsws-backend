@@ -8,6 +8,7 @@ import com.webgis.dsws.domain.repository.DonViHanhChinhRepository;
 import com.webgis.dsws.domain.service.impl.BenhServiceImpl;
 import com.webgis.dsws.domain.service.importer.AddressService;
 import com.webgis.dsws.domain.service.importer.LoaiVatNuoiImportProcessor;
+import com.webgis.dsws.domain.service.processor.BenhProcessor;
 
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
@@ -33,6 +34,7 @@ public class TrangTraiMapper {
     private final AddressService addressService;
     private final BenhServiceImpl benhService;
     private final LoaiVatNuoiImportProcessor loaiVatNuoiImportProcessor;
+    private final BenhProcessor benhProcessor;
 
     @Transactional
     public TrangTrai toEntity(TrangTraiImportDTO dto) {
@@ -103,9 +105,26 @@ public class TrangTraiMapper {
         }
         trangTraiEntity.setTrangTraiVatNuois(trangTraiVatNuois);
 
-        // Process Benh
-        Set<CaBenh> danhSachCaBenh = benhService.processBenhList(dto.getLoaiBenh(), trangTraiEntity);
-        trangTraiEntity.setCaBenhs(danhSachCaBenh);
+        // Process Benh - Modified section
+        if (dto.getLoaiBenh() != null && !dto.getLoaiBenh().trim().isEmpty()) {
+            Set<CaBenh> danhSachCaBenh = new HashSet<>();
+
+            // Split disease names and process each
+            String[] benhNames = dto.getLoaiBenh().split(",");
+            for (String benhName : benhNames) {
+                Benh benh = benhService.findOrCreateBenh(benhName.trim());
+
+                // Create disease cases for compatible animal types
+                for (TrangTraiVatNuoi trangTraiVatNuoi : trangTraiVatNuois) {
+                    if (benh.getLoaiVatNuoi().contains(trangTraiVatNuoi.getLoaiVatNuoi())) {
+                        CaBenh caBenh = benhProcessor.createInitialCaBenh(benh, trangTraiVatNuoi);
+                        danhSachCaBenh.add(caBenh);
+                    }
+                }
+            }
+
+            trangTraiEntity.setCaBenhs(danhSachCaBenh);
+        }
 
         return trangTraiEntity;
     }
@@ -148,7 +167,7 @@ public class TrangTraiMapper {
                     .findByTenContainingIgnoreCaseAndDiacritics(tenPhuong);
 
             if (!matches.isEmpty()) {
-                // Lấy đơn vị hành chính có tên giống nhất (dựa trên khoảng cách Levenshtein)
+                // Lấy đơn vị hành chính có tên giống nh���t (dựa trên khoảng cách Levenshtein)
                 donViHanhChinh = matches.stream()
                         .min((a, b) -> {
                             String normalizedInput = StringUtils.normalize(tenPhuong);

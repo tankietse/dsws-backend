@@ -151,17 +151,12 @@ public class VungDichController {
 
     /**
      * API lấy dữ liệu cho bản đồ nhiệt (heatmap)
-     * 
-     * @param fromDate Ngày bắt đầu lấy dữ liệu
-     * @param toDate   Ngày kết thúc lấy dữ liệu
      * @return Dữ liệu cho bản đồ nhiệt
      */
     @GetMapping("/heatmap")
     @Operation(summary = "Lấy dữ liệu cho bản đồ nhiệt")
-    public ResponseEntity<List<Map<String, Object>>> getHeatmapData(
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate) {
-        List<Map<String, Object>> heatmapData = vungDichService.getHeatmapData(fromDate, toDate);
+    public ResponseEntity<List<Map<String, Object>>> getHeatmapData() {
+        List<Map<String, Object>> heatmapData = vungDichService.getHeatmapData();
         return ResponseEntity.ok(heatmapData);
     }
 
@@ -193,22 +188,5 @@ public class VungDichController {
             @RequestParam(required = false) MucDoVungDichEnum mucDo) {
         Map<String, Object> symbolData = vungDichService.getFeatureLayerSymbols(mucDo);
         return ResponseEntity.ok(symbolData);
-    }
-
-    /**
-     * API tự động tạo vùng dịch từ dữ liệu trang trại và ca bệnh
-     */
-    @PostMapping("/auto-import")
-    @Operation(summary = "Tự động tạo vùng dịch từ dữ liệu hiện có")
-    public ResponseEntity<List<VungDich>> autoImportVungDich(
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate,
-            @RequestParam(required = false) String maTinhThanh,
-            @RequestParam(required = false) String loaiBenh,
-            @RequestParam(required = false) Integer minCases) {
-
-        List<VungDich> newZones = vungDichAutoImportService.autoCreateFromData(
-                fromDate, toDate, maTinhThanh, loaiBenh, minCases);
-        return ResponseEntity.ok(newZones);
     }
 }

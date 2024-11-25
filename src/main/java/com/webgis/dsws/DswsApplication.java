@@ -3,6 +3,7 @@ package com.webgis.dsws;
 import com.webgis.dsws.exception.DataImportException;
 import com.webgis.dsws.importer.DonViHanhChinhImporter;
 import com.webgis.dsws.importer.TrangtraiDataImporter;
+import com.webgis.dsws.domain.service.VungDichAutoImportService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +28,7 @@ public class DswsApplication {
 
     private final DonViHanhChinhImporter boundaryImporter;
     private final TrangtraiDataImporter farmImporter;
+    private final VungDichAutoImportService vungDichAutoImportService;
 
     @Value("${app.hochiminh-boundary-path:}")
     private String hoChiMinhBoundaryPath;
@@ -35,9 +37,11 @@ public class DswsApplication {
     private String farmPath;
 
     public DswsApplication(DonViHanhChinhImporter boundaryImporter,
-            TrangtraiDataImporter farmImporter) {
+            TrangtraiDataImporter farmImporter,
+            VungDichAutoImportService vungDichAutoImportService) {
         this.boundaryImporter = boundaryImporter;
         this.farmImporter = farmImporter;
+        this.vungDichAutoImportService = vungDichAutoImportService;
     }
 
     public static void main(String[] args) {
@@ -51,6 +55,7 @@ public class DswsApplication {
             if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
                 importBoundaryData();
                 importFarmData();
+                importVirusZones();
             }
         };
     }
@@ -71,5 +76,10 @@ public class DswsApplication {
         } catch (DataImportException e) {
             log.error("Lỗi khi import dữ liệu trang trại: {}", e.getMessage(), e);
         }
+    }
+
+    private void importVirusZones() {
+        vungDichAutoImportService.autoCreateFromData(1, 1);
+        log.info("Đã import thành công vùng dịch");
     }
 }

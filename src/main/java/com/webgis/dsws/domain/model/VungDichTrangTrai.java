@@ -1,6 +1,6 @@
 package com.webgis.dsws.domain.model;
 
-import java.sql.Date;
+import java.util.Date;
 import jakarta.persistence.*;
 import lombok.*;
 

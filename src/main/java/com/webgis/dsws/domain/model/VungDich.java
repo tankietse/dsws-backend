@@ -1,6 +1,7 @@
 package com.webgis.dsws.domain.model;
 
-import java.sql.Date;
+import java.util.Date;
+import java.util.HashSet;
 
 import org.locationtech.jts.geom.Geometry;
 
@@ -56,7 +57,21 @@ public class VungDich {
     @OneToMany(mappedBy = "vungDich")
     private Set<CanhBao> canhBaos;
 
-    @ManyToMany
+    @ManyToMany(cascade = CascadeType.MERGE) // Khi thêm mới vùng dịch, cập nhật thông tin biện pháp phòng chống
     @JoinTable(name = "vung_dich_bien_phap", joinColumns = @JoinColumn(name = "vung_dich_id"), inverseJoinColumns = @JoinColumn(name = "bien_phap_id"))
     private Set<BienPhapPhongChong> bienPhapPhongChongs;
+
+    @OneToMany(mappedBy = "vungDich", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<VungDichBienPhap> vungDichBienPhaps = new HashSet<>(); // Initialize empty set
+
+    // Helper method để quản lý quan hệ 2 chiều
+    public void addVungDichBienPhap(VungDichBienPhap vungDichBienPhap) {
+        vungDichBienPhaps.add(vungDichBienPhap);
+        vungDichBienPhap.setVungDich(this);
+    }
+
+    public void removeVungDichBienPhap(VungDichBienPhap vungDichBienPhap) {
+        vungDichBienPhaps.remove(vungDichBienPhap);
+        vungDichBienPhap.setVungDich(null);
+    }
 }

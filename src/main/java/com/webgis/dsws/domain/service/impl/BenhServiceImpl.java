@@ -48,6 +48,27 @@ public class BenhServiceImpl implements BenhService {
     }
 
     /**
+     * Tìm kiếm bệnh theo tên hoặc tạo mới nếu chưa tồn tại.
+     *
+     * @param tenBenh Tên bệnh cần tìm hoặc tạo mới
+     * @return Thực thể Benh tương ứng (đã tồn tại hoặc mới tạo)
+     */
+    @Override
+    public Benh findOrCreateBenh(String tenBenh) {
+        String standardName = standardizeDiseaseNameAndCheck(tenBenh);
+        return benhRepository.findByTenBenh(standardName)
+                .orElseGet(() -> {
+                    Benh newBenh = new Benh(null, standardName);
+                    // Lấy thông tin bổ sung từ registry nếu có
+                    BenhRegistry.DiseaseInfo info = BenhRegistry.getInfo(tenBenh);
+                    if (info != null) {
+                        // Có thể thêm các thông tin bổ sung vào đây nếu cần
+                    }
+                    return save(newBenh);
+                });
+    }
+
+    /**
      * Tìm kiếm bệnh theo mã định danh.
      *
      * @param id Mã định danh của bệnh cần tìm
@@ -137,26 +158,6 @@ public class BenhServiceImpl implements BenhService {
         }
 
         return danhSachCaBenh;
-    }
-
-    /**
-     * Tìm kiếm bệnh theo tên hoặc tạo mới nếu chưa tồn tại.
-     *
-     * @param tenBenh Tên bệnh cần tìm hoặc tạo mới
-     * @return Thực thể Benh tương ứng (đã tồn tại hoặc mới tạo)
-     */
-    private Benh findOrCreateBenh(String tenBenh) {
-        String standardName = standardizeDiseaseNameAndCheck(tenBenh);
-        return benhRepository.findByTenBenh(standardName)
-                .orElseGet(() -> {
-                    Benh newBenh = new Benh(null, standardName);
-                    // Lấy thông tin bổ sung từ registry nếu có
-                    BenhRegistry.DiseaseInfo info = BenhRegistry.getInfo(tenBenh);
-                    if (info != null) {
-                        // Có thể thêm các thông tin bổ sung vào đây nếu cần
-                    }
-                    return save(newBenh);
-                });
     }
 
     /**

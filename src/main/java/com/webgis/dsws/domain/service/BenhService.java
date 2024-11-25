@@ -9,6 +9,8 @@ public interface BenhService {
 
     Optional<Benh> findById(Long id);
 
+    Benh findOrCreateBenh(String tenBenh);
+
     Benh save(Benh benh);
 
     void deleteById(Long id);

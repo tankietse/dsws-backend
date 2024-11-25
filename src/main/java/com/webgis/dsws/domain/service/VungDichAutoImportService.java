@@ -2,6 +2,9 @@ package com.webgis.dsws.domain.service;
 
 import com.webgis.dsws.domain.model.*;
 import com.webgis.dsws.domain.repository.*;
+
+import jakarta.transaction.Transactional;
+
 import com.webgis.dsws.domain.model.enums.MucDoVungDichEnum;
 import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
@@ -27,16 +30,14 @@ public class VungDichAutoImportService {
     private final GeometryService geometryService;
     private final ClusterAnalysisService clusterAnalysisService;
     private final BienPhapPhongChongService bienPhapPhongChongService;
+    private final VungDichBienPhapRepository vungDichBienPhapRepository;
 
     public List<VungDich> autoCreateFromData(
-            Date fromDate,
-            Date toDate,
-            String maTinhThanh,
-            String loaiBenh,
+            Integer maTinhThanh,
             Integer minCases) {
 
         // 1. Lấy danh sách ca bệnh theo điều kiện
-        List<CaBenh> caBenhs = getCaBenhsByFilters(fromDate, toDate, maTinhThanh, loaiBenh);
+        List<CaBenh> caBenhs = getCaBenhsByFilters(maTinhThanh);
 
         // 2. Nhóm các ca bệnh theo loại bệnh
         Map<Benh, List<CaBenh>> diseasesGroups = caBenhs.stream()
@@ -57,7 +58,9 @@ public class VungDichAutoImportService {
             for (Map.Entry<Geometry, List<CaBenh>> cluster : diseaseClusters.entrySet()) {
                 if (cluster.getValue().size() >= (minCases != null ? minCases : 1)) {
                     VungDich vungDich = createZoneFromCluster(cluster.getKey(), cluster.getValue(), benh);
-                    newZones.add(vungDichRepository.save(vungDich));
+                    vungDich = vungDichRepository.save(vungDich); // Ensure vungDich is saved before associating with
+                                                                  // BienPhapPhongChong
+                    newZones.add(vungDich);
                 }
             }
         }
@@ -65,32 +68,15 @@ public class VungDichAutoImportService {
         return newZones;
     }
 
-    private List<CaBenh> getCaBenhsByFilters(
-            Date fromDate,
-            Date toDate,
-            String maTinhThanh,
-            String loaiBenh) {
+    private List<CaBenh> getCaBenhsByFilters(Integer maTinhThanh) {
+        Specification<CaBenh> spec = Specification
+                .where((root, query, builder) -> builder.equal(root.get("daKetThuc"), false));
 
-        Specification<CaBenh> spec = Specification.where(null);
+        if (maTinhThanh != null && maTinhThanh > 0) {
+            List<Integer> allDVHCIds = donViHanhChinhRepository.findAllChildrenIds(maTinhThanh);
 
-        if (fromDate != null) {
-            spec = spec.and((root, query, builder) -> 
-                builder.greaterThanOrEqualTo(root.get("ngayPhatHien"), fromDate));
-        }
-
-        if (toDate != null) {
-            spec = spec.and((root, query, builder) -> 
-                builder.lessThanOrEqualTo(root.get("ngayPhatHien"), toDate));
-        }
-
-        if (maTinhThanh != null) {
-            spec = spec.and((root, query, builder) -> 
-                builder.equal(root.get("trangTrai").get("donViHanhChinh").get("maTinhThanh"), maTinhThanh));
-        }
-
-        if (loaiBenh != null) {
-            spec = spec.and((root, query, builder) -> 
-                builder.equal(root.get("benh").get("tenBenh"), loaiBenh));
+            spec = spec.and(
+                    (root, query, builder) -> root.get("trangTrai").get("donViHanhChinh").get("id").in(allDVHCIds));
         }
 
         return caBenhRepository.findAll(spec);
@@ -131,63 +117,45 @@ public class VungDichAutoImportService {
         return clusters;
     }
 
-    private VungDich createZoneFromCluster(Geometry center, List<CaBenh> caBenhs, Benh benh) {
-        if (caBenhs.isEmpty()) {
-            throw new IllegalArgumentException("Không thể tạo vùng dịch từ danh sách ca bệnh rỗng");
+    @Transactional
+    protected VungDich createZoneFromCluster(Geometry center, List<CaBenh> caBenhs, Benh benh) {
+        // 1. Validate
+        if (caBenhs.isEmpty() || caBenhs.stream().allMatch(CaBenh::getDaKetThuc)) {
+            throw new IllegalArgumentException("Không thể tạo vùng dịch từ danh sách ca bệnh đã kết thúc");
         }
 
+        // 2. Create VungDich
         VungDich vungDich = new VungDich();
-
-        // 1. Thông tin cơ bản
-        float radius = (float) calculateRadius(caBenhs);
-        MucDoVungDichEnum severity = calculateSeverity(caBenhs);
-        java.sql.Date ngayBatDau = caBenhs.stream()
-                .map(CaBenh::getNgayPhatHien)
-                .min(Date::compareTo)
-                .orElseThrow(() -> new IllegalStateException("Không thể xác định ngày bắt đầu"));
-
-        // 2. Thiết lập thông tin vùng dịch
-        String maVung = generateZoneCode(benh.getId());
-        vungDich.setMaVung(maVung);
         vungDich.setBenh(benh);
         vungDich.setGeom(center);
-        vungDich.setBanKinh(radius);
-        vungDich.setMucDo(severity);
-        vungDich.setNgayBatDau(ngayBatDau);
-        // TODO: Set trạng thái vùng dịch dựa vào tính toán ca bệnh và tốc độ lây lan
-        // của bệnh
-        vungDich.setTrangThai(TrangThaiVungDichEnum.DANG_BUNG_PHAT);
-        vungDich.setMucDoNghiemTrong(severity.ordinal() + 1);
+        vungDich.setBanKinh(calculateRadius(caBenhs));
+        vungDich.setMucDo(calculateSeverity(caBenhs));
+        vungDich.setTrangThai(TrangThaiVungDichEnum.DANG_GIAM_SAT);
+        vungDich.setNgayBatDau(
+                caBenhs.stream()
+                        .map(CaBenh::getNgayPhatHien)
+                        .min(Date::compareTo)
+                        .orElseThrow());
 
-        // 3. Tạo tên và mô tả
-        String tenVung = String.format("Vùng dịch %s - %s",
-                benh.getTenBenh(),
-                maVung);
-        vungDich.setTenVung(tenVung);
+        // 3. Save VungDich first
+        vungDich = vungDichRepository.save(vungDich);
 
-        String moTa = String.format(
-                "Vùng dịch %s\n" +
-                        "Số ca nhiễm: %d\n" +
-                        "Mức độ: %s\n" +
-                        "Bán kính ảnh hưởng: %.1f mét",
-                benh.getTenBenh(),
-                caBenhs.size(),
-                severity.name(),
-                radius);
+        // 4. Create default measures
+        // List<BienPhapPhongChong> defaultMeasures = bienPhapPhongChongService
+        // .getDefaultMeasuresForDisease(benh.getId());
 
-        // 5. Thiết lập các trang trại bị ảnh hưởng
-        Set<VungDichTrangTrai> affectedFarms = calculateAffectedFarms(vungDich).stream()
-                .peek(vdt -> {
-                    vdt.setNgayBatDauAnhHuong(ngayBatDau);
-                    vdt.setMucDoAnhHuong(calculateFarmImpact(vdt.getKhoangCach(), radius));
-                })
-                .collect(Collectors.toSet());
-        vungDich.setTrangTrais(affectedFarms);
+        // // 5. Create associations
+        // List<VungDichBienPhap> vungDichBienPhaps = defaultMeasures.stream()
+        // .map(measure -> {
+        // VungDichBienPhap vdbp = new VungDichBienPhap();
+        // vdbp.setVungDich(vungDich);
+        // vdbp.setBienPhap(measure);
+        // vdbp.setNgayApDung(new Date(System.currentTimeMillis()));
+        // return vdbp;
+        // })
+        // .collect(Collectors.toList());
 
-        // 6. Thiết lập các biện pháp phòng chống
-        vungDich.setBienPhapXuLy(benh.getBienPhapPhongNgua());
-        Set<BienPhapPhongChong> bienPhaps = bienPhapPhongChongService.getDefaultPreventiveMeasures(severity);
-        vungDich.setBienPhapPhongChongs(bienPhaps);
+        // vungDichBienPhapRepository.saveAll(vungDichBienPhaps);
 
         return vungDich;
     }
@@ -256,60 +224,49 @@ public class VungDichAutoImportService {
                 .collect(Collectors.toList());
     }
 
-    private double calculateRadius(List<CaBenh> caBenhs) {
-        if (caBenhs.isEmpty())
-            return 1000.0; // Default 1km
-
-        // Tính centroid của cluster
+    private float calculateRadius(List<CaBenh> caBenhs) {
+        // Tính bán kính dựa trên khoảng cách xa nhất từ trung tâm đến các điểm
+        double maxDistance = 0;
         Point centroid = geometryService.calculateCentroid(
                 caBenhs.stream()
                         .map(cb -> cb.getTrangTrai().getPoint())
                         .collect(Collectors.toList()))
                 .getCentroid();
 
-        // Tìm điểm xa nhất từ centroid
-        double maxDistance = caBenhs.stream()
-                .mapToDouble(cb -> geometryService.calculateDistance(
-                        centroid,
-                        cb.getTrangTrai().getPoint()))
-                .max()
-                .orElse(1000.0);
+        for (CaBenh caBenh : caBenhs) {
+            double distance = geometryService.calculateDistance(
+                    centroid,
+                    caBenh.getTrangTrai().getPoint());
+            maxDistance = Math.max(maxDistance, distance);
+        }
 
-        // Thêm buffer 20%
-        return maxDistance * 1.2;
+        return (float) (maxDistance * 1.2); // Thêm 20% buffer
     }
 
     private MucDoVungDichEnum calculateSeverity(List<CaBenh> caBenhs) {
-        if (caBenhs.isEmpty())
-            return MucDoVungDichEnum.CAP_DO_1;
+        int totalCases = caBenhs.stream()
+                .mapToInt(CaBenh::getSoCaNhiemBanDau)
+                .sum();
 
-        // Tính các tiêu chí đánh giá mức độ
-        int totalCases = caBenhs.size();
-        double timeSpan = calculateTimeSpan(caBenhs);
-        double spreadRate = calculateSpreadRate(caBenhs);
-
-        // Xác định mức độ dựa trên các ngưỡng
-        if (totalCases >= 10 && timeSpan <= 7 && spreadRate >= 2.0) {
+        if (totalCases >= 100)
             return MucDoVungDichEnum.CAP_DO_4;
-        } else if (totalCases >= 7 && timeSpan <= 14 && spreadRate >= 1.5) {
+        if (totalCases >= 50)
             return MucDoVungDichEnum.CAP_DO_3;
-        } else if (totalCases >= 5 && timeSpan <= 21 && spreadRate >= 1.0) {
+        if (totalCases >= 10)
             return MucDoVungDichEnum.CAP_DO_2;
-        } else {
-            return MucDoVungDichEnum.CAP_DO_1;
-        }
+        return MucDoVungDichEnum.CAP_DO_1;
     }
 
     private double calculateTimeSpan(List<CaBenh> caBenhs) {
         Date earliest = caBenhs.stream()
                 .map(CaBenh::getNgayPhatHien)
                 .min(Date::compareTo)
-                .orElse((java.sql.Date) new Date());
+                .orElse(new Date());
 
         Date latest = caBenhs.stream()
                 .map(CaBenh::getNgayPhatHien)
                 .max(Date::compareTo)
-                .orElse((java.sql.Date) new Date());
+                .orElse(new Date());
 
         return (latest.getTime() - earliest.getTime()) / (1000.0 * 60 * 60 * 24); // Convert to days
     }
