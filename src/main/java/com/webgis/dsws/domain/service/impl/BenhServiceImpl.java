@@ -82,6 +82,18 @@ public class BenhServiceImpl implements BenhService {
     }
 
     /**
+     * Tìm kiếm bệnh theo tên.
+     *
+     * @param tenBenh Tên bệnh cần tìm
+     * @return Optional chứa thực thể Benh nếu tìm thấy, ngược lại là Optional rỗng
+     */
+    @Override
+    public Optional<Benh> findByTenBenh(String tenBenh) {
+        String standardName = standardizeDiseaseNameAndCheck(tenBenh);
+        return benhRepository.findByTenBenh(standardName);
+    }
+
+    /**
      * Lưu thông tin một bệnh mới vào hệ thống.
      * Kiểm tra trùng lặp tên bệnh trước khi lưu.
      *

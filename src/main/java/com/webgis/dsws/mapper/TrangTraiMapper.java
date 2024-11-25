@@ -40,6 +40,7 @@ public class TrangTraiMapper {
     private final BenhServiceImpl benhService;
     private final LoaiVatNuoiImportProcessor loaiVatNuoiImportProcessor;
     private final GeometryService geometryService;
+    private final BenhVatNuoiRepository benhVatNuoiRepository;
 
     /**
      * Chuyển đổi từ DTO sang Entity TrangTrai
@@ -152,10 +153,28 @@ public class TrangTraiMapper {
         // });
         // }
 
-        // Process Benh
+        // Process Benh and BenhVatNuoi relationships
 
-        Set<CaBenh> danhSachCaBenh = benhService.processBenhList(dto.getLoaiBenh(), trangTraiEntity);
+        String loaiBenh = dto.getLoaiBenh();
+        Set<CaBenh> danhSachCaBenh = benhService.processBenhList(loaiBenh, trangTraiEntity);
         trangTraiEntity.setCaBenhs(danhSachCaBenh);
+
+        // Process BenhVatNuoi relationships
+        danhSachCaBenh.forEach(caBenh -> {
+            Benh benh = caBenh.getBenh();
+            TrangTraiVatNuoi trangTraiVatNuoi = caBenh.getTrangTrai().getTrangTraiVatNuois().stream()
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException(
+                            "No TrangTraiVatNuoi found for TrangTrai: " + caBenh.getTrangTrai().getId()));
+
+            // Create BenhVatNuoi if it doesn't exist
+            if (!benhVatNuoiRepository.existsByBenhAndLoaiVatNuoi(benh, trangTraiVatNuoi.getLoaiVatNuoi())) {
+                BenhVatNuoi benhVatNuoi = new BenhVatNuoi();
+                benhVatNuoi.setBenh(benh);
+                benhVatNuoi.setLoaiVatNuoi(trangTraiVatNuoi.getLoaiVatNuoi());
+                benhVatNuoiRepository.save(benhVatNuoi);
+            }
+        });
 
         return trangTraiEntity;
     }
@@ -191,7 +210,7 @@ public class TrangTraiMapper {
         DonViHanhChinh donViHanhChinh = donViHanhChinhRepository.findByTen(tenPhuong);
 
         if (donViHanhChinh == null) {
-            // Thử tìm theo tên giống nh��t
+            // Thử tìm theo tên giống nhất
             List<DonViHanhChinh> matches = donViHanhChinhRepository
                     .findByTenContainingIgnoreCaseAndDiacritics(tenPhuong);
 
