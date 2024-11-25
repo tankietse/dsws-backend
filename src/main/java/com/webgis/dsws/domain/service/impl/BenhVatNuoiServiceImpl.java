@@ -4,7 +4,6 @@ import com.google.common.base.Preconditions;
 import com.webgis.dsws.domain.model.BenhVatNuoi;
 import com.webgis.dsws.domain.repository.BenhVatNuoiRepository;
 import com.webgis.dsws.domain.service.BenhVatNuoiService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 
@@ -18,7 +17,6 @@ import java.util.Optional;
 public class BenhVatNuoiServiceImpl implements BenhVatNuoiService {
     private final BenhVatNuoiRepository benhVatNuoiRepository;
 
-    @Autowired
     public BenhVatNuoiServiceImpl(BenhVatNuoiRepository benhVatNuoiRepository) {
         this.benhVatNuoiRepository = benhVatNuoiRepository;
     }

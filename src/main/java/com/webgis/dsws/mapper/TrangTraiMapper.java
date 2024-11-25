@@ -43,123 +43,135 @@ public class TrangTraiMapper {
     private final BenhVatNuoiRepository benhVatNuoiRepository;
 
     /**
-     * Chuyển đổi từ DTO sang Entity TrangTrai
-     * 
-     * @param dto Đối tượng DTO chứa dữ liệu import
-     * @return Đối tượng TrangTrai đã được chuyển đổi và xử lý
+     * Chuyển đổi từ DTO sang Entity TrangTrai.
+     * Xử lý toàn bộ quá trình chuyển đổi dữ liệu bao gồm:
+     * - Tạo thông tin cơ bản trang trại
+     * - Xử lý dữ liệu địa lý và hành chính
+     * - Xử lý thông tin vật nuôi
+     * - Xử lý thông tin bệnh
      */
     @Transactional
     public TrangTrai toEntity(TrangTraiImportDTO dto) {
-        // Khởi tạo đối tượng TrangTrai mới
-        TrangTrai trangTraiEntity = new TrangTrai();
-        // TrangTraiBenh trangTraiBenhEntity = new TrangTraiBenh();
-        // Benh benhEntity = new Benh();
+        TrangTrai trangTrai = createBasicTrangTrai(dto);
 
-        // ID được sinh tự động
+        // Handle geographic and administrative data
+        setupGeographicData(trangTrai, dto);
 
-        // TODO: Cập nhật thông tin từ DTO vào entity
-        trangTraiEntity.setMaTrangTrai(dto.getMaSo());
-        trangTraiEntity.setTenChu(dto.getChuCoSo());
-        trangTraiEntity.setSoDienThoai(dto.getDienThoai());
-        trangTraiEntity.setSoNha(dto.getSoNha());
-        trangTraiEntity.setKhuPho(dto.getKhuPho());
-        trangTraiEntity.setDiaChiDayDu(dto.getDiaChi());
-        trangTraiEntity.setTongDan(dto.getSoLuong());
-        // trangTraiEntity.setTenTrangTrai(dto.getTenTrangTrai());
-        // trangTraiEntity.setEmail(dto.getEmail());
-        trangTraiEntity.setTenDuong(dto.getTenDuong());
-        // trangTraiEntity.setDienTich(dto.getDienTich());
-        // trangTraiEntity.setPhuongThucChanNuoi(dto.getPhuongThucChanNuoi());
-        // trangTraiEntity.setNguoiQuanLy(dto.getNguoiQuanLy());
-        trangTraiEntity.setNgayTao(LocalDateTime.now());
-        trangTraiEntity.setNgayCapNhat(LocalDateTime.now());
-        trangTraiEntity.setTrangThaiHoatDong(true);
+        // Process animal types and distributions
+        processAnimalTypes(trangTrai, dto);
 
-        // Xử lý chuyển đổi geometry
+        // Process diseases
+        processDiseases(trangTrai, dto);
+
+        return trangTrai;
+    }
+
+    /**
+     * Tạo đối tượng TrangTrai với các thông tin cơ bản.
+     * Thiết lập các thuộc tính cơ bản như mã, tên chủ, địa chỉ, số điện thoại...
+     */
+    private TrangTrai createBasicTrangTrai(TrangTraiImportDTO dto) {
+        TrangTrai trangTrai = new TrangTrai();
+
+        trangTrai.setMaTrangTrai(dto.getMaSo());
+        trangTrai.setTenChu(dto.getChuCoSo());
+        trangTrai.setSoDienThoai(dto.getDienThoai());
+        trangTrai.setSoNha(dto.getSoNha());
+        trangTrai.setKhuPho(dto.getKhuPho());
+        trangTrai.setDiaChiDayDu(dto.getDiaChi());
+        trangTrai.setTongDan(dto.getSoLuong());
+        trangTrai.setTenDuong(dto.getTenDuong());
+        trangTrai.setNgayTao(LocalDateTime.now());
+        trangTrai.setNgayCapNhat(LocalDateTime.now());
+        trangTrai.setTrangThaiHoatDong(true);
+
+        return trangTrai;
+    }
+
+    /**
+     * Xử lý và thiết lập dữ liệu địa lý cho trang trại.
+     * - Chuyển đổi tọa độ địa lý
+     * - Thiết lập đơn vị hành chính
+     * - Tạo địa chỉ đầy đủ
+     */
+    private void setupGeographicData(TrangTrai trangTrai, TrangTraiImportDTO dto) {
+        // Convert and set geometry
         Point point = geometryService.convertGeometry(dto.getGeomWKB());
-        trangTraiEntity.setPoint(point);
+        trangTrai.setPoint(point);
 
-        // Find and set administrative unit
+        // Set administrative unit
         DonViHanhChinh donViHanhChinh = findDonViHanhChinh(dto.getTenXaPhuong());
-        trangTraiEntity.setDonViHanhChinh(donViHanhChinh);
+        trangTrai.setDonViHanhChinh(donViHanhChinh);
 
-        // Generate full address
+        // Generate and update full address
         String fullAddress = addressService.generateFullAddress(
                 dto.getSoNha(),
                 dto.getTenDuong(),
                 dto.getKhuPho(),
                 donViHanhChinh);
-
-        // Update address with point information if needed
         fullAddress = addressService.updateAddressWithPoint(fullAddress, point, donViHanhChinh);
-        trangTraiEntity.setDiaChiDayDu(fullAddress);
+        trangTrai.setDiaChiDayDu(fullAddress);
+    }
 
-        // Process LoaiVatNuoi
+    /**
+     * Xử lý thông tin về các loại vật nuôi.
+     * - Phân tích danh sách loại vật nuôi
+     * - Tính toán phân bổ số lượng
+     * - Tạo các bản ghi liên kết giữa trang trại và vật nuôi
+     */
+    private void processAnimalTypes(TrangTrai trangTrai, TrangTraiImportDTO dto) {
         Set<String> loaiVatNuoiNames = parseNames(dto.getChungLoai());
         Set<LoaiVatNuoi> loaiVatNuois = loaiVatNuoiImportProcessor.processAndSave(loaiVatNuoiNames);
 
-        // Get total number of animals
-        Integer totalAnimals = trangTraiEntity.getTongDan();
+        // Calculate distribution
+        Integer totalAnimals = trangTrai.getTongDan();
         int numAnimalTypes = loaiVatNuois.size();
-
-        // Distribute animals equally if possible
         int averageSoLuong = (totalAnimals != null && numAnimalTypes > 0) ? totalAnimals / numAnimalTypes : 0;
         int remainder = (totalAnimals != null && numAnimalTypes > 0) ? totalAnimals % numAnimalTypes : 0;
 
-        // Xử lý phân bổ số lượng vật nuôi
+        // Create TrangTraiVatNuoi entries
+        Set<TrangTraiVatNuoi> trangTraiVatNuois = distributeAnimals(trangTrai, loaiVatNuois, averageSoLuong, remainder);
+        trangTrai.setTrangTraiVatNuois(trangTraiVatNuois);
+    }
+
+    /**
+     * Phân bổ số lượng vật nuôi cho từng loại.
+     * Tạo các đối tượng TrangTraiVatNuoi với số lượng được phân bổ đều
+     */
+    private Set<TrangTraiVatNuoi> distributeAnimals(TrangTrai trangTrai, Set<LoaiVatNuoi> loaiVatNuois,
+            int averageSoLuong, int remainder) {
         Set<TrangTraiVatNuoi> trangTraiVatNuois = new HashSet<>();
         int index = 0;
+
         for (LoaiVatNuoi loaiVatNuoi : loaiVatNuois) {
             TrangTraiVatNuoi trangTraiVatNuoi = new TrangTraiVatNuoi();
-            trangTraiVatNuoi.setTrangTrai(trangTraiEntity);
+            trangTraiVatNuoi.setTrangTrai(trangTrai);
             trangTraiVatNuoi.setLoaiVatNuoi(loaiVatNuoi);
             trangTraiVatNuoi.setSoLuong(averageSoLuong + (index < remainder ? 1 : 0));
             trangTraiVatNuois.add(trangTraiVatNuoi);
             index++;
         }
-        trangTraiEntity.setTrangTraiVatNuois(trangTraiVatNuois);
 
-        // // Xử lý thông tin bệnh và tạo ca bệnh
-        // if (dto.getLoaiBenh() != null && !dto.getLoaiBenh().trim().isEmpty()) {
-        // // Remove duplicate disease names
-        // Set<String> uniqueBenhNames = Arrays.stream(dto.getLoaiBenh().split(","))
-        // .map(String::trim)
-        // .filter(name -> !name.isEmpty())
-        // .collect(Collectors.toSet());
+        return trangTraiVatNuois;
+    }
 
-        // // Find or create Benh in batch
-        // Set<Benh> benhSet = benhService.findOrCreateBenhBatch(uniqueBenhNames);
+    /**
+     * Xử lý thông tin về các bệnh của vật nuôi.
+     * - Tạo danh sách ca bệnh
+     * - Thiết lập mối quan hệ giữa bệnh và vật nuôi
+     */
+    private void processDiseases(TrangTrai trangTrai, TrangTraiImportDTO dto) {
+        Set<CaBenh> danhSachCaBenh = benhService.processBenhList(dto.getLoaiBenh(), trangTrai);
+        trangTrai.setCaBenhs(danhSachCaBenh);
 
-        // // Create disease cases efficiently
-        // Set<CaBenh> danhSachCaBenh = benhSet.stream()
-        // .flatMap(benh -> trangTraiVatNuois.stream()
-        // .filter(trangTraiVatNuoi -> benh.getLoaiVatNuoi()
-        // .contains(trangTraiVatNuoi.getLoaiVatNuoi()))
-        // .map(trangTraiVatNuoi -> benhProcessor.createInitialCaBenh(benh,
-        // trangTraiVatNuoi)))
-        // .filter(Objects::nonNull)
-        // .collect(Collectors.toSet());
+        processBenhVatNuoi(danhSachCaBenh);
+    }
 
-        // trangTraiEntity.setCaBenhs(danhSachCaBenh);
-
-        // // Associate diseases with animal types in benh_vatnuoi
-        // benhSet.forEach(benh -> {
-        // benh.getLoaiVatNuoi().forEach(loaiVatNuoi -> {
-        // BenhVatNuoi benhVatNuoi = new BenhVatNuoi();
-        // benhVatNuoi.setBenh(benh);
-        // benhVatNuoi.setLoaiVatNuoi(loaiVatNuoi);
-        // benhVatNuoiRepository.save(benhVatNuoi);
-        // });
-        // });
-        // }
-
-        // Process Benh and BenhVatNuoi relationships
-
-        String loaiBenh = dto.getLoaiBenh();
-        Set<CaBenh> danhSachCaBenh = benhService.processBenhList(loaiBenh, trangTraiEntity);
-        trangTraiEntity.setCaBenhs(danhSachCaBenh);
-
-        // Process BenhVatNuoi relationships
+    /**
+     * Xử lý và lưu trữ mối quan hệ giữa bệnh và loại vật nuôi.
+     * Tạo các bản ghi BenhVatNuoi nếu chưa tồn tại
+     */
+    private void processBenhVatNuoi(Set<CaBenh> danhSachCaBenh) {
         danhSachCaBenh.forEach(caBenh -> {
             Benh benh = caBenh.getBenh();
             TrangTraiVatNuoi trangTraiVatNuoi = caBenh.getTrangTrai().getTrangTraiVatNuois().stream()
@@ -167,7 +179,6 @@ public class TrangTraiMapper {
                     .orElseThrow(() -> new RuntimeException(
                             "No TrangTraiVatNuoi found for TrangTrai: " + caBenh.getTrangTrai().getId()));
 
-            // Create BenhVatNuoi if it doesn't exist
             if (!benhVatNuoiRepository.existsByBenhAndLoaiVatNuoi(benh, trangTraiVatNuoi.getLoaiVatNuoi())) {
                 BenhVatNuoi benhVatNuoi = new BenhVatNuoi();
                 benhVatNuoi.setBenh(benh);
@@ -175,8 +186,6 @@ public class TrangTraiMapper {
                 benhVatNuoiRepository.save(benhVatNuoi);
             }
         });
-
-        return trangTraiEntity;
     }
 
     /**
