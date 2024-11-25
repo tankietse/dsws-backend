@@ -21,7 +21,6 @@ import java.util.stream.Collectors;
 public class TrangTraiImportService {
     private final TrangTraiMapper trangTraiMapper;
     private final TrangTraiRepository trangTraiRepository;
-    private final TrangTraiImportBatchProcessor batchProcessor;
     private static final int BATCH_SIZE = 50;
 
     public void importTrangTrai(List<TrangTraiImportDTO> dtos) {

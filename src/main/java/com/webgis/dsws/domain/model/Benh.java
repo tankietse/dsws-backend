@@ -7,12 +7,7 @@ import lombok.*;
 import java.util.HashSet;
 import java.util.Set;
 
-import org.springframework.beans.factory.annotation.Autowired;
-
-import com.webgis.dsws.domain.model.constant.BenhRegistry;
 import com.webgis.dsws.domain.model.enums.MucDoBenhEnum;
-import com.webgis.dsws.domain.repository.LoaiVatNuoiRepository;
-import com.webgis.dsws.domain.model.LoaiVatNuoi;
 
 @Entity
 @Getter
@@ -41,23 +36,18 @@ public class Benh {
     private Set<VungDich> vungDichs = new HashSet<>();
 
     @ElementCollection(targetClass = MucDoBenhEnum.class)
-    @CollectionTable(name = "benh_phan_loai", 
-        joinColumns = @JoinColumn(name = "benh_id"))
+    @CollectionTable(name = "benh_phan_loai", joinColumns = @JoinColumn(name = "benh_id"))
     @Column(name = "muc_do")
     @Enumerated(EnumType.STRING)
     private Set<MucDoBenhEnum> mucDoBenhs = new HashSet<>();
 
     @ManyToMany
-    @JoinTable(
-        name = "benh_loai_vat_nuoi",
-        joinColumns = @JoinColumn(name = "benh_id"),
-        inverseJoinColumns = @JoinColumn(name = "loai_vat_nuoi_id")
-    )
+    @JoinTable(name = "benh_loai_vat_nuoi", joinColumns = @JoinColumn(name = "benh_id"), inverseJoinColumns = @JoinColumn(name = "loai_vat_nuoi_id"))
     private Set<LoaiVatNuoi> loaiVatNuoi = new HashSet<>();
 
     @Column(name = "can_cong_bo_dich")
     private Boolean canCongBoDich = false;
-    
+
     @Column(name = "can_phong_benh_bat_buoc")
     private Boolean canPhongBenhBatBuoc = false;
 

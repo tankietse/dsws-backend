@@ -5,7 +5,6 @@ import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.mapper.TrangTraiMapper;
 import com.webgis.dsws.domain.model.TrangTrai;
 import com.webgis.dsws.domain.repository.TrangTraiRepository;
-import com.webgis.dsws.domain.service.TransactionService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -33,9 +32,6 @@ public class TrangTraiImportBatchProcessor implements BatchProcessor<TrangTraiIm
 
     /** Mapper để chuyển đổi giữa DTO và entity */
     private final TrangTraiMapper mapper;
-
-    /** Service xử lý giao dịch */
-    private final TransactionService transactionService;
 
     /** Repository để thao tác với dữ liệu trang trại */
     private final TrangTraiRepository trangTraiRepository;

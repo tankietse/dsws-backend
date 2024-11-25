@@ -1,19 +1,17 @@
 package com.webgis.dsws.mapper;
 
+import com.webgis.dsws.domain.repository.BenhVatNuoiRepository;
 import com.webgis.dsws.util.StringUtils;
 import com.webgis.dsws.domain.model.*;
 import com.webgis.dsws.dto.TrangTraiImportDTO;
-import com.webgis.dsws.exception.DataImportException;
 import com.webgis.dsws.domain.repository.DonViHanhChinhRepository;
 import com.webgis.dsws.domain.service.impl.BenhServiceImpl;
 import com.webgis.dsws.domain.service.importer.AddressService;
 import com.webgis.dsws.domain.service.importer.LoaiVatNuoiImportProcessor;
-import com.webgis.dsws.domain.service.processor.BenhProcessor;
+import com.webgis.dsws.domain.service.GeometryService;
 
 import lombok.RequiredArgsConstructor;
 import org.locationtech.jts.geom.Point;
-import org.locationtech.jts.io.WKBReader;
-import org.locationtech.jts.io.WKTReader;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,19 +23,33 @@ import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 
+/**
+ * Lớp chuyển đổi dữ liệu từ DTO sang Entity cho TrangTrai.
+ * Xử lý việc import dữ liệu trang trại từ file, bao gồm:
+ * - Chuyển đổi thông tin cơ bản của trang trại
+ * - Xử lý dữ liệu địa lý (geometry)
+ * - Xử lý thông tin đơn vị hành chính
+ * - Phân bổ số lượng vật nuôi
+ * - Xử lý thông tin bệnh và ca bệnh
+ */
 @Component
 @RequiredArgsConstructor
 public class TrangTraiMapper {
-    private final WKTReader wktReader;
     private final DonViHanhChinhRepository donViHanhChinhRepository;
-    private final WKBReader wkbReader = new WKBReader();
     private final AddressService addressService;
     private final BenhServiceImpl benhService;
     private final LoaiVatNuoiImportProcessor loaiVatNuoiImportProcessor;
-    private final BenhProcessor benhProcessor;
+    private final GeometryService geometryService;
 
+    /**
+     * Chuyển đổi từ DTO sang Entity TrangTrai
+     * 
+     * @param dto Đối tượng DTO chứa dữ liệu import
+     * @return Đối tượng TrangTrai đã được chuyển đổi và xử lý
+     */
     @Transactional
     public TrangTrai toEntity(TrangTraiImportDTO dto) {
+        // Khởi tạo đối tượng TrangTrai mới
         TrangTrai trangTraiEntity = new TrangTrai();
         // TrangTraiBenh trangTraiBenhEntity = new TrangTraiBenh();
         // Benh benhEntity = new Benh();
@@ -62,8 +74,8 @@ public class TrangTraiMapper {
         trangTraiEntity.setNgayCapNhat(LocalDateTime.now());
         trangTraiEntity.setTrangThaiHoatDong(true);
 
-        // Handle geometry conversion
-        Point point = convertGeometry(dto.getGeomWKB());
+        // Xử lý chuyển đổi geometry
+        Point point = geometryService.convertGeometry(dto.getGeomWKB());
         trangTraiEntity.setPoint(point);
 
         // Find and set administrative unit
@@ -93,6 +105,7 @@ public class TrangTraiMapper {
         int averageSoLuong = (totalAnimals != null && numAnimalTypes > 0) ? totalAnimals / numAnimalTypes : 0;
         int remainder = (totalAnimals != null && numAnimalTypes > 0) ? totalAnimals % numAnimalTypes : 0;
 
+        // Xử lý phân bổ số lượng vật nuôi
         Set<TrangTraiVatNuoi> trangTraiVatNuois = new HashSet<>();
         int index = 0;
         for (LoaiVatNuoi loaiVatNuoi : loaiVatNuois) {
@@ -105,46 +118,54 @@ public class TrangTraiMapper {
         }
         trangTraiEntity.setTrangTraiVatNuois(trangTraiVatNuois);
 
-        // Process Benh - Modified section
-        if (dto.getLoaiBenh() != null && !dto.getLoaiBenh().trim().isEmpty()) {
-            Set<CaBenh> danhSachCaBenh = new HashSet<>();
+        // // Xử lý thông tin bệnh và tạo ca bệnh
+        // if (dto.getLoaiBenh() != null && !dto.getLoaiBenh().trim().isEmpty()) {
+        // // Remove duplicate disease names
+        // Set<String> uniqueBenhNames = Arrays.stream(dto.getLoaiBenh().split(","))
+        // .map(String::trim)
+        // .filter(name -> !name.isEmpty())
+        // .collect(Collectors.toSet());
 
-            // Split disease names and process each
-            String[] benhNames = dto.getLoaiBenh().split(",");
-            for (String benhName : benhNames) {
-                Benh benh = benhService.findOrCreateBenh(benhName.trim());
+        // // Find or create Benh in batch
+        // Set<Benh> benhSet = benhService.findOrCreateBenhBatch(uniqueBenhNames);
 
-                // Create disease cases for compatible animal types
-                for (TrangTraiVatNuoi trangTraiVatNuoi : trangTraiVatNuois) {
-                    if (benh.getLoaiVatNuoi().contains(trangTraiVatNuoi.getLoaiVatNuoi())) {
-                        CaBenh caBenh = benhProcessor.createInitialCaBenh(benh, trangTraiVatNuoi);
-                        danhSachCaBenh.add(caBenh);
-                    }
-                }
-            }
+        // // Create disease cases efficiently
+        // Set<CaBenh> danhSachCaBenh = benhSet.stream()
+        // .flatMap(benh -> trangTraiVatNuois.stream()
+        // .filter(trangTraiVatNuoi -> benh.getLoaiVatNuoi()
+        // .contains(trangTraiVatNuoi.getLoaiVatNuoi()))
+        // .map(trangTraiVatNuoi -> benhProcessor.createInitialCaBenh(benh,
+        // trangTraiVatNuoi)))
+        // .filter(Objects::nonNull)
+        // .collect(Collectors.toSet());
 
-            trangTraiEntity.setCaBenhs(danhSachCaBenh);
-        }
+        // trangTraiEntity.setCaBenhs(danhSachCaBenh);
+
+        // // Associate diseases with animal types in benh_vatnuoi
+        // benhSet.forEach(benh -> {
+        // benh.getLoaiVatNuoi().forEach(loaiVatNuoi -> {
+        // BenhVatNuoi benhVatNuoi = new BenhVatNuoi();
+        // benhVatNuoi.setBenh(benh);
+        // benhVatNuoi.setLoaiVatNuoi(loaiVatNuoi);
+        // benhVatNuoiRepository.save(benhVatNuoi);
+        // });
+        // });
+        // }
+
+        // Process Benh
+
+        Set<CaBenh> danhSachCaBenh = benhService.processBenhList(dto.getLoaiBenh(), trangTraiEntity);
+        trangTraiEntity.setCaBenhs(danhSachCaBenh);
 
         return trangTraiEntity;
     }
 
-    private Point convertGeometry(String geomWKT) {
-        try {
-            // First try WKB conversion
-            byte[] wkbBytes = hexStringToByteArray(geomWKT);
-            return (Point) wkbReader.read(wkbBytes);
-        } catch (Exception e) {
-            try {
-                // If WKB fails, try WKT
-                return (Point) wktReader.read(geomWKT);
-            } catch (Exception ex) {
-                throw new DataImportException("Không thể chuyển đổi geometry. Dữ liệu: " + geomWKT, ex);
-            }
-        }
-    }
-
-    // Chuyển chuỗi hex sang mảng byte
+    /**
+     * Chuyển đổi chuỗi hex thành mảng byte
+     * 
+     * @param s Chuỗi hex cần chuyển đổi
+     * @return Mảng byte tương ứng
+     */
     private byte[] hexStringToByteArray(String s) {
         int len = s.length();
         byte[] data = new byte[len / 2];
@@ -157,17 +178,25 @@ public class TrangTraiMapper {
         return data;
     }
 
+    /**
+     * Tìm đơn vị hành chính dựa trên tên
+     * Sử dụng thuật toán Levenshtein để tìm tên gần đúng nếu không tìm thấy tên
+     * chính xác
+     * 
+     * @param tenPhuong Tên phường/xã cần tìm
+     * @return Đơn vị hành chính tương ứng hoặc null nếu không tìm thấy
+     */
     private DonViHanhChinh findDonViHanhChinh(String tenPhuong) {
         // Tìm theo tên chính xác
         DonViHanhChinh donViHanhChinh = donViHanhChinhRepository.findByTen(tenPhuong);
 
         if (donViHanhChinh == null) {
-            // Thử tìm theo tên giống nhất
+            // Thử tìm theo tên giống nh��t
             List<DonViHanhChinh> matches = donViHanhChinhRepository
                     .findByTenContainingIgnoreCaseAndDiacritics(tenPhuong);
 
             if (!matches.isEmpty()) {
-                // Lấy đơn vị hành chính có tên giống nh���t (dựa trên khoảng cách Levenshtein)
+                // Lấy đơn vị hành chính có tên giống nhất (dựa trên khoảng cách Levenshtein)
                 donViHanhChinh = matches.stream()
                         .min((a, b) -> {
                             String normalizedInput = StringUtils.normalize(tenPhuong);
@@ -186,7 +215,14 @@ public class TrangTraiMapper {
         return donViHanhChinh;
     }
 
-    // Tính khoảng cách Levenshtein giữa 2 chuỗi
+    /**
+     * Tính khoảng cách Levenshtein giữa hai chuỗi
+     * Sử dụng để so sánh độ tương đồng của tên đơn vị hành chính
+     * 
+     * @param s1 Chuỗi thứ nhất
+     * @param s2 Chuỗi thứ hai
+     * @return Khoảng cách Levenshtein giữa hai chuỗi
+     */
     private int levenshteinDistance(String s1, String s2) {
         // Tạo mảng 2 chiều để lưu kết quả
         int[][] dp = new int[s1.length() + 1][s2.length() + 1];
@@ -208,6 +244,13 @@ public class TrangTraiMapper {
         return dp[s1.length()][s2.length()];
     }
 
+    /**
+     * Phân tách chuỗi tên thành tập hợp các tên riêng biệt
+     * Loại bỏ khoảng trắng thừa và các tên rỗng
+     * 
+     * @param namesStr Chuỗi tên cần phân tách, các tên cách nhau bởi dấu phẩy
+     * @return Tập hợp các tên đã được xử lý
+     */
     private Set<String> parseNames(String namesStr) {
         if (namesStr == null || namesStr.trim().isEmpty()) {
             return Collections.emptySet();

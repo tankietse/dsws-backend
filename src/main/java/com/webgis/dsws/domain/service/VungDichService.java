@@ -17,9 +17,7 @@ import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
-import org.locationtech.jts.geom.Geometry;
 import java.util.*;
-import java.sql.Timestamp;
 import java.util.stream.Collectors;
 
 @Service

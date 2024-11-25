@@ -3,6 +3,7 @@ package com.webgis.dsws.domain.service.impl;
 import com.webgis.dsws.domain.model.Benh;
 import com.webgis.dsws.domain.model.CaBenh;
 import com.webgis.dsws.domain.model.TrangTrai;
+import com.webgis.dsws.domain.model.TrangTraiVatNuoi;
 import com.webgis.dsws.domain.model.constant.BenhRegistry;
 import com.webgis.dsws.domain.repository.BenhRepository;
 import com.webgis.dsws.domain.service.BenhService;
@@ -17,6 +18,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Triển khai dịch vụ xử lý nghiệp vụ liên quan đến thực thể Benh.
@@ -137,6 +139,7 @@ public class BenhServiceImpl implements BenhService {
      * @param trangTrai   Trang trại được gán các ca bệnh
      * @return Tập hợp các ca bệnh đã được tạo
      */
+    @Transactional
     public Set<CaBenh> processBenhList(String benhListStr, TrangTrai trangTrai) {
         if (benhListStr == null || benhListStr.trim().isEmpty()) {
             return Collections.emptySet();
@@ -145,19 +148,53 @@ public class BenhServiceImpl implements BenhService {
         Set<CaBenh> danhSachCaBenh = new HashSet<>();
         String[] benhNames = benhListStr.split(",");
 
-        for (String benhName : benhNames) {
-            String cleanBenhName = benhName.trim();
-            if (!cleanBenhName.isEmpty()) {
-                Benh benh = findOrCreateBenh(cleanBenhName);
+        try {
+            for (String benhName : benhNames) {
+                String cleanBenhName = benhName.trim();
+                if (!cleanBenhName.isEmpty()) {
+                    Benh benh = findOrCreateBenh(cleanBenhName);
 
-                CaBenh newCabenh = new CaBenh();
-                newCabenh.setBenh(benh);
-                newCabenh.setTrangTrai(trangTrai);
-                danhSachCaBenh.add(newCabenh);
+                    for (TrangTraiVatNuoi vatNuoi : trangTrai.getTrangTraiVatNuois()) {
+                        CaBenh newCabenh = benhProcessor.createInitialCaBenh(benh, vatNuoi);
+                        danhSachCaBenh.add(newCabenh);
+                    }
+                }
             }
+            return danhSachCaBenh;
+        } catch (Exception e) {
+            throw new RuntimeException("Error processing disease list", e);
+        }
+    }
+
+    public Set<Benh> findOrCreateBenhBatch(Set<String> benhNames) {
+        Set<Benh> benhSet = new HashSet<>();
+        List<Benh> existingBenhs = benhRepository.findByTenBenhIn(benhNames);
+
+        Set<String> existingNames = existingBenhs.stream()
+                .map(Benh::getTenBenh)
+                .collect(Collectors.toSet());
+
+        benhSet.addAll(existingBenhs);
+
+        Set<String> newBenhNames = benhNames.stream()
+                .filter(name -> !existingNames.contains(name))
+                .collect(Collectors.toSet());
+
+        if (!newBenhNames.isEmpty()) {
+            List<Benh> newBenhs = newBenhNames.stream()
+                    .map(name -> {
+                        Benh benh = new Benh();
+                        benh.setTenBenh(name);
+                        // benh.set
+                        return benh;
+                    })
+                    .collect(Collectors.toList());
+
+            benhRepository.saveAll(newBenhs);
+            benhSet.addAll(newBenhs);
         }
 
-        return danhSachCaBenh;
+        return benhSet;
     }
 
     /**

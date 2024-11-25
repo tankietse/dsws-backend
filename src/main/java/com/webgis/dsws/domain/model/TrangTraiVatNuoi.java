@@ -39,6 +39,5 @@ public class TrangTraiVatNuoi {
     @PreUpdate
     protected void onUpdate() {
         ngayCapNhat = new Date(System.currentTimeMillis());
-        // TODO: Thêm logic
     }
 }

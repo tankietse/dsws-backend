@@ -1,7 +1,6 @@
 package com.webgis.dsws.domain.service.processor;
 
 import com.webgis.dsws.domain.model.Benh;
-import com.webgis.dsws.domain.model.LoaiVatNuoi;
 import com.webgis.dsws.domain.model.constant.BenhRegistry;
 import com.webgis.dsws.domain.model.enums.MucDoBenhEnum;
 import com.webgis.dsws.domain.repository.LoaiVatNuoiRepository;
@@ -56,19 +55,20 @@ public class BenhProcessor {
 
     /**
      * Tính toán số ca nhiễm ban đầu dựa trên tổng số vật nuôi
+     * Cho phép tỷ lệ nhiễm từ 10-90% tổng đàn tùy theo mức độ nghiêm trọng
      * 
      * @param totalAnimals tổng số vật nuôi
      * @return số ca nhiễm ban đầu
      */
     private int calculateInitialInfections(int totalAnimals) {
-        // Tỷ lệ nhiễm cơ bản từ 5-15%
-        double baseInfectionRate = 0.05 + random.nextDouble() * 0.10;
+        // Tỷ lệ nhiễm từ 10-90%
+        double baseInfectionRate = 0.50 + random.nextDouble() * 0.80;
 
         // Tính số ca nhiễm dự kiến
         int estimatedCases = (int) Math.round(totalAnimals * baseInfectionRate);
 
-        // Đảm bảo có ít nhất 1 ca nhiễm và không quá 50% tổng đàn
-        return Math.max(1, Math.min(estimatedCases, totalAnimals / 2));
+        // Đảm bảo có ít nhất 1 ca nhiễm và không quá 90% tổng đàn
+        return Math.max(1, Math.min(estimatedCases, (int) (totalAnimals * 0.9)));
     }
 
     /**

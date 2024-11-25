@@ -13,10 +13,17 @@ import org.locationtech.jts.io.ParseException;
 import org.locationtech.jts.io.geojson.GeoJsonReader;
 import org.springframework.stereotype.Service;
 
+import com.webgis.dsws.exception.DataImportException;
+
+import org.locationtech.jts.io.WKBReader;
+import org.locationtech.jts.io.WKTReader;
+
 @Service
 public class GeometryService {
     private final GeoJsonReader reader = new GeoJsonReader();
     private final GeometryFactory geometryFactory = new GeometryFactory();
+    private final WKBReader wkbReader = new WKBReader();
+    private final WKTReader wktReader = new WKTReader();
 
     public Polygon convertToPolygon(String geoJson) throws ParseException {
         Geometry geom = reader.read(geoJson);
@@ -78,5 +85,46 @@ public class GeometryService {
 
         // Tạo điểm centroid
         return geometryFactory.createPoint(new Coordinate(centerX, centerY));
+    }
+
+    /**
+     * Chuyển đổi chuỗi geometry sang đối tượng Point
+     * Hỗ trợ cả định dạng WKB và WKT
+     * 
+     * @param geomWKT Chuỗi geometry cần chuyển đổi
+     * @return Đối tượng Point đã chuyển đổi
+     * @throws DataImportException nếu không thể chuyển đổi
+     */
+    public Point convertGeometry(String geomWKT) {
+        try {
+            // First try WKB conversion
+            byte[] wkbBytes = hexStringToByteArray(geomWKT);
+            return (Point) wkbReader.read(wkbBytes);
+        } catch (Exception e) {
+            try {
+                // If WKB fails, try WKT
+                return (Point) wktReader.read(geomWKT);
+            } catch (Exception ex) {
+                throw new DataImportException("Không thể chuyển đổi geometry. Dữ liệu: " + geomWKT, ex);
+            }
+        }
+    }
+
+    /**
+     * Chuyển đổi chuỗi hex thành mảng byte
+     * 
+     * @param s Chuỗi hex cần chuyển đổi
+     * @return Mảng byte tương ứng
+     */
+    private byte[] hexStringToByteArray(String s) {
+        int len = s.length();
+        byte[] data = new byte[len / 2];
+
+        // Chuyển đổi từng cặp ký tự hex thành byte
+        for (int i = 0; i < len; i += 2) {
+            data[i / 2] = (byte) ((Character.digit(s.charAt(i), 16) << 4)
+                    + Character.digit(s.charAt(i + 1), 16));
+        }
+        return data;
     }
 }

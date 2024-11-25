@@ -10,6 +10,6 @@ import java.util.List;
 @Repository
 public interface BenhVatNuoiRepository extends JpaRepository<BenhVatNuoi, Long> {
     Optional<BenhVatNuoi> findByBenh_IdAndLoaiVatNuoi_Id(Long benhId, Long loaiVatNuoiId);
-    List<BenhVatNuoi> findByBenh_TenBenh(String tenBenh);
-    List<BenhVatNuoi> findByLoaiVatNuoi_TenLoai(String tenLoai);
+    List<BenhVatNuoi> findByBenh_TenBenh(String tenBenh);    List<BenhVatNuoi> findByLoaiVatNuoi_TenLoai(String tenLoai);    List<BenhVatNuoi> findByBenhId(Long benhId);
+    List<BenhVatNuoi> findByLoaiVatNuoiId(Long loaiVatNuoiId);
 }

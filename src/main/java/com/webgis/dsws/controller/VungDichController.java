@@ -2,10 +2,8 @@ package com.webgis.dsws.controller;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.checkerframework.checker.units.qual.A;
 import org.locationtech.jts.geom.Coordinate;
 
-import com.webgis.dsws.domain.service.VungDichAutoImportService;
 import com.webgis.dsws.domain.service.VungDichService;
 import com.webgis.dsws.domain.model.VungDich;
 import org.springframework.http.ResponseEntity;
@@ -21,9 +19,6 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import org.springframework.beans.factory.annotation.Value;
 
 import jakarta.persistence.EntityNotFoundException;
-import org.locationtech.jts.geom.Point;
-import org.springframework.format.annotation.DateTimeFormat;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -34,9 +29,6 @@ public class VungDichController {
 
     @Autowired
     private VungDichService vungDichService;
-
-    @Autowired
-    private VungDichAutoImportService vungDichAutoImportService;
 
     @Value("${springdoc.swagger-ui.path:}")
     private String baseUrl;
@@ -151,6 +143,7 @@ public class VungDichController {
 
     /**
      * API lấy dữ liệu cho bản đồ nhiệt (heatmap)
+     * 
      * @return Dữ liệu cho bản đồ nhiệt
      */
     @GetMapping("/heatmap")

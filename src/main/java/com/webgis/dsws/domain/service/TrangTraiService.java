@@ -50,7 +50,7 @@ public class TrangTraiService {
 
     public TrangTrai findById(Long id) {
         return trangTraiRepository.findById(id)
-            .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy trang trại với ID: " + id));
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy trang trại với ID: " + id));
     }
 
     public List<TrangTrai> findAll() {
@@ -74,7 +74,7 @@ public class TrangTraiService {
      */
     public TrangTrai updateTrangTrai(Long id, TrangTrai trangTraiDetails) {
         TrangTrai trangTrai = findById(id);
-        
+
         // Chỉ cập nhật các trường không null
         if (trangTraiDetails.getTenTrangTrai() != null) {
             trangTrai.setTenTrangTrai(trangTraiDetails.getTenTrangTrai());
@@ -94,7 +94,7 @@ public class TrangTraiService {
         if (trangTraiDetails.getDiaChiDayDu() != null) {
             trangTrai.setDiaChiDayDu(trangTraiDetails.getDiaChiDayDu());
         }
-        
+
         return trangTraiRepository.save(trangTrai);
     }
 

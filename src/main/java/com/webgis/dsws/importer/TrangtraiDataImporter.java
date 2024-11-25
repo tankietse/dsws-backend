@@ -3,7 +3,6 @@ package com.webgis.dsws.importer;
 import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.exception.DataImportException;
 import com.webgis.dsws.domain.service.importer.TrangTraiImportBatchProcessor;
-import com.webgis.dsws.domain.service.importer.TrangTraiImportService;
 import com.webgis.dsws.util.DataValidator;
 
 import org.apache.poi.ss.usermodel.*;
@@ -13,18 +12,13 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.io.BufferedInputStream;
 import java.io.FileInputStream;
-import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.StreamSupport;
 
 @Component
 @RequiredArgsConstructor
 @Slf4j
 public class TrangtraiDataImporter {
-    private static final int PARALLEL_THRESHOLD = 1000;
-
-    private final TrangTraiImportService importService;
     private final DataValidator dataValidator;
     private final TrangTraiImportBatchProcessor batchProcessor;
 
@@ -51,30 +45,11 @@ public class TrangtraiDataImporter {
             // Pre-allocate ArrayList size
             dtos = new ArrayList<>(rowCount - 1);
 
-            // Use parallel processing for large datasets
-            if (rowCount > PARALLEL_THRESHOLD) {
-                processSheetInParallel(sheet, dtos);
-            } else {
-                processSheetSequential(sheet, dtos);
-            }
+            // Process all rows sequentially
+            processSheetSequential(sheet, dtos);
         }
 
         return dtos;
-    }
-
-    private void processSheetInParallel(Sheet sheet, List<TrangTraiImportDTO> dtos) {
-        StreamSupport.stream(sheet.spliterator(), true)
-                .skip(1) // Skip header
-                .forEach(row -> {
-                    try {
-                        TrangTraiImportDTO dto = mapRowToDTO(row);
-                        synchronized (dtos) {
-                            dtos.add(dto);
-                        }
-                    } catch (Exception e) {
-                        log.error("Lỗi xử lý dòng {}: {}", row.getRowNum(), e.getMessage());
-                    }
-                });
     }
 
     private void processSheetSequential(Sheet sheet, List<TrangTraiImportDTO> dtos) {

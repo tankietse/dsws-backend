@@ -46,9 +46,7 @@ public class BenhVatNuoiServiceImpl implements BenhVatNuoiService {
 
         existing.setBenh(benhVatNuoiDetails.getBenh());
         existing.setLoaiVatNuoi(benhVatNuoiDetails.getLoaiVatNuoi());
-        existing.setTiLeTuVong(benhVatNuoiDetails.getTiLeTuVong());
-        existing.setTiLeLayNhiem(benhVatNuoiDetails.getTiLeLayNhiem());
-        existing.setDacDiemRieng(benhVatNuoiDetails.getDacDiemRieng());
+        // TODO: Update other fields
         return benhVatNuoiRepository.save(existing);
     }
 

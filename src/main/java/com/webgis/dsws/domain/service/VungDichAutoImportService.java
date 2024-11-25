@@ -24,20 +24,16 @@ public class VungDichAutoImportService {
 
     private final TrangTraiRepository trangTraiRepository;
     private final CaBenhRepository caBenhRepository;
-    private final BenhRepository benhRepository;
-    private final DonViHanhChinhRepository donViHanhChinhRepository;
     private final VungDichRepository vungDichRepository;
     private final GeometryService geometryService;
     private final ClusterAnalysisService clusterAnalysisService;
-    private final BienPhapPhongChongService bienPhapPhongChongService;
-    private final VungDichBienPhapRepository vungDichBienPhapRepository;
 
     public List<VungDich> autoCreateFromData(
-            Integer maTinhThanh,
+            Integer capHanhChinh, // Changed from adminLevel to capHanhChinh
             Integer minCases) {
 
         // 1. Lấy danh sách ca bệnh theo điều kiện
-        List<CaBenh> caBenhs = getCaBenhsByFilters(maTinhThanh);
+        List<CaBenh> caBenhs = getCaBenhsByCapHanhChinh(capHanhChinh);
 
         // 2. Nhóm các ca bệnh theo loại bệnh
         Map<Benh, List<CaBenh>> diseasesGroups = caBenhs.stream()
@@ -68,15 +64,16 @@ public class VungDichAutoImportService {
         return newZones;
     }
 
-    private List<CaBenh> getCaBenhsByFilters(Integer maTinhThanh) {
+    private List<CaBenh> getCaBenhsByCapHanhChinh(Integer capHanhChinh) {
         Specification<CaBenh> spec = Specification
                 .where((root, query, builder) -> builder.equal(root.get("daKetThuc"), false));
 
-        if (maTinhThanh != null && maTinhThanh > 0) {
-            List<Integer> allDVHCIds = donViHanhChinhRepository.findAllChildrenIds(maTinhThanh);
-
-            spec = spec.and(
-                    (root, query, builder) -> root.get("trangTrai").get("donViHanhChinh").get("id").in(allDVHCIds));
+        if (capHanhChinh != null) {
+            spec = spec.and((root, query, builder) -> builder.equal(
+                    root.get("trangTrai")
+                            .get("donViHanhChinh")
+                            .get("capHanhChinh"),
+                    capHanhChinh.toString()));
         }
 
         return caBenhRepository.findAll(spec);
