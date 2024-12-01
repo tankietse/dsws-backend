@@ -13,4 +13,5 @@ public interface NguoiDungRepository extends JpaRepository<NguoiDung, Long> {
     Optional<NguoiDung> findByTenDangNhap(String tenDangNhap);
     Optional<NguoiDung> findByEmail(String email);
     List<NguoiDung> findByHoTenContaining(String hoTen);
+    Optional<NguoiDung> findById(Long id);
 }

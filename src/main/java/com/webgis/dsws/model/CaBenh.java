@@ -3,6 +3,7 @@ package com.webgis.dsws.model;
 import java.sql.Date;
 import java.util.Set;
 
+import com.webgis.dsws.model.enums.TrangThaiEnum;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -56,6 +57,9 @@ public class CaBenh {
 
     private Boolean daKetThuc;
 
+    @Enumerated(EnumType.STRING)
+    private TrangThaiEnum trangThai;
+
     @OneToMany(mappedBy = "caBenh")
     private Set<DienBienCaBenh> dienBienCaBenhs;
 
@@ -66,6 +70,8 @@ public class CaBenh {
             ngayPhatHien = ngayTao;
         }
         daKetThuc = false;
+        // Mặc định khi tạo mới sẽ ở trạng thái PENDING
+        trangThai = TrangThaiEnum.PENDING;
     }
 
     /**
@@ -83,5 +89,4 @@ public class CaBenh {
         // ...
         return vungDich;
     }
-
 }

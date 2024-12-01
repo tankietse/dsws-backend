@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Register</title>
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+    <link rel="stylesheet" type="text/css" href="/css/LoginStyle.css" />
+</head>
+<body>
+<div class="app">
+    <div class="container">
+        <div class="login-form">
+            <h1>Register</h1>
+            <p>How to I get started lorem ipsum dolor at?</p>
+            <form th:action="@{/register}" method="post" style="display: flex; flex-direction: column;">
+                <input type="text" name="username" placeholder=" Enter username" autocomplete="username" required>
+                <input type="text" name="email" placeholder=" Enter email" autocomplete="email" required>
+                <input type="text" name="phone" placeholder=" Enter phone" autocomplete="phone" required>
+                <div style="position: relative; width: 100%;">
+                    <input id="password" type="password" name="password" placeholder="Enter password" style="width: 100%;" autocomplete="password" required />
+                    <img id="toggle-password" src="/images/eye-password-hide.svg"
+                         style="
+                            position: absolute;
+                            top: 50%;
+                            right: 10px;
+                            toggle-password
+                            transform: translateY(-80%); width: 17px;">
+                </div>
+                <div class="remember-me">
+                    <div class="d-flex align-items-center justify-content-center gap-2">
+                    </div>
+                    <a href="/login"><span>Login now.</span></a>
+                </div>
+                <br>
+                <button type="submit" class="btn-login">Register</button>
+            </form>
+            <div class="login-with-others">
+                <span><strong>Login</strong> with Others:</span>
+                <a class="google-btn" href="#" target="_blank">
+                    <img src="/images/google-logo.png" alt="Google">
+                    <span style="margin-top: 5px;">Login with <strong>Google</strong></span>
+                </a>
+                <a  class="facebook-btn" href="#">
+                    <img src="/images/facebook-logo.png" alt="Facebook">
+                    <span style="margin-top: 5px;">Login with <strong>Facebook</strong></span>
+                </a>
+            </div>
+        </div>
+        <div class="images-display">
+            <img src="/images/Rectangle_mini.png" style="width: 260px; position: absolute; top: 70px; right: 80px">
+            <img src="/images/Rectangle.png" style="position: absolute; top: 0; left: 0; z-index: -1;">
+            <img src="/images/WomenWithTablet.png" style="width: 500px; position: absolute; top: 65px; right: 10px">
+            <img src="/images/Thunder.png" style="width: 55px; position: absolute; top: 300px; right: 310px">
+            <p style="position: absolute; text-align: left; color: white; font-weight: bold; font-size: 25px; top: 85px; left: 90px">
+                Very good<br>works are<br>waiting for<br>you Login<br>Now!!!
+            </p>
+            <img src="/images/IconHTMs.png" style="width: 150px; position: absolute; top: 430px; right: 130px">
+        </div>
+    </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap/5.3.3/js/bootstrap.bundle.min.js"></script>
+<script type="text/javascript" th:src="@{/js/myjavascript.js}"></script>
+</body>
+</html>

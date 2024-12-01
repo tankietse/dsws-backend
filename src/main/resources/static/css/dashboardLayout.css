@@ -1,0 +1,453 @@
+﻿/* Font hiện tại: Poppins */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+
+:root {
+    /* Color */
+    --body-color: #fff;
+    --primary-color: #fff;
+    --my-left-sidebar-dask-color: #F8F8F8;
+    --primary-color: #fff;
+    --toggle-color: #ddd;
+    --text-color: #4d4d4d;
+    --toggle-color: #695cfe;
+    --task-name-clicked-color: #2bc3ff;
+    --scrollbar-thumb-color: #d0d0d0;
+    --primary-light: #8abdff;
+    --primary: #6d5dfc;
+    --primary-dark: #5b0eeb;
+    --white: #FFFFFF;
+    --greyLight-1: #E4EBF5;
+    --greyLight-2: #c8d0e7;
+    --greyLight-3: #bec8e4;
+    --greyDark: #9baacf;
+    /* Transition */
+    --tran-02: all 0.2 ease;
+    --tran-03: all 0.3 ease;
+    --tran-04: all 0.4 ease;
+    --tran-05: all 0.5 ease;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Poppins", sans-serif;
+}
+
+body {
+    height: 100vh;
+    margin: 0; 
+}
+
+.my-navbar form {
+    position: relative;
+}
+
+.btn.search-input {
+    width: fit-content;
+    height: fit-content;
+    margin: 0 !important;
+    padding: 0px;
+}
+
+.image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.bg-image {
+    background-image: url("~/images/WomenWithTablet.png");
+    background-color: #cccccc;
+    height: 500px;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    position: relative;
+}
+
+.bg-dashboard {
+    width: 100%;
+    height: 100%;
+    background-image: url('~/wwwroot/assets/images/bg-dashboard.png');
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+}
+
+/* my-navbar */
+.my-navbar {
+    background-color: #fff;
+    display: flex;
+    position: fixed;
+    height: 70px;
+    top: 0;
+    right: 0;
+    width: calc(100vw - 265px);
+    margin-left: 10px;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 1000;
+    padding: 0 20px;
+}
+
+.my-navbar-left {  
+    display: flex;
+    align-items: center;
+    height: 30px;
+    width: 20vw;
+    margin-left: 20px;
+    background-color: var(--my-left-sidebar-dask-color); 
+    border-radius: 50px;
+    overflow: hidden;
+}
+
+.my-navbar-right {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+} 
+
+.my-navbar-left.search-input:hover
+.my-navbar-left.search-input:focus {
+    background-color: var( --scrollbar-thumb-color);
+    transition: width var(--tran-05);
+}
+
+.my-navbar-left.search-input {
+    flex-grow: 1;
+    border: none;
+    outline: none;
+    margin-left: 10px;
+    background: transparent;
+    color: var(--text-color);
+}
+#search-icon{
+    font-size: 17px;
+    width: 5vw;
+    padding: 0px;
+}
+
+
+.my-navbar .my-navbar-right a {
+    padding-right: 20px;
+    text-decoration: none;
+    color: var(--text-color);
+}
+
+
+/* my-left-sidebar- */
+.my-left-sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    width: 270px;
+    background: var(--primary-color);
+    border-radius: 0 5px 5px 0;
+    padding: 10px 5px 5px 0;
+    margin-right: 5px;
+    display: flex;
+    flex-direction: column;
+    z-index: 1;
+    margin-left: 20px;
+}
+
+::-webkit-scrollbar {
+    width: 5px;
+    height: 5px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--scrollbar-thumb-color);
+    border-radius: 10px;
+}
+
+.my-left-sidebar header {
+    position: relative;
+}
+
+.my-left-sidebar .profile-detail,
+.my-left-sidebar .profile-detail .profile-content {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin: 10px 0;
+    height: 80px;
+    width: 100%;
+    color: #000000;
+    align-items: center;
+    text-decoration: none;
+    list-style: none;
+}
+
+
+
+/* .my-left-sidebar header .profile-detail .toggle {
+    color: #fff;
+    font-size: 22px;
+    position: absolute;
+    top: 25%;
+    right: -35px;
+    height: 25px;
+    width: 25px;
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    background-color: var(--toggle-color);
+} */
+
+.profile-image {
+    width: 50px;
+    height: 50px;
+    border-radius: 100%;
+}
+
+.mini-profile-image {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    overflow: hidden;
+    margin: 10px;
+}
+
+.my-left-sidebar .profile-detail .profile-text .job {
+    font-size: 16px;
+    font-weight: 400;
+    color: #A4A4A4;
+}
+
+.profile-detail .profile-text .name {
+    font-size: 20px;
+    font-weight: 500;
+}
+
+.dashboard {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    background-color: var(--my-left-sidebar-dask-color);
+    padding: 10px 35px 10px 15px;
+    margin: 0 5px 10px 0;
+    box-sizing: border-box;
+    border-radius: 0 5px 5px 0;
+    color: black;
+    /*align-items: left;*/
+    text-decoration: none;
+}
+
+.dashboard img {
+    width: 30px;
+    height: 30px;
+    filter: contrast(50%);
+}
+
+.dashboard span {
+    color: black;
+    text-align: center;
+    font-size: 25px;
+    font-weight: 550;
+    filter: contrast(50%);
+}
+
+/* my-scrollbox */
+
+.my-scrollbox {
+    overflow: auto;
+    visibility: hidden;
+}
+
+.my-scrollbox-inner,
+.my-scrollbox:is(:hover) {
+    visibility: visible;
+}
+
+.my-scrollbox-inner {
+    font-size: 16px;
+    max-height: 100vh;
+}
+
+.my-left-sidebar .my-scrollbox .my-scrollbox-inner .my-nav-list {
+    padding: 0;
+}
+
+    .my-left-sidebar .my-scrollbox .my-scrollbox-inner .my-nav-list .side-title {
+        color: black;
+        font-size: 18px;
+        font-weight: 500;
+        margin: 20px 0px 5px 10px;
+    }
+
+.my-left-sidebar ul {
+    margin-top: 20px;
+}
+
+    .my-left-sidebar ul .task-name {
+        /* background-color: #695cfe; */
+        position: relative;
+        height: 40px;
+        width: 95%;
+        margin-left: 5px;
+        list-style: none;
+        line-height: 50px;
+    }
+
+.my-left-sidebar .task-name a {
+    color: var(--text-color);
+    font-size: 16px;
+    font-weight: 450;
+    /* display:  flex; */
+    align-items: center;
+    margin-left: 5%;
+    padding-right: 5%;
+    text-decoration: none;
+}
+
+    .my-left-sidebar .task-name a .links-name {
+        color: var(--text-color);
+        font-weight: 400;
+        font-size: 14px;
+    }
+
+
+.vertical-bar {
+    position: absolute;
+    top: 0;
+    width: 5px;
+    height: 0;
+    background-color: var(--toggle-color);
+    display: none;
+    transition: var(--tran-03);
+}
+
+.my-left-sidebar ul .task-name:is(:hover) .vertical-bar,
+.my-left-sidebar ul .task-name.clicked .vertical-bar {
+    display: block;
+    height: 100%;
+}
+
+.my-left-sidebar ul .task-name.clicked .vertical-bar {
+    background-color: var(--task-name-clicked-color);
+}
+
+
+/* Icons */
+.my-left-sidebar .task-name a span {
+    align-items: center;
+}
+
+.icons {
+    font-size: 15px;
+    margin-left: 5%;
+    margin-right: 20px;
+    background-color: #F8F8F8;
+    border: none;
+    border-radius: 20%;
+    padding: 3px;
+}
+
+/* main */
+main {
+    position: fixed;
+    right: 0;
+    bottom: 0;
+    width: calc(100% - 270px); 
+    height: calc(100% - 50px);
+    z-index: 3;
+    overflow: hidden; /* Ẩn nội dung khi vượt quá kích thước max-width và max-height */
+}
+
+/* #main-content */
+#main-content {
+    max-width: 100%;
+    max-height: 100%;
+}
+
+/* .my-scrollbox */
+.my-scrollbox {
+    overflow-x: auto; /* Cho phép scroll ngang nếu cần */
+    max-height: 100%;/* Đảm bảo nó không ảnh hưởng đến layout của các phần khác */
+}
+
+
+    
+tr:hover, th:hover {
+    cursor: pointer;
+}
+tbody tr:hover {
+    color: aqua;
+    background-color: #DFF5FF;
+    transition: var(--tran-05);
+}
+
+.filter-icon {
+    margin-left: 10px;
+    font-size: 20px;
+}
+
+/*  SEARCH  */
+.search {
+    grid-column: 3 / 4;
+    grid-row: 2 / 3;
+    position: relative;
+    display: flex;
+    align-items: center;
+    margin-left: 42px;
+}
+
+.search > input {
+    width: 20.4rem;
+    height: 3rem;
+    border: none;
+    border-radius: 1rem;
+    font-size: 18px;
+    padding-left: 1.8rem;
+    box-shadow: inset .2rem .2rem .5rem var(--greyLight-2), inset -.2rem -.2rem .5rem var(--white);
+    background: none;
+    font-family: inherit;
+    color: #000;
+}
+
+.search__input::placeholder {
+    color: var(--greyLight-3);
+}
+
+.search__input:focus {
+    outline: none;
+    box-shadow: .3rem .3rem .6rem var(--greyLight-2), -.2rem -.2rem .5rem var(--white);
+}
+.search__icon {
+    color: var(--primary);
+}
+.icon__settings {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    box-shadow: .3rem .3rem .6rem var(--greyLight-2), -.2rem -.2rem .5rem var(--white);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    cursor: pointer;
+    color: var(--greyDark);
+    transition: all .5s ease;
+}
+.icon__settings:active {
+    box-shadow: inset .2rem .2rem .5rem var(--greyLight-2), inset -.2rem -.2rem .5rem var(--white);
+    color: var(--primary);
+}
+
+.icon__settings:hover {
+    color: var(--primary);
+}
+#nav-btn {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 18px;
+    margin-right: 40px;
+}
+

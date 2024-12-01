@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thêm Bệnh</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body>
+<div class="container my-4">
+    <h1 class="text-center mb-4">Thêm Bệnh</h1>
+    <form action="#" th:action="@{/benh/create}" th:object="${benh}" method="post" class="row g-3">
+        <div class="col-md-6">
+            <label for="tenBenh" class="form-label">Tên Bệnh</label>
+            <input type="text" id="tenBenh" th:field="*{tenBenh}" class="form-control" required />
+        </div>
+        <div class="col-md-6">
+            <label for="moTa" class="form-label">Mô Tả</label>
+            <textarea id="moTa" th:field="*{moTa}" class="form-control"></textarea>
+        </div>
+        <div class="col-md-6">
+            <label for="tacNhanGayBenh" class="form-label">Tác Nhân Gây Bệnh</label>
+            <input type="text" id="tacNhanGayBenh" th:field="*{tacNhanGayBenh}" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label for="trieuChung" class="form-label">Triệu Chứng</label>
+            <input type="text" id="trieuChung" th:field="*{trieuChung}" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label for="thoiGianUBenh" class="form-label">Thời Gian Ủ Bệnh</label>
+            <input type="number" id="thoiGianUBenh" th:field="*{thoiGianUBenh}" class="form-control" />
+        </div>
+        <div class="col-md-6">
+            <label for="phuongPhapChanDoan" class="form-label">Phương Pháp Chẩn Đoán</label>
+            <input type="text" id="phuongPhapChanDoan" th:field="*{phuongPhapChanDoan}" class="form-control" />
+        </div>
+        <div class="col-12">
+            <label for="bienPhapPhongNgua" class="form-label">Biện Pháp Phòng Ngừa</label>
+            <textarea id="bienPhapPhongNgua" th:field="*{bienPhapPhongNgua}" class="form-control"></textarea>
+        </div>
+        <div class="col-12 text-center">
+            <button type="submit" class="btn btn-primary">Lưu</button>
+            <a href="/benh" class="btn btn-secondary">Hủy</a>
+        </div>
+    </form>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

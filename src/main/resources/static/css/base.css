@@ -1,0 +1,255 @@
+﻿/* Please see documentation at https://docs.microsoft.com/aspnet/core/client-side/bundling-and-minification
+for details on configuring this project to bundle and minify static web assets. */
+
+:root {
+    /*----- Color ------*/
+    --system-primary-color: #4378ff;
+    --system-secondary-color: #525252;
+}
+
+* {
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+}
+
+.full-screen {
+    width: 100%;
+    min-height: 100vh;
+    max-width: 1440px;
+    margin: 0 auto;
+}
+
+.app-width {
+    max-width: 1440px;
+}
+
+body {
+    margin: 0 auto;
+    color: white;
+    background-color: white;
+    font-size: 16px;
+    font-weight: normal;
+    font-family: "Inter", sans-serif;
+}
+
+ul, li {
+    padding: 0;
+    margin: 0;
+}
+
+li {
+    list-style: none;
+}
+
+.title1 {
+    font-family: "Roboto", sans-serif;
+    font-weight: 600;
+    font-size: 48px;
+    line-height: 56.25px;
+    color: white;
+}
+
+.title2 {
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    font-size: 40px;
+    line-height: 48.41px;
+    color: white;
+}
+
+.title2-dark {
+    font-family: "Inter", sans-serif;
+    font-weight: 400;
+    font-size: 32px;
+    line-height: 40px;
+    color: var(--system-secondary-color);
+}
+
+.title4 {
+    font-family: "Inter", sans-serif;
+    width: 400px;
+    font-size: 24px;
+    line-height: 29.05px;
+    color: white;
+}
+
+.description {
+    font-family: "Inter", sans-serif;
+    width: 400px;
+    font-size: 18px;
+    line-height: 21.78px;
+    color: white;
+}
+
+.text-secondary {
+    color: var(--system-secondary-color);
+}
+
+.bg-primary {
+    background: linear-gradient(to right, #3216E4, #5E4BD9, #5946CF);
+}
+
+.bg-secondary {
+    background: linear-gradient(to right, #242634, #2c303d, #333a47);
+}
+
+.bg-third {
+    background-color: #2f3541;
+}
+
+.text-paragraph {
+    color: #525252;
+}
+
+.btn-small {
+    display: grid;
+    place-items: center;
+    width: 158px;
+    height: 30px;
+    color: white;
+    background-color: white;
+    border: 1px solid white;
+    font-size: 16px;
+    font-weight: 400;
+    border: none;
+}
+
+.btn-transparent {
+    display: grid;
+    place-items: center;
+    width: 158px;
+    height: 30px;
+    color: white;
+    background-color: transparent;
+    border: none;
+    font-size: 16px;
+    font-weight: 400;
+    transition: all .3s ease-in-out;
+}
+
+.btn-transparent.btn-outline {
+    border: 1px solid #ccc;
+    color: white;
+    font-weight: 600;
+    width: 170px;
+    height: 46px;
+}
+
+.btn-transparent.btn-outline:hover {
+    border: 1px solid var(--system-primary-color);
+    color: var(--system-primary-color);
+}
+
+.btn-small-rounded {
+    display: grid;
+    place-items: center;
+    width: 158px;
+    height: 30px;
+    color: #4378ff;
+    background-color: white;
+    border-radius: 16px;
+    border: none;
+    font-size: 16px;
+    font-weight: 400;
+}
+
+.btn-large-rouded {
+    display: grid;
+    place-items: center;
+    width: 170px;
+    height: 46px;
+    color: #4378ff;
+    background-color: white;
+    border-radius: 30px;
+    font-size: 16px;
+    font-weight: 600;
+    border: none;
+}
+
+.btn-hover {
+    border: none;
+    outline: none;
+    position: relative;
+    z-index: 1;
+    cursor: pointer;
+    background: none;
+    text-shadow: 3px 3px 10px rgba(0, 0, 0, 0.45);
+}
+
+.btn-hover:before,
+.btn-hover:after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    border-radius: 10em;
+    -webkit-transform: translateX(-50%) translateY(-50%);
+    transform: translateX(-50%) translateY(-50%);
+    width: 105%;
+    height: 105%;
+    content: "";
+    z-index: -2;
+    background-size: 400% 400%;
+    background-color: white;
+}
+
+.btn-hover:hover:before {
+    -webkit-filter: blur(5px);
+    filter: blur(5px);
+    -webkit-transition: all 0.25s ease;
+    transition: all 0.25s ease;
+    -webkit-animation: pulse 10s infinite ease;
+    animation: pulse 10s infinite ease;
+}
+
+.btn-hover:after {
+    -webkit-filter: blur(0.3px);
+    filter: blur(0.3px);
+}
+
+.btn-hover:hover:before {
+    width: 110%;
+    height: 110%;
+}
+
+.image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.underline-none {
+    text-decoration: none;
+}
+
+.text-hover:hover {
+    opacity: .8;
+}
+
+.transition {
+    transition: all .2s linear;
+}
+
+.flexStart {
+    display: flex;
+    justify-content: start;
+    align-items: center;
+}
+
+.flexCenter {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.flexEnd {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+}
+
+.flexBetween {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}

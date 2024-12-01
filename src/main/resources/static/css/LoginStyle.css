@@ -1,0 +1,155 @@
+﻿* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: sans-serif;
+    background-color: #fdfdfd;
+    margin: 0 auto;
+}
+
+.app {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+}
+
+.container {
+    display: flex;
+    justify-content: center;
+    text-align: center;
+    width: 100%;
+    height: 80vh;
+}
+
+.login-form {
+    text-align: left;
+    width: 420px;
+    background-color: #fdfdfd;
+    padding: 30px 50px;
+    border-radius: 5px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.login-form h1 {
+    text-align: center;
+    margin-bottom: 10px;
+}
+
+.login-form p {
+    text-align: center;
+    margin-bottom: 26px;
+}
+
+.login-form input {
+    width: 100%;
+    padding: 10px 10px;
+    margin-bottom: 10px;
+    border: 1px solid #ddd;
+    border-radius: 3px;
+}
+
+.login-form button {
+    background-color: #5038ED;
+    color: #fff;
+    width: 100%;
+    font-size: 14px;
+    font-weight: bold;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 10px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    cursor: pointer;
+    transition: 0.3s;
+}
+
+.remember-me {
+    display: flex; 
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+span.text-danger.field-validation-error {
+    color: red;
+}
+
+.remember-me input {
+    width: fit-content;
+    height: fit-content;
+}
+
+.remember-me a {
+    color: blue;
+}
+
+.button:hover {
+    background-color: #0069d9;
+}
+
+.button span {
+    text-transform: uppercase;
+}
+
+.login-with-others {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+    margin-top: 16px;
+}
+
+.login-with-others p {
+    margin-top: 22px;
+    margin-bottom: 10px;
+}
+
+.login-with-others a {
+    display: flex;
+    justify-content: center;
+    margin: 0 5px;
+    padding: 8px 10px;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    text-decoration: none;
+    color: #333;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.google-btn:hover,
+.facebook-btn:hover {
+    box-shadow: 0 0 14px rgba(0, 0, 0, 0.2);
+}
+
+.login-with-others a img {
+    margin-right: 10px;
+    width: 28px;
+}
+
+.images-display {
+    position: relative;
+    background-position: center center;
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-image: url("~/images/Rectangle.png");
+    border-right: 1px;
+    width: 420px;
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    overflow: hidden;
+}
+
+#password {
+    position: relative;
+}
+
+#toggle-password {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+}
