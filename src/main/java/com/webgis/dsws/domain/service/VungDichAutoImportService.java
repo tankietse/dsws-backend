@@ -85,7 +85,7 @@ public class VungDichAutoImportService {
         double clusterDistance = 1000.0; // 1km
 
         while (!unprocessed.isEmpty()) {
-            CaBenh current = unprocessed.remove(0);
+            CaBenh current = unprocessed.removeFirst();
             List<CaBenh> cluster = new ArrayList<>();
             cluster.add(current);
 
@@ -123,6 +123,11 @@ public class VungDichAutoImportService {
 
         // 2. Create VungDich
         VungDich vungDich = new VungDich();
+        vungDich.setMaVung(generateZoneCode(benh.getId()));
+        vungDich.setTenVung(
+                "Vùng dịch " + benh.getTenBenh() + " - " + new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));
+        vungDich.setMucDoNghiemTrong(MucDoVungDichEnum.valueOf(calculateSeverity(caBenhs).toString()).getMucDo());
+        vungDich.setNgayKetThuc(null);
         vungDich.setBenh(benh);
         vungDich.setGeom(center);
         vungDich.setBanKinh(calculateRadius(caBenhs));
@@ -133,26 +138,18 @@ public class VungDichAutoImportService {
                         .map(CaBenh::getNgayPhatHien)
                         .min(Date::compareTo)
                         .orElseThrow());
+        String moTa = String.format("Vùng dịch %s với %d ca bệnh, bắt đầu từ %s",
+                benh.getTenBenh(),
+                caBenhs.size(),
+                new SimpleDateFormat("dd/MM/yyyy").format(
+                        caBenhs.stream()
+                                .map(CaBenh::getNgayPhatHien)
+                                .min(Date::compareTo)
+                                .orElseThrow()));
+        vungDich.setMoTa(moTa);
 
         // 3. Save VungDich first
         vungDich = vungDichRepository.save(vungDich);
-
-        // 4. Create default measures
-        // List<BienPhapPhongChong> defaultMeasures = bienPhapPhongChongService
-        // .getDefaultMeasuresForDisease(benh.getId());
-
-        // // 5. Create associations
-        // List<VungDichBienPhap> vungDichBienPhaps = defaultMeasures.stream()
-        // .map(measure -> {
-        // VungDichBienPhap vdbp = new VungDichBienPhap();
-        // vdbp.setVungDich(vungDich);
-        // vdbp.setBienPhap(measure);
-        // vdbp.setNgayApDung(new Date(System.currentTimeMillis()));
-        // return vdbp;
-        // })
-        // .collect(Collectors.toList());
-
-        // vungDichBienPhapRepository.saveAll(vungDichBienPhaps);
 
         return vungDich;
     }
@@ -164,61 +161,6 @@ public class VungDichAutoImportService {
     private String generateZoneCode(Long maBenhCode) {
         String timestamp = new SimpleDateFormat("yyyyMMddHHmmss").format(new Date());
         return String.format("VD_%s_%s", maBenhCode, timestamp);
-    }
-
-    private String calculateFarmImpact(float distance, float radius) {
-        double impactRatio = distance / radius;
-        if (impactRatio <= 0.3)
-            return "Rất cao";
-        if (impactRatio <= 0.5)
-            return "Cao";
-        if (impactRatio <= 0.7)
-            return "Trung bình";
-        return "Thấp";
-    }
-
-    private BienPhapPhongChong createMeasure(String ten, String moTa, int mucDoUuTien) {
-        BienPhapPhongChong measure = new BienPhapPhongChong();
-        measure.setTenBienPhap(ten);
-        measure.setMoTa(moTa);
-        measure.setThuTuUuTien(mucDoUuTien);
-        return measure;
-    }
-
-    /**
-     * Xác định đơn vị hành chính cho vùng dịch dựa trên phân tích cluster
-     */
-    private DonViHanhChinh determineAdministrativeUnit(List<CaBenh> caBenhs, Geometry center) {
-        // Thống kê số ca bệnh theo đơn vị hành chính
-        Map<DonViHanhChinh, Long> dvhcCount = caBenhs.stream()
-                .map(cb -> cb.getTrangTrai().getDonViHanhChinh())
-                .collect(Collectors.groupingBy(
-                        dvhc -> dvhc,
-                        Collectors.counting()));
-
-        // Tìm đơn vị hành chính có nhiều ca bệnh nhất
-        return dvhcCount.entrySet().stream()
-                .max(Map.Entry.comparingByValue())
-                .map(Map.Entry::getKey)
-                .orElseThrow(() -> new IllegalStateException("Không thể xác định đơn vị hành chính"));
-    }
-
-    private List<VungDichTrangTrai> calculateAffectedFarms(VungDich vungDich) {
-        List<TrangTrai> trangTraisInRange = trangTraiRepository.findFarmsWithinDistance(
-                vungDich.getGeom(),
-                vungDich.getBanKinh());
-
-        return trangTraisInRange.stream()
-                .map(trangTrai -> {
-                    VungDichTrangTrai vdt = new VungDichTrangTrai();
-                    vdt.setVungDich(vungDich);
-                    vdt.setTrangTrai(trangTrai);
-                    vdt.setKhoangCach((float) geometryService.calculateDistance(
-                            vungDich.getGeom(),
-                            trangTrai.getPoint()));
-                    return vdt;
-                })
-                .collect(Collectors.toList());
     }
 
     private float calculateRadius(List<CaBenh> caBenhs) {
@@ -252,27 +194,5 @@ public class VungDichAutoImportService {
         if (totalCases >= 10)
             return MucDoVungDichEnum.CAP_DO_2;
         return MucDoVungDichEnum.CAP_DO_1;
-    }
-
-    private double calculateTimeSpan(List<CaBenh> caBenhs) {
-        Date earliest = caBenhs.stream()
-                .map(CaBenh::getNgayPhatHien)
-                .min(Date::compareTo)
-                .orElse(new Date());
-
-        Date latest = caBenhs.stream()
-                .map(CaBenh::getNgayPhatHien)
-                .max(Date::compareTo)
-                .orElse(new Date());
-
-        return (latest.getTime() - earliest.getTime()) / (1000.0 * 60 * 60 * 24); // Convert to days
-    }
-
-    private double calculateSpreadRate(List<CaBenh> caBenhs) {
-        double timeSpan = calculateTimeSpan(caBenhs);
-        if (timeSpan == 0)
-            return 0;
-
-        return caBenhs.size() / timeSpan; // Cases per day
     }
 }

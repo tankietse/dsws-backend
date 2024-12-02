@@ -1,4 +1,4 @@
-package com.webgis.dsws.controller;
+package com.webgis.dsws.controller.api;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -6,6 +6,8 @@ import org.locationtech.jts.geom.Coordinate;
 
 import com.webgis.dsws.domain.service.VungDichService;
 import com.webgis.dsws.domain.model.VungDich;
+import com.webgis.dsws.domain.model.VungDichTrangTrai;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
@@ -21,11 +23,12 @@ import org.springframework.beans.factory.annotation.Value;
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/v1/vung-dich")
 @Tag(name = "Vùng dịch", description = "API quản lý vùng dịch")
-public class VungDichController {
+public class VungDichApi {
 
     @Autowired
     private VungDichService vungDichService;
@@ -148,8 +151,8 @@ public class VungDichController {
      */
     @GetMapping("/heatmap")
     @Operation(summary = "Lấy dữ liệu cho bản đồ nhiệt")
-    public ResponseEntity<List<Map<String, Object>>> getHeatmapData() {
-        List<Map<String, Object>> heatmapData = vungDichService.getHeatmapData();
+    public ResponseEntity<List<Map<String, Object>>> getGradientHeatmapData() {
+        List<Map<String, Object>> heatmapData = vungDichService.getGradientHeatmapData();
         return ResponseEntity.ok(heatmapData);
     }
 
@@ -170,16 +173,26 @@ public class VungDichController {
     }
 
     /**
-     * API lấy dữ liệu biểu tượng cho feature layer
+     * API lấy dữ liệu biểu tượng cho feature layer với thông tin chi tiết
      * 
      * @param mucDo Mức độ vùng dịch cần lọc
      * @return Dữ liệu symbols cho feature layer
      */
     @GetMapping("/symbols")
-    @Operation(summary = "Lấy dữ liệu biểu tượng cho feature layer")
+    @Operation(summary = "Lấy dữ liệu biểu tượng cho feature layer với thông tin chi tiết")
     public ResponseEntity<Map<String, Object>> getFeatureLayerSymbols(
             @RequestParam(required = false) MucDoVungDichEnum mucDo) {
         Map<String, Object> symbolData = vungDichService.getFeatureLayerSymbols(mucDo);
         return ResponseEntity.ok(symbolData);
+    }
+
+    @GetMapping("/{id}/affected-farms")
+    @Operation(summary = "Lấy danh sách trang trại bị ảnh hưởng bởi vùng dịch")
+    public ResponseEntity<Set<VungDichTrangTrai>> getAffectedFarms(@PathVariable Long id) {
+        VungDich vungDich = vungDichService.findById(id);
+        if (vungDich == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(vungDich.getTrangTrais());
     }
 }

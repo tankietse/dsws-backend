@@ -1,0 +1,72 @@
+/* Ensure column headers stay visible while scrolling */
+.sticky {
+    position: sticky;
+    top: 0;
+    background: #f3f4f6;
+    z-index: 10; /* Lower z-index */
+    /* Match bg-zinc-100 */
+}
+
+/* Set column widths */
+.table-fixed th,
+.table-fixed td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Specific column widths */
+.table-fixed th:nth-child(1),
+.table-fixed td:nth-child(1) {
+    width: 120px;
+}
+
+/* Mã trang trại */
+.table-fixed th:nth-child(2),
+.table-fixed td:nth-child(2) {
+    width: 200px;
+}
+
+/* Tên trang trại */
+.table-fixed th:nth-child(3),
+.table-fixed td:nth-child(3) {
+    width: 150px;
+}
+
+/* Chủ sở hữu */
+.table-fixed th:nth-child(4),
+.table-fixed td:nth-child(4) {
+    width: 150px;
+}
+
+/* Liên hệ */
+.table-fixed th:nth-child(5),
+.table-fixed td:nth-child(5) {
+    width: 250px;
+}
+
+/* Địa chỉ */
+.table-fixed th:nth-child(6),
+.table-fixed td:nth-child(6) {
+    width: 120px;
+}
+
+/* Diện tích */
+.table-fixed th:nth-child(7),
+.table-fixed td:nth-child(7) {
+    width: 100px;
+}
+
+/* Tổng đàn */
+.table-fixed th:nth-child(8),
+.table-fixed td:nth-child(8) {
+    width: 200px;
+}
+
+/* Loại vật nuôi */
+.table-fixed th:nth-child(9),
+.table-fixed td:nth-child(9) {
+    width: 120px;
+}
+
+/* Trạng thái */

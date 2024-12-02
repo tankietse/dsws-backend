@@ -7,36 +7,46 @@ import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
 import com.webgis.dsws.domain.model.VungDich;
+import com.webgis.dsws.domain.model.VungDichTrangTrai;
 import com.webgis.dsws.domain.model.enums.MucDoVungDichEnum;
+import com.webgis.dsws.domain.repository.TrangTraiRepository;
 import com.webgis.dsws.domain.repository.VungDichRepository;
 import com.webgis.dsws.domain.model.BienPhapPhongChong;
+import com.webgis.dsws.domain.model.TrangTrai;
 
 import jakarta.persistence.EntityNotFoundException;
-import java.util.List;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+
+import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.locationtech.jts.io.geojson.GeoJsonWriter;
+import com.fasterxml.jackson.databind.ObjectMapper;
 
 @Service
 @Validated
 public class VungDichService {
     private final VungDichRepository vungDichRepository;
+    private final TrangTraiRepository trangTraiRepository;
     private final GeometryFactory geometryFactory;
+    private final GeometryService geometryService;
 
-    @Autowired
-    public VungDichService(VungDichRepository vungDichRepository) {
+    public VungDichService(VungDichRepository vungDichRepository, TrangTraiRepository trangTraiRepository) {
         this.vungDichRepository = vungDichRepository;
+        this.trangTraiRepository = trangTraiRepository;
+        this.geometryService = new GeometryService();
         this.geometryFactory = new GeometryFactory();
     }
 
     private static final Map<MucDoVungDichEnum, String> SYMBOL_COLORS = Map.of(
-            MucDoVungDichEnum.CAP_DO_1, "#ffd700", // Vàng
-            MucDoVungDichEnum.CAP_DO_2, "#ff8c00", // Cam
-            MucDoVungDichEnum.CAP_DO_3, "#ff4500", // Đỏ cam
-            MucDoVungDichEnum.CAP_DO_4, "#ff0000" // Đỏ
+            MucDoVungDichEnum.CAP_DO_1, MucDoVungDichEnum.CAP_DO_1.getMauHienThi(),
+            MucDoVungDichEnum.CAP_DO_2, MucDoVungDichEnum.CAP_DO_2.getMauHienThi(),
+            MucDoVungDichEnum.CAP_DO_3, MucDoVungDichEnum.CAP_DO_3.getMauHienThi(),
+            MucDoVungDichEnum.CAP_DO_4, MucDoVungDichEnum.CAP_DO_4.getMauHienThi()// Cam
+
     );
 
     /**
@@ -131,7 +141,9 @@ public class VungDichService {
      */
     @Transactional
     public VungDich save(VungDich vungDich) {
-        return vungDichRepository.save(vungDich);
+        vungDich = vungDichRepository.save(vungDich);
+        associateAffectedFarms(vungDich);
+        return vungDich;
     }
 
     /**
@@ -148,8 +160,12 @@ public class VungDichService {
         vungDich.setMucDo(vungDichDetails.getMucDo());
         vungDich.setGeom(vungDichDetails.getGeom());
         vungDich.setBanKinh(vungDichDetails.getBanKinh());
-        // Cập nhật các thuộc tính khác nếu cần
-        return vungDichRepository.save(vungDich);
+        vungDich.setMoTa(vungDichDetails.getMoTa());
+        vungDich.setNgayBatDau(vungDichDetails.getNgayBatDau());
+        vungDich.setNgayKetThuc(vungDichDetails.getNgayKetThuc());
+        vungDich = vungDichRepository.save(vungDich);
+        associateAffectedFarms(vungDich);
+        return vungDich;
     }
 
     /**
@@ -215,8 +231,69 @@ public class VungDichService {
             heatmapPoint.put("intensity", vd.getMucDo().ordinal() * 0.25);
             heatmapPoint.put("radius", vd.getBanKinh());
 
+            heatmapPoint.put("id", vd.getId());
+            heatmapPoint.put("tenVung", vd.getTenVung());
+            heatmapPoint.put("mucDo", vd.getMucDo());
+            heatmapPoint.put("color", vd.getMucDo().getMauHienThi());
+            heatmapPoint.put("moTa", vd.getMoTa());
+            heatmapPoint.put("ngayBatDau", vd.getNgayBatDau());
+            heatmapPoint.put("ngayKetThuc", vd.getNgayKetThuc());
+            heatmapPoint.put("tenBenh", vd.getBenh().getTenBenh());
+
             return heatmapPoint;
         }).collect(Collectors.toList());
+    }
+
+    /**
+     * Lấy dữ liệu thống kê bệnh theo khu vực với gradient màu
+     * 
+     * @return Danh sách các điểm dữ liệu cho bản đồ nhiệt với gradient màu
+     */
+    public List<Map<String, Object>> getGradientHeatmapData() {
+        // Lọc vùng dịch đang hoạt động
+        Specification<VungDich> spec = (root, query, cb) -> cb.isNull(root.get("ngayKetThuc"));
+        List<VungDich> vungDichs = vungDichRepository.findAll(spec);
+
+        // Tính toán cường độ gradient dựa trên mức độ nghiêm trọng
+        double maxIntensity = vungDichs.stream()
+                .mapToDouble(vd -> calculateIntensity(vd))
+                .max()
+                .orElse(1.0);
+
+        return vungDichs.stream().map(vd -> {
+            Map<String, Object> heatmapPoint = new HashMap<>();
+            Point centroid = vd.getGeom().getCentroid();
+
+            double intensity = calculateIntensity(vd) / maxIntensity; // Normalize to 0-1
+            String gradientColor = generateGradientColor(intensity);
+
+            heatmapPoint.put("latitude", centroid.getY());
+            heatmapPoint.put("longitude", centroid.getX());
+            heatmapPoint.put("intensity", intensity);
+            heatmapPoint.put("radius", vd.getBanKinh());
+            heatmapPoint.put("id", vd.getId());
+            heatmapPoint.put("tenVung", vd.getTenVung());
+            heatmapPoint.put("mucDo", vd.getMucDo());
+            heatmapPoint.put("color", gradientColor);
+            heatmapPoint.put("moTa", vd.getMoTa());
+
+            return heatmapPoint;
+        }).collect(Collectors.toList());
+    }
+
+    private double calculateIntensity(VungDich vungDich) {
+        // Tính cường độ dựa trên mức độ và bán kính
+        double mucDoWeight = (vungDich.getMucDo().ordinal() + 1) * 0.7;
+        double radiusWeight = Math.min(vungDich.getBanKinh() / 1000.0, 1.0) * 0.3;
+        return mucDoWeight + radiusWeight;
+    }
+
+    private String generateGradientColor(double intensity) {
+        // Tạo gradient màu từ xanh lá (an toàn) đến đỏ (nguy hiểm)
+        int red = (int) (255 * intensity);
+        int green = (int) (255 * (1 - intensity));
+        int blue = 0;
+        return String.format("#%02X%02X%02X", red, green, blue);
     }
 
     /**
@@ -239,9 +316,17 @@ public class VungDichService {
             clusterPoint.put("latitude", centroid.getY());
             clusterPoint.put("longitude", centroid.getX());
             clusterPoint.put("mucDo", vd.getMucDo());
+            clusterPoint.put("color", vd.getMucDo().getMauHienThi());
             clusterPoint.put("tenVung", vd.getTenVung());
             clusterPoint.put("banKinh", radius);
             clusterPoint.put("color", SYMBOL_COLORS.get(vd.getMucDo()));
+
+            clusterPoint.put("tenVung", vd.getTenVung());
+            clusterPoint.put("mucDo", vd.getMucDo());
+            clusterPoint.put("moTa", vd.getMoTa());
+            clusterPoint.put("ngayBatDau", vd.getNgayBatDau());
+            clusterPoint.put("ngayKetThuc", vd.getNgayKetThuc());
+            clusterPoint.put("tenBenh", vd.getBenh().getTenBenh());
 
             return clusterPoint;
         }).collect(Collectors.toList());
@@ -261,11 +346,23 @@ public class VungDichService {
             vungDichs = vungDichRepository.findAll();
         }
 
+        GeoJsonWriter geoJsonWriter = new GeoJsonWriter();
+        ObjectMapper objectMapper = new ObjectMapper();
+
         // Tạo features cho mỗi vùng dịch
         List<Map<String, Object>> features = vungDichs.stream().map(vd -> {
             Map<String, Object> feature = new HashMap<>();
             feature.put("type", "Feature");
-            feature.put("geometry", vd.getGeom());
+
+            // Chuyển đổi Geometry sang GeoJSON
+            String geometryJson = geoJsonWriter.write(vd.getGeom());
+            Map<String, Object> geometry = null;
+            try {
+                geometry = objectMapper.readValue(geometryJson, Map.class);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            feature.put("geometry", geometry);
 
             Map<String, Object> properties = new HashMap<>();
             properties.put("id", vd.getId());
@@ -276,6 +373,15 @@ public class VungDichService {
             properties.put("strokeColor", SYMBOL_COLORS.get(vd.getMucDo()));
             properties.put("strokeWidth", 2);
 
+            // Add more useful information
+            properties.put("moTa", vd.getMoTa());
+            properties.put("ngayBatDau", vd.getNgayBatDau());
+            properties.put("ngayKetThuc", vd.getNgayKetThuc());
+            properties.put("tenBenh", vd.getBenh().getTenBenh());
+            properties.put("banKinh", vd.getBanKinh());
+            properties.put("trangThai", vd.getTrangThai());
+            properties.put("mucDoNghiemTrong", vd.getMucDoNghiemTrong());
+
             feature.put("properties", properties);
             return feature;
         }).collect(Collectors.toList());
@@ -285,5 +391,26 @@ public class VungDichService {
         symbolData.put("features", features);
 
         return symbolData;
+    }
+
+    private void associateAffectedFarms(VungDich vungDich) {
+        if (vungDich.getTrangTrais() == null) {
+            vungDich.setTrangTrais(new HashSet<>());
+        } else {
+            vungDich.getTrangTrais().clear();
+        }
+
+        List<TrangTrai> affectedFarms = trangTraiRepository.findFarmsWithinDistance(
+                vungDich.getGeom(), vungDich.getBanKinh());
+
+        for (TrangTrai trangTrai : affectedFarms) {
+            VungDichTrangTrai vdt = new VungDichTrangTrai();
+            vdt.setVungDich(vungDich);
+            vdt.setTrangTrai(trangTrai);
+            float distance = (float) geometryService.calculateDistance(
+                    vungDich.getGeom(), trangTrai.getPoint());
+            vdt.setKhoangCach(distance);
+            vungDich.getTrangTrais().add(vdt);
+        }
     }
 }

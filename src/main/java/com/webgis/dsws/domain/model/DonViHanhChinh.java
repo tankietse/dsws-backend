@@ -5,6 +5,7 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 
 import com.webgis.dsws.domain.model.enums.AdminLevelEnum;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -21,6 +22,7 @@ import java.util.List;
 @ToString(exclude = { "donViCha", "dsDonViCon" }) // Thêm exclude để tránh lỗi vòng lặp vô hạn
 @Entity
 @Table(name = "don_vi_hanh_chinh")
+@JsonIgnoreProperties({"ranhGioi", "centerPoint", "donViCha"})
 public class DonViHanhChinh {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -45,14 +47,14 @@ public class DonViHanhChinh {
     @Column(nullable = false)
     private AdminLevelEnum adminLevel;
 
-    @ManyToOne(fetch = FetchType.LAZY) // Thêm LAZY loading
+    @ManyToOne(fetch = FetchType.LAZY) // Change to LAZY loading
     @JoinColumn(name = "id_cha")
     private DonViHanhChinh donViCha;
 
     @OneToMany(mappedBy = "donViCha", fetch = FetchType.LAZY)
     private List<DonViHanhChinh> dsDonViCon;
 
-    @Column(name = "ranh_gioi", columnDefinition = "geometry")
+    @Column(name = "ranh_gioi", columnDefinition = "Geometry")
     private Geometry ranhGioi;
 
     @Column(name = "diem_trung_tam", columnDefinition = "geometry")

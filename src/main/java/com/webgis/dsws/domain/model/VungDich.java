@@ -51,8 +51,8 @@ public class VungDich {
     @JoinColumn(name = "nguoi_tao_id")
     private NguoiDung nguoiTao;
 
-    @OneToMany(mappedBy = "vungDich")
-    private Set<VungDichTrangTrai> trangTrais;
+    @OneToMany(mappedBy = "vungDich", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<VungDichTrangTrai> trangTrais = new HashSet<>();
 
     @OneToMany(mappedBy = "vungDich")
     private Set<CanhBao> canhBaos;
@@ -63,6 +63,8 @@ public class VungDich {
 
     @OneToMany(mappedBy = "vungDich", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<VungDichBienPhap> vungDichBienPhaps = new HashSet<>(); // Initialize empty set
+
+    private String moTa;
 
     // Helper method để quản lý quan hệ 2 chiều
     public void addVungDichBienPhap(VungDichBienPhap vungDichBienPhap) {

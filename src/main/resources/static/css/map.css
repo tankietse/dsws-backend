@@ -1,0 +1,280 @@
+#map {
+    height: 70vh;
+    width: 100%;
+    border-radius: 12px;
+}
+
+/* Stats Panel */
+.stats-panel {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    min-width: 250px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    /* box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1); */
+    backdrop-filter: blur(10px);
+}
+
+.stats-panel.fixed {
+    position: absolute;
+    bottom: 30px;
+    right: 30px;
+    max-width: 300px;
+    z-index: 1000;
+    display: none;
+}
+
+/* Stats Components */
+.stats-title {
+    font-size: 1.1em;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.stats-title i {
+    color: #3b82f6;
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+
+.stats-table th,
+.stats-table td {
+    border-bottom: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
+
+.stats-table th {
+    background-color: #f9fafb;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.stats-table tr:last-child td {
+    border-bottom: none;
+}
+
+.stats-table td {
+    color: #4b5563;
+}
+
+/* Map Controls */
+.map-controls {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    min-width: 220px;
+}
+
+.control-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 16px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    transition: all 0.2s ease;
+    border: 1px solid transparent;
+    cursor: pointer;
+}
+
+.control-btn svg {
+    width: 18px;
+    height: 18px;
+    opacity: 0.9;
+}
+
+.control-btn:hover {
+    transform: translateX(2px);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.control-btn.active {
+    border-color: currentColor;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Control button variants */
+.control-btn.marker-btn {
+    background: #ecfdf5;
+    color: #047857;
+}
+
+.control-btn.heatmap-btn {
+    background: #eff6ff;
+    color: #2563eb;
+}
+
+.control-btn.cluster-btn {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.control-btn.boundary-btn {
+    background: #f3e8ff;
+    color: #7e22ce;
+}
+
+.control-btn.region-btn {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+.control-btn.farm-btn {
+    background: #f0fdf4;
+    color: #065f46;
+}
+
+/* Legend Styles */
+.info-legend {
+    position: absolute;
+    bottom: 10px;
+    left: 10px;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.info-legend .legend-header svg {
+    width: 24px;
+    height: 24px;
+}
+
+.legend-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.legend-title {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.legend-items {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    color: #4b5563;
+    padding: 6px 8px;
+    border-radius: 6px;
+    transition: all 0.2s;
+}
+
+.legend-item:hover {
+    background: rgba(0, 0, 0, 0.02);
+}
+
+.legend-color {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.legend-color::after {
+    content: '';
+    position: absolute;
+    inset: 2px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+}
+
+.legend-label {
+    flex: 1;
+    font-weight: 500;
+}
+
+.legend-value {
+    font-variant-numeric: tabular-nums;
+    color: #6b7280;
+}
+
+/* Thêm hiệu ứng hover cho các item */
+.legend-item:hover .legend-color::after {
+    border-color: white;
+}
+
+.legend-item:hover .legend-label {
+    color: #2563eb;
+}
+
+/* Dropzone styling */
+.glass-dropzone {
+    background: rgba(255, 255, 255, 0.1) !important;
+    border: 2px dashed rgba(255, 255, 255, 0.3) !important;
+    border-radius: 12px !important;
+    transition: all 0.3s ease;
+}
+
+.glass-dropzone:hover {
+    background: rgba(255, 255, 255, 0.2) !important;
+    border-color: rgba(255, 255, 255, 0.4) !important;
+}
+
+.glass-dropzone .dz-message {
+    text-align: center;
+    padding: 2rem;
+    color: #4b5563;
+}
+
+/* Enhanced tree view styling */
+#adminTree {
+    font-size: 0.9rem;
+}
+
+#adminTree .node {
+    padding: 0.5rem;
+    border-radius: 6px;
+    margin-bottom: 0.25rem;
+    transition: all 0.2s;
+}
+
+#adminTree .node:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+#adminTree .node.selected {
+    background: rgba(59, 130, 246, 0.1);
+    border-left: 3px solid #3b82f6;
+}

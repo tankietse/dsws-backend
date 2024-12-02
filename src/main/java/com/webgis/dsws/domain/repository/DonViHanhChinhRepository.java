@@ -40,4 +40,11 @@ public interface DonViHanhChinhRepository extends JpaRepository<DonViHanhChinh, 
 
     @Query("SELECT d.id FROM DonViHanhChinh d WHERE d.id = :rootId OR d.donViCha.id = :rootId OR EXISTS (SELECT 1 FROM DonViHanhChinh p WHERE p.donViCha.id = :rootId AND d.donViCha.id = p.id)")
     List<Integer> findAllChildrenIds(@Param("rootId") Integer rootId);
+
+    @Query(value = "WITH RECURSIVE dvhc_tree AS (" +
+            "SELECT id FROM don_vi_hanh_chinh WHERE id = :rootId " +
+            "UNION ALL " +
+            "SELECT d.id FROM don_vi_hanh_chinh d JOIN dvhc_tree dt ON d.id_cha = dt.id)" +
+            "SELECT id FROM dvhc_tree", nativeQuery = true)
+    List<Integer> findAllDescendantIds(@Param("rootId") Integer rootId);
 }

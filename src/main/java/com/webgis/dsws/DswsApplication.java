@@ -52,11 +52,11 @@ public class DswsApplication {
     @Profile("!prod")
     public ApplicationRunner dataImporter() {
         return args -> {
-            if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
-                importBoundaryData();
-                importFarmData();
-                importVirusZones();
-            }
+//            if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
+//                importBoundaryData();
+//                importFarmData();
+//                importVirusZones();
+//            }
         };
     }
 
@@ -82,11 +82,6 @@ public class DswsApplication {
 
         // Import cho cấp phường/xã (8)
         vungDichAutoImportService.autoCreateFromData(8, 1); // Chỉ cần 1 ca để tạo vùng cấp xã
-
-        // Import cho cấp quận/huyện (6)
-        vungDichAutoImportService.autoCreateFromData(6, 1); // Cần ít nhất 3 ca để tạo vùng cấp huyện
-        // Import cho cấp tỉnh (4)
-        vungDichAutoImportService.autoCreateFromData(4, 1); // Cần ít nhất 5 ca để tạo vùng cấp tỉnh
 
         log.info("Đã import thành công vùng dịch cho các cấp hành chính");
     }

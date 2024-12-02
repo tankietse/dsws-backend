@@ -1,4 +1,4 @@
-package com.webgis.dsws.controller;
+package com.webgis.dsws.controller.api;
 
 import com.webgis.dsws.domain.model.TrangTrai;
 import com.webgis.dsws.domain.model.VungDichTrangTrai;
@@ -12,18 +12,20 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.PageRequest;
 
 import java.util.List;
 import java.util.Set;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/trang-trai")
 @Tag(name = "Trang trại", description = "API quản lý trang trại")
-public class TrangTraiController {
+public class TrangTraiApi {
 
     private final TrangTraiService trangTraiService;
 
-    public TrangTraiController(TrangTraiService trangTraiService) {
+    public TrangTraiApi(TrangTraiService trangTraiService) {
         this.trangTraiService = trangTraiService;
     }
 
@@ -46,8 +48,23 @@ public class TrangTraiController {
      */
     @GetMapping("/paged")
     @Operation(summary = "Lấy danh sách trang trại phân trang")
-    public ResponseEntity<Page<TrangTrai>> getTrangTraiPaged(Pageable pageable) {
-        return ResponseEntity.ok(trangTraiService.getAllTrangTrai(pageable));
+    public ResponseEntity<Page<TrangTrai>> getPagedTrangTrai(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") Integer size,
+            @RequestParam(required = false) String tenTrangTrai,
+            @RequestParam(required = false) String capDonViHanhChinh,
+            @RequestParam(required = false) Integer idDonViHanhChinh) {
+
+        // Validate size parameter
+        if (size == null || size <= 0) {
+            size = 10; // Default size
+        }
+
+        Pageable pageable = PageRequest.of(page, size);
+
+        Page<TrangTrai> result = trangTraiService.findAllWithFilters(tenTrangTrai, capDonViHanhChinh, idDonViHanhChinh,
+                pageable);
+        return ResponseEntity.ok(result);
     }
 
     /**
@@ -143,5 +160,57 @@ public class TrangTraiController {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(trangTrai.getVungDichs());
+    }
+
+    /**
+     * Lấy dữ liệu trang trại dạng GeoJSON để hiển thị trên bản đồ
+     *
+     * @param loaiVatNuoi Loại vật nuôi để lọc (không bắt buộc)
+     * @return ResponseEntity chứa dữ liệu GeoJSON
+     */
+    @GetMapping("/geojson")
+    @Operation(summary = "Lấy dữ liệu trang trại dạng GeoJSON")
+    public ResponseEntity<Map<String, Object>> getTrangTraiGeoJSON(
+            @RequestParam(required = false) String loaiVatNuoi) {
+        return ResponseEntity.ok(trangTraiService.getGeoJSONData(loaiVatNuoi));
+    }
+
+    /**
+     * Lấy thống kê trang trại theo khu vực
+     *
+     * @param capHanhChinh Cấp hành chính (tinh/huyen/xa)
+     * @return ResponseEntity chứa dữ liệu thống kê
+     */
+    @GetMapping("/thong-ke")
+    @Operation(summary = "Lấy thống kê trang trại theo khu vực")
+    public ResponseEntity<Map<String, Object>> getThongKeTheoKhuVuc(
+            @RequestParam(required = false) String capHanhChinh) {
+        return ResponseEntity.ok(trangTraiService.getThongKeTheoKhuVuc(capHanhChinh));
+    }
+
+    /**
+     * Lấy dữ liệu cho hiển thị cluster trên bản đồ
+     * 
+     * @param radius Bán kính cluster (mét)
+     * @return ResponseEntity chứa dữ liệu clusters
+     */
+    @GetMapping("/cluster")
+    @Operation(summary = "Lấy dữ liệu cluster")
+    public ResponseEntity<List<Map<String, Object>>> getClusterData(
+            @RequestParam(defaultValue = "1000") double radius) {
+        return ResponseEntity.ok(trangTraiService.getClusterData(radius));
+    }
+
+    /**
+     * Lấy dữ liệu biểu tượng cho feature layer
+     * 
+     * @param loaiVatNuoi Loại vật nuôi để lọc (không bắt buộc)
+     * @return ResponseEntity chứa dữ liệu symbols
+     */
+    @GetMapping("/symbols")
+    @Operation(summary = "Lấy dữ liệu biểu tượng cho feature layer")
+    public ResponseEntity<Map<String, Object>> getFeatureLayerSymbols(
+            @RequestParam(required = false) String loaiVatNuoi) {
+        return ResponseEntity.ok(trangTraiService.getFeatureLayerSymbols(loaiVatNuoi));
     }
 }

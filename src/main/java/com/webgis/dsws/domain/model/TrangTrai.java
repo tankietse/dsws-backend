@@ -5,6 +5,7 @@ import lombok.*;
 import org.locationtech.jts.geom.Point;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -36,6 +37,7 @@ public class TrangTrai {
 
     @ManyToOne
     @JoinColumn(name = "don_vi_hanh_chinh_id")
+    @JsonIgnoreProperties({"ranhGioi", "centerPoint", "donViCha", "donViCon"})
     private DonViHanhChinh donViHanhChinh;
 
     private Float dienTich;
