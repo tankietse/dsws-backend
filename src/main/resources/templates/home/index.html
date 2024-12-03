@@ -10,8 +10,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Phân vùng dịch bệnh</title>
 
-   
-
     <!-- Load Leaflet from CDN -->
     <link
       rel="stylesheet"
@@ -42,7 +40,6 @@
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster-src.js"></script>
 
     <link rel="stylesheet" th:href="@{/css/map.css}" />
-    <link rel="icon" href="/favicon.ico" type="image/x-icon" />
   </head>
   <body>
     <section layout:fragment="content" class="p-6">
@@ -56,13 +53,16 @@
       </div> -->
 
       <div class="relative">
-        <div id="map"></div>
+        <div id="map" class="rounded-lg shadow-md"></div>
 
-        <div class="map-controls">
-          <button id="heatmapBtn" class="control-btn heatmap-btn">
+        <div class="absolute top-4 right-4 flex flex-col space-y-2">
+          <button
+            id="heatmapBtn"
+            class="flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
+              class="w-5 h-5 mr-2"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -155,22 +155,36 @@
         <div id="statsPanelContent"></div>
       </div> -->
 
-      <script src="/js/map/config.js"></script>
-      <script src="/js/map/layers.js"></script>
-      <script src="/js/map/controls.js"></script>
+      <script th:src="@{/js/map/config.js}"></script>
+      <script th:src="@{/js/map/layers.js}"></script>
+      <script th:src="@{/js/map/controls.js}"></script>
       <script>
-        const map = L.map("map", MAP_CONFIG);
-        map.setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
+        // Đợi xác thực hoàn tất trước khi khởi tạo map
+        document.addEventListener("DOMContentLoaded", async function () {
+          if (!window._authInitialized) {
+            await new Promise((resolve) => {
+              const checkAuth = setInterval(() => {
+                if (window._authInitialized) {
+                  clearInterval(checkAuth);
+                  resolve();
+                }
+              }, 100);
+            });
+          }
 
-        L.esri.Vector.vectorBasemapLayer(MAP_CONFIG.basemapEnum, {
-          token: MAP_CONFIG.accessToken,
-        }).addTo(map);
+          const map = L.map("map", MAP_CONFIG);
+          map.setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
 
-        const mapLayers = new MapLayers(map);
-        const mapControls = new MapControls(mapLayers);
+          L.esri.Vector.vectorBasemapLayer(MAP_CONFIG.basemapEnum, {
+            token: MAP_CONFIG.accessToken,
+          }).addTo(map);
 
-        mapLayers.loadAdminBoundaries();
-        mapLayers.loadMarkers();
+          const mapLayers = new MapLayers(map);
+          const mapControls = new MapControls(mapLayers);
+
+          mapLayers.loadAdminBoundaries();
+          mapLayers.loadMarkers();
+        });
       </script>
     </section>
   </body>

@@ -3,6 +3,7 @@
   lang="vi"
   xmlns:th="http://www.thymeleaf.org"
   xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity"
 >
   <head>
     <meta charset="UTF-8" />
@@ -14,10 +15,6 @@
       rel="stylesheet"
     />
     <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-    />
-    <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       rel="stylesheet"
     />
@@ -25,113 +22,151 @@
       rel="stylesheet"
       href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
     />
-    <link rel="stylesheet" href="/css/styles.css" />
-    <link
-      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
-      rel="stylesheet"
-    />
+
+    <!-- Add Favicon for the tab icon -->
+    <link rel="icon" type="image/png" th:href="@{/img/logo.png}" />
     <style>
       /* Prevent Tailwind from resetting our existing styles */
       @layer base {
         :root {
           --primary-color: #003399;
           --secondary-color: #004ce6;
-          --background-color: #f0f2f5;
-          --glass-background: rgba(255, 255, 255, 0.7);
-          --glass-border: rgba(255, 255, 255, 0.25);
-          --glass-shadow: 0 8px 32px rgba(0, 51, 153, 0.1);
         }
       }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"></script>
     <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
     <!-- <script src="/js/main.js"></script> -->
+    <!-- Add auth service -->
+    <script th:src="@{/js/services/auth-service.js}" defer></script>
+
+    <link rel="stylesheet" th:href="@{/css/map.css}" />
   </head>
-  <body>
-    <nav class="sidebar">
-      <div class="sidebar-brand">
-        <i class="fas fa-chart-line"></i>
-        DSWS
+  <body class="bg-gray-50">
+    <nav class="fixed top-0 left-0 h-full w-64 bg-white shadow-lg">
+      <div class="flex items-center px-6 py-4 bg-blue-700 text-white">
+        <i class="fas fa-chart-line mr-2"></i>
+        <span class="font-bold text-xl">DSWS</span>
       </div>
-      <ul class="nav-menu">
-        <li class="nav-item">
-          <a class="nav-link" href="/">
-            <i class="fas fa-home"></i>
-            Trang chủ
+      <ul class="mt-4">
+        <li>
+          <a href="/" class="flex items-center px-6 py-3 hover:bg-gray-100">
+            <i class="fas fa-home mr-3 text-gray-600"></i>
+            <span>Trang chủ</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/map-trangtrai">
-            <i class="fas fa-map-marked-alt"></i>
-            Bản đồ trang trại
+        <li>
+          <a
+            href="/map-trangtrai"
+            class="flex items-center px-6 py-3 hover:bg-gray-100"
+          >
+            <i class="fas fa-map-marked-alt mr-3 text-gray-600"></i>
+            <span>Bản đồ trang trại</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/ql-dia-gioi">
-            <i class="fas fa-map-marked-alt"></i>
-            Quản lý đơn vị hành chính
+        <li>
+          <a
+            href="/ql-dia-gioi"
+            class="flex items-center px-6 py-3 hover:bg-gray-100"
+          >
+            <i class="fas fa-map-marked-alt mr-3 text-gray-600"></i>
+            <span>Quản lý đơn vị hành chính</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/ql-trang-trai">
-            <i class="fas fa-tractor"></i>
-            Quản lý trang trại
+        <li>
+          <a
+            href="/ql-trang-trai"
+            class="flex items-center px-6 py-3 hover:bg-gray-100"
+          >
+            <i class="fas fa-tractor mr-3 text-gray-600"></i>
+            <span>Quản lý trang trại</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/analytics">
-            <i class="fas fa-chart-bar"></i>
-            Phân tích
+        <li>
+          <a
+            href="/analytics"
+            class="flex items-center px-6 py-3 hover:bg-gray-100"
+          >
+            <i class="fas fa-chart-bar mr-3 text-gray-600"></i>
+            <span>Phân tích</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/reports">
-            <i class="fas fa-file-alt"></i>
-            Báo cáo
+        <li>
+          <a
+            href="/reports"
+            class="flex items-center px-6 py-3 hover:bg-gray-100"
+          >
+            <i class="fas fa-file-alt mr-3 text-gray-600"></i>
+            <span>Báo cáo</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/alerts">
-            <i class="fas fa-bell"></i>
-            Cảnh báo
+        <li>
+          <a
+            href="/alerts"
+            class="flex items-center px-6 py-3 hover:bg-gray-100"
+          >
+            <i class="fas fa-bell mr-3 text-gray-600"></i>
+            <span>Cảnh báo</span>
             <span class="badge bg-danger">2</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/statistics">
-            <i class="fas fa-chart-pie"></i>
-            Thống kê
+        <li>
+          <a
+            href="/statistics"
+            class="flex items-center px-6 py-3 hover:bg-gray-100"
+          >
+            <i class="fas fa-chart-pie mr-3 text-gray-600"></i>
+            <span>Thống kê</span>
           </a>
         </li>
-        <li class="nav-item">
-          <a class="nav-link" href="/export">
-            <i class="fas fa-file-export"></i>
-            Xuất báo cáo
+        <li>
+          <a
+            href="/export"
+            class="flex items-center px-6 py-3 hover:bg-gray-100"
+          >
+            <i class="fas fa-file-export mr-3 text-gray-600"></i>
+            <span>Xuất báo cáo</span>
           </a>
         </li>
       </ul>
     </nav>
 
-    <div class="content-wrapper">
-      <div class="top-bar">
-        <h1 class="page-title">Phân vùng và Cảnh báo Dịch bệnh</h1>
-        <div class="user-menu">
-          <i class="fas fa-user-circle"></i>
+    <div class="ml-64 min-h-screen">
+      <header class="bg-white shadow-sm">
+        <div class="flex justify-between items-center px-6 py-4">
+          <h1 class="text-2xl font-semibold text-gray-800">
+            Phân vùng và Cảnh báo Dịch bệnh
+          </h1>
+          <div class="relative">
+            <button class="flex items-center text-gray-700 hover:text-gray-900">
+              <i class="fas fa-user-circle text-2xl"></i>
+            </button>
+            <ul
+              class="dropdown-menu dropdown-menu-end"
+              aria-labelledby="userMenuButton"
+            >
+              <li><a class="dropdown-item" href="/profile">Tài khoản</a></li>
+              <li><a class="dropdown-item" href="/settings">Cài đặt</a></li>
+              <li><hr class="dropdown-divider" /></li>
+              <li>
+                <a class="dropdown-item" href="#" onclick="AuthService.logout()"
+                  >Đăng xuất</a
+                >
+              </li>
+            </ul>
+          </div>
         </div>
-      </div>
+      </header>
 
-      <main>
+      <main class="p-6">
         <section layout:fragment="content"></section>
       </main>
-    </div>
 
-    <footer>
-      <!-- <div class="text-center"> -->
-      <p class="mb-0">
-        © 2024 DSWS - Hệ thống Cảnh báo Dịch bệnh. All rights reserved.
-      </p>
-      <!-- </div> -->
-    </footer>
+      <footer class="bg-white border-t">
+        <div class="container mx-auto px-6 py-4 text-center text-gray-600">
+          © 2024 DSWS - Hệ thống Cảnh báo Dịch bệnh. All rights reserved.
+        </div>
+      </footer>
+    </div>
   </body>
 </html>

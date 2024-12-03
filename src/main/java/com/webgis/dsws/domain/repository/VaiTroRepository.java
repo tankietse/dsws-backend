@@ -6,4 +6,7 @@ import org.springframework.stereotype.Repository;
 
 @Repository
 public interface VaiTroRepository extends JpaRepository<VaiTro, Long> {
+    VaiTro findVaiTroById(Long id);
+
+    VaiTro findVaiTroByTenVaiTro(String name);
 }

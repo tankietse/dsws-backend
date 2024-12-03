@@ -19,6 +19,7 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import jakarta.persistence.EntityNotFoundException;
 import java.util.List;
@@ -28,6 +29,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/v1/vung-dich")
 @Tag(name = "Vùng dịch", description = "API quản lý vùng dịch")
+@PreAuthorize("isAuthenticated()")  // Require authentication for all endpoints
 public class VungDichApi {
 
     @Autowired

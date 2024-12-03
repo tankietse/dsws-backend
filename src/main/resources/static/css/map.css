@@ -1,7 +1,8 @@
 #map {
-    height: 70vh;
+    height: 80vh;
     width: 100%;
-    border-radius: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 /* Stats Panel */
@@ -69,48 +70,33 @@
 /* Map Controls */
 .map-controls {
     position: absolute;
-    top: 20px;
-    right: 20px;
+    top: 10px;
+    right: 10px;
     z-index: 1000;
-    background: rgba(255, 255, 255, 0.2);
-    padding: 12px;
-    border-radius: 12px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
-    backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.3);
-    display: grid;
-    grid-template-columns: 1fr;
-    gap: 8px;
-    min-width: 220px;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
 }
 
 .control-btn {
+    background: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 4px;
     display: flex;
     align-items: center;
-    gap: 10px;
-    padding: 10px 16px;
-    border-radius: 8px;
-    font-weight: 500;
-    font-size: 14px;
-    transition: all 0.2s ease;
-    border: 1px solid transparent;
+    gap: 8px;
     cursor: pointer;
-}
-
-.control-btn svg {
-    width: 18px;
-    height: 18px;
-    opacity: 0.9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .control-btn:hover {
-    transform: translateX(2px);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+    background: #f0f0f0;
 }
 
 .control-btn.active {
-    border-color: currentColor;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+    background: var(--primary-color);
+    color: white;
 }
 
 /* Control button variants */

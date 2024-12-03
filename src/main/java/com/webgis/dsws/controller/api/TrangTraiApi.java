@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/trang-trai")
 @Tag(name = "Trang trại", description = "API quản lý trang trại")
+@PreAuthorize("isAuthenticated()") // Require authentication for all endpoints
 public class TrangTraiApi {
 
     private final TrangTraiService trangTraiService;

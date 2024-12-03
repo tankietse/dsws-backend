@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.Map;
@@ -16,6 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/don-vi-hanh-chinh")
 @Tag(name = "Đơn vị hành chính", description = "API quản lý đơn vị hành chính")
+@PreAuthorize("isAuthenticated()")  // Require authentication for all endpoints
 public class DonViHanhChinhApi {
 
     private final DonViHanhChinhService donViHanhChinhService;
@@ -42,6 +44,7 @@ public class DonViHanhChinhApi {
         return ResponseEntity.ok(donViHanhChinhService.searchByName(name));
     }
 
+    @PreAuthorize("permitAll()")
     @GetMapping("/cap/{capHanhChinh}")
     @Operation(summary = "Lấy danh sách đơn vị hành chính theo cấp")
     public ResponseEntity<List<DonViHanhChinh>> getByCapHanhChinh(@PathVariable String capHanhChinh) {

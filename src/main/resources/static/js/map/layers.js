@@ -30,8 +30,15 @@ class MapLayers {
     if (this.legendControl) {
       this.map.removeControl(this.legendControl);
     }
-    fetch("/api/v1/vung-dich/heatmap")
-      .then((response) => response.json())
+    fetch("/api/v1/vung-dich/heatmap", {
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
       .then((data) => {
         const markers = L.layerGroup();
         data.forEach((point) => {
@@ -100,6 +107,13 @@ class MapLayers {
           return div;
         }.bind(this);
         this.legendControl.addTo(this.map);
+      })
+      .catch((error) => {
+        console.error("Error loading markers:", error);
+        if (error.status === 401) {
+          // Redirect to login if unauthorized
+          window.location.href = "/auth/login";
+        }
       });
   }
 
@@ -107,8 +121,15 @@ class MapLayers {
     if (this.currentLayer) {
       this.map.removeLayer(this.currentLayer);
     }
-    fetch("/api/v1/vung-dich/heatmap")
-      .then((response) => response.json())
+    fetch("/api/v1/vung-dich/heatmap", {
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
       .then((data) => {
         const heatData = data.map((d) => [
           d.latitude,
@@ -127,6 +148,12 @@ class MapLayers {
           },
         });
         this.currentLayer.addTo(this.map);
+      })
+      .catch((error) => {
+        console.error("Error loading heatmap:", error);
+        if (error.status === 401) {
+          window.location.href = "/auth/login";
+        }
       });
   }
 
@@ -134,8 +161,15 @@ class MapLayers {
     if (this.currentLayer) {
       this.map.removeLayer(this.currentLayer);
     }
-    fetch("/api/v1/vung-dich/cluster")
-      .then((response) => response.json())
+    fetch("/api/v1/vung-dich/cluster", {
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
       .then((data) => {
         const markers = L.markerClusterGroup();
         data.forEach((d) => {
@@ -156,12 +190,24 @@ class MapLayers {
         this.currentLayer = markers;
         this.currentLayer.addTo(this.map);
       })
-      .catch((error) => console.error("Error fetching cluster data:", error));
+      .catch((error) => {
+        console.error("Error loading clusters:", error);
+        if (error.status === 401) {
+          window.location.href = "/auth/login";
+        }
+      });
   }
 
   loadAdminBoundaries() {
-    fetch("/api/v1/don-vi-hanh-chinh/cap/6/geojson")
-      .then((response) => response.json())
+    fetch("/api/v1/don-vi-hanh-chinh/cap/6/geojson", {
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
       .then((data) => {
         if (!data || !data.features || data.features.length === 0) {
           console.warn("No boundary data available");
@@ -181,7 +227,12 @@ class MapLayers {
         });
         this.boundaryLayer.addTo(this.map);
       })
-      .catch((error) => console.error("Error loading boundaries:", error));
+      .catch((error) => {
+        console.error("Error loading boundaries:", error);
+        if (error.status === 401) {
+          window.location.href = "/auth/login";
+        }
+      });
   }
 
   toggleBoundaries() {
@@ -215,8 +266,15 @@ class MapLayers {
     const statsPanel = document.getElementById("statsPanel");
     const statsPanelContent = document.getElementById("statsPanelContent");
 
-    fetch("/api/v1/ca-benh/geojson-vung?capHanhChinh=6")
-      .then((response) => response.json())
+    fetch("/api/v1/ca-benh/geojson-vung?capHanhChinh=6", {
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
       .then((data) => {
         this.currentLayer = L.geoJSON(data, {
           style: (feature) => ({
@@ -349,7 +407,12 @@ class MapLayers {
 
         this.legendControl.addTo(this.map);
       })
-      .catch((error) => console.error("Error loading region cases:", error));
+      .catch((error) => {
+        console.error("Error loading region cases:", error);
+        if (error.status === 401) {
+          window.location.href = "/auth/login";
+        }
+      });
   }
 
   getColorByCaseCount(caseCount) {
@@ -365,8 +428,15 @@ class MapLayers {
     if (this.currentLayer) {
       this.map.removeLayer(this.currentLayer);
     }
-    fetch("/api/v1/trang-trai/geojson")
-      .then((response) => response.json())
+    fetch("/api/v1/trang-trai/geojson", {
+      credentials: "include",
+    })
+      .then((response) => {
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        return response.json();
+      })
       .then((data) => {
         const farmClusters = L.markerClusterGroup({
           maxClusterRadius: 80, // Increase cluster radius for better performance
@@ -402,7 +472,12 @@ class MapLayers {
         this.currentLayer = farmClusters;
         this.currentLayer.addTo(this.map);
       })
-      .catch((error) => console.error("Error loading farm data:", error));
+      .catch((error) => {
+        console.error("Error loading farms:", error);
+        if (error.status === 401) {
+          window.location.href = "/auth/login";
+        }
+      });
   }
 }
 
