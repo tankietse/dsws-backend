@@ -120,6 +120,36 @@ public class TrangTraiApi {
         return ResponseEntity.ok(trangTraiService.updateTrangTrai(id, trangTraiDetails));
     }
 
+    @PatchMapping("/{id}")
+    @Operation(summary = "Cập nhật một trường của trang trại")
+    public ResponseEntity<?> updateField(
+            @PathVariable Long id,
+            @RequestBody Map<String, Object> updates) {
+        try {
+            TrangTrai updated = trangTraiService.updateFields(id, updates);
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
+    @PostMapping("/{id}/toggle-status")
+    @Operation(summary = "Thay đổi trạng thái hoạt động của trang trại")
+    public ResponseEntity<?> toggleStatus(
+            @PathVariable Long id,
+            @RequestBody Map<String, Boolean> status) {
+        try {
+            TrangTrai updated = trangTraiService.toggleStatus(id, status.get("trangThaiHoatDong"));
+            return ResponseEntity.ok(updated);
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, e.getMessage()));
+        }
+    }
+
     /**
      * Xóa một trang trại
      *

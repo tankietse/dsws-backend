@@ -3,6 +3,7 @@ package com.webgis.dsws.controller.api;
 import com.webgis.dsws.domain.dto.AuthRequest;
 import com.webgis.dsws.domain.dto.AuthResponse;
 import com.webgis.dsws.domain.dto.RegisterRequest;
+import com.webgis.dsws.domain.model.NguoiDung;
 import com.webgis.dsws.domain.service.NguoiDungService;
 import com.webgis.dsws.util.JwtUtil;
 import org.springframework.http.HttpStatus;
@@ -15,6 +16,10 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.List;
+import org.springframework.security.access.prepost.PreAuthorize;
+import com.webgis.dsws.domain.dto.NguoiDungDTO;
+import jakarta.persistence.EntityNotFoundException;
 
 /**
  * Controller xử lý các yêu cầu xác thực (Authentication) như đăng nhập, đăng
@@ -45,7 +50,7 @@ public class AuthApi {
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
         String jwt_token = jwtUtil.generateToken(authentication.getName());
-        return ResponseEntity.ok(new AuthResponse(jwt_token, "/")); // Explicitly set redirect URL
+        return ResponseEntity.ok(new AuthResponse(jwt_token, "/")); // Set appropriate redirect URL
     }
 
     /**
@@ -92,6 +97,112 @@ public class AuthApi {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("valid", false, "error", e.getMessage()));
+        }
+    }
+
+    /**
+     * Lấy thông tin profile của user hiện tại
+     */
+    @GetMapping("/api/v1/auth/profile")
+    @PreAuthorize("isAuthenticated()") // Add this annotation
+    public ResponseEntity<?> getCurrentUserProfile() {
+        try {
+            NguoiDung currentUser = nguoiDungService.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
+                        .body(Map.of("error", "User not authenticated"));
+            }
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", currentUser.getId());
+            response.put("hoTen", currentUser.getHoTen());
+            response.put("email", currentUser.getEmail());
+            response.put("soDienThoai", currentUser.getSoDienThoai());
+            response.put("chucVu", currentUser.getChucVu());
+            response.put("trangThaiHoatDong", currentUser.getTrangThaiHoatDong());
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("error", "Error fetching user profile: " + e.getMessage()));
+        }
+    }
+
+    /**
+     * Cập nhật thông tin profile
+     */
+    @PutMapping("/api/v1/auth/profile")
+    public ResponseEntity<?> updateProfile(@Valid @RequestBody NguoiDungDTO userDto) {
+        try {
+            NguoiDung currentUser = nguoiDungService.getCurrentUser();
+            if (currentUser == null) {
+                return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Không có quyền cập nhật");
+            }
+
+            userDto.setId(currentUser.getId()); // Ensure updating current user
+            nguoiDungService.update(userDto);
+            return ResponseEntity.ok("Cập nhật thông tin thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi cập nhật thông tin");
+        }
+    }
+
+    /**
+     * Thêm người dùng mới (Admin only)
+     */
+    @PostMapping("/api/v1/auth/users")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> addUser(@Valid @RequestBody NguoiDungDTO userDto) {
+        try {
+            nguoiDungService.save(userDto);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Tạo người dùng thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi tạo người dùng");
+        }
+    }
+
+    /**
+     * Cập nhật thông tin người dùng (Admin only)
+     */
+    @PutMapping("/api/v1/auth/users/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody NguoiDungDTO userDto) {
+        try {
+            userDto.setId(id);
+            nguoiDungService.update(userDto);
+            return ResponseEntity.ok("Cập nhật người dùng thành công");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi cập nhật người dùng");
+        }
+    }
+
+    /**
+     * Xóa người dùng (Admin only)
+     */
+    @DeleteMapping("/api/v1/auth/users/{id}")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
+        try {
+            nguoiDungService.deleteById(id);
+            return ResponseEntity.ok("Xóa người dùng thành công");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi xóa người dùng");
+        }
+    }
+
+    /**
+     * Lấy danh sách người dùng (Admin only)
+     */
+    @GetMapping("/api/v1/auth/users")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> getAllUsers() {
+        try {
+            List<NguoiDungDTO> users = nguoiDungService.findAll();
+            return ResponseEntity.ok(users);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi lấy danh sách người dùng");
         }
     }
 }

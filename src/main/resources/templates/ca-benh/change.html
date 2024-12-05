@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Thay Đổi Thông Tin Ca Bệnh</title>
+</head>
+<body>
+<form th:action="@{/ca-benh/change}" th:object="${caBenh}" method="post">
+    <input type="hidden" th:field="*{id}" />
+
+    <div>
+        <label>Ngày Phát Hiện:</label>
+        <input type="date" th:field="*{ngayPhatHien}" />
+    </div>
+
+    <div>
+        <label>Mô Tả Ban Đầu:</label>
+        <textarea th:field="*{moTaBanDau}"></textarea>
+    </div>
+
+    <div>
+        <label>Số Ca Nhiễm:</label>
+        <input type="number" th:field="*{soCaNhiemBanDau}" />
+    </div>
+
+    <div>
+        <label>Số Ca Tử Vong:</label>
+        <input type="number" th:field="*{soCaTuVongBanDau}" />
+    </div>
+
+    <div>
+        <label>Nguyên Nhân Dự Đoán:</label>
+        <input type="text" th:field="*{nguyenNhanDuDoan}" />
+    </div>
+
+    <button type="submit">Gửi Thay Đổi</button>
+</form>
+</body>
+</html>

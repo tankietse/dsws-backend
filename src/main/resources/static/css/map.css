@@ -1,8 +1,13 @@
 #map {
     height: 80vh;
+    /* Chiều cao viewport trừ đi padding và header */
+    min-height: 500px;
     width: 100%;
-    border-radius: 8px;
+    border-radius: 0.5rem;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 0;
+    /* Lower the z-index of the map */
+    position: relative;
 }
 
 /* Stats Panel */
@@ -70,33 +75,49 @@
 /* Map Controls */
 .map-controls {
     position: absolute;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-    display: flex;
-    flex-direction: column;
-    gap: 5px;
+    top: 20px;
+    right: 20px;
+    z-index: 400;
+    background: rgba(255, 255, 255, 0.2);
+    padding: 12px;
+    border-radius: 12px;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 8px;
+    min-width: 220px;
 }
 
 .control-btn {
-    background: white;
-    border: none;
-    padding: 8px 12px;
-    border-radius: 4px;
     display: flex;
     align-items: center;
     gap: 8px;
+    padding: 8px 12px;
+    background: white;
+    border: 1px solid #ccc;
+    border-radius: 4px;
     cursor: pointer;
+    font-size: 14px;
+    transition: all 0.2s ease;
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .control-btn:hover {
     background: #f0f0f0;
+    transform: translateX(-2px);
 }
 
 .control-btn.active {
-    background: var(--primary-color);
+    background: #003399;
     color: white;
+    border-color: #002266;
+}
+
+.control-btn svg {
+    width: 20px;
+    height: 20px;
 }
 
 /* Control button variants */
@@ -264,3 +285,32 @@
     background: rgba(59, 130, 246, 0.1);
     border-left: 3px solid #3b82f6;
 }
+
+
+
+/* 
+.leaflet-pane.leaflet-basemap-pane {
+    z-index: 100;
+}
+
+.leaflet-pane.leaflet-boundaries-pane {
+    z-index: 150;
+}
+
+.leaflet-pane.leaflet-regions-pane {
+    z-index: 250;
+}
+
+.leaflet-pane.leaflet-points-pane {
+    z-index: 300;
+}
+
+.leaflet-popup-pane {
+    z-index: 400;
+}
+
+.leaflet-marker-pane {
+    z-index: 350;
+}
+
+*/

@@ -1,6 +1,7 @@
 package com.webgis.dsws.domain.repository;
 
 import com.webgis.dsws.domain.model.CaBenh;
+import com.webgis.dsws.domain.model.enums.TrangThaiEnum;
 
 import org.geolatte.geom.Geometry;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -51,4 +52,6 @@ public interface CaBenhRepository extends JpaRepository<CaBenh, Long>, JpaSpecif
            "LEFT JOIN FETCH dvh_cha.donViCha dvh_ong " +
            "WHERE dvh.ranhGioi IS NOT NULL")
     List<CaBenh> findAllWithRegions();
+
+    List<CaBenh> findByTrangThai(TrangThaiEnum trangThai);
 }

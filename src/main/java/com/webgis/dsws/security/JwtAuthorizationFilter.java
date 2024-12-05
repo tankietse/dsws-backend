@@ -106,11 +106,29 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
-        return path.startsWith("/auth/") ||
-                path.startsWith("/api/v1/auth/") ||
+        return path.startsWith("/auth/login") ||
+                path.startsWith("/auth/register") ||
+                path.equals("/api/v1/auth/login") ||
+                path.equals("/api/v1/auth/register") ||
                 path.startsWith("/swagger-ui/") ||
                 path.startsWith("/v3/api-docs/") ||
-                path.contains("favicon.ico");
+                path.startsWith("/css/") ||
+                path.startsWith("/js/") ||
+                path.startsWith("/img/") ||
+                request.getRequestURI().contains("arcgis.com") ||
+                isStaticResource(path);
+    }
+
+    private boolean isStaticResource(String path) {
+        return path.endsWith(".js") ||
+                path.endsWith(".css") ||
+                path.endsWith(".png") ||
+                path.endsWith(".jpg") ||
+                path.endsWith(".gif") ||
+                path.endsWith(".woff") ||
+                path.endsWith(".woff2") ||
+                path.endsWith(".ttf") ||
+                path.endsWith(".map");
     }
 
     private String extractToken(HttpServletRequest request) {

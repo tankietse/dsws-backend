@@ -1,4 +1,4 @@
-package com.webgis.dsws.dto;
+package com.webgis.dsws.domain.dto;
 
 import lombok.Data;
 import lombok.Getter;

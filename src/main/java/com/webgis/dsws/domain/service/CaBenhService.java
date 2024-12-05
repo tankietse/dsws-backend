@@ -2,7 +2,9 @@ package com.webgis.dsws.domain.service;
 
 import com.webgis.dsws.domain.model.CaBenh;
 import com.webgis.dsws.domain.model.DonViHanhChinh;
+import com.webgis.dsws.domain.model.NguoiDung;
 import com.webgis.dsws.domain.model.TrangTrai;
+import com.webgis.dsws.domain.model.enums.TrangThaiEnum;
 import com.webgis.dsws.domain.model.Benh;
 import com.webgis.dsws.domain.repository.CaBenhRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -310,5 +312,66 @@ public class CaBenhService {
 
         result.put("features", features);
         return result;
+    }
+
+    @Transactional
+    public CaBenh createCaBenh(CaBenh caBenh, NguoiDung nguoiTao) {
+        caBenh.setNgayTao(new Date());
+        caBenh.setDaKetThuc(false);
+        caBenh.setTrangThai(TrangThaiEnum.PENDING);
+        caBenh.setNguoiTao(nguoiTao);
+
+        // Validate bệnh và trang trại
+        if (caBenh.getBenh() == null || caBenh.getTrangTrai() == null) {
+            throw new IllegalArgumentException("Bệnh và trang trại không được để trống");
+        }
+
+        // Kiểm tra trùng lặp ca bệnh
+        boolean caBenhExists = caBenhRepository.findAll().stream()
+                .anyMatch(cb -> cb.getTrangTrai().getId().equals(caBenh.getTrangTrai().getId())
+                        && cb.getBenh().getId().equals(caBenh.getBenh().getId())
+                        && !cb.getDaKetThuc());
+
+        if (caBenhExists) {
+            throw new IllegalStateException("Đã tồn tại ca bệnh chưa kết thúc cho bệnh này tại trang trại");
+        }
+
+        return caBenhRepository.save(caBenh);
+    }
+
+    @Transactional
+    public CaBenh thayDoiCaBenh(CaBenh caBenh, NguoiDung nguoiDung) {
+        caBenh.setTrangThai(TrangThaiEnum.PENDING);
+        caBenh.setNguoiTao(nguoiDung);
+        caBenh.setNgayTao(new Date(System.currentTimeMillis()));
+        return caBenhRepository.save(caBenh);
+    }
+
+    @Transactional
+    public CaBenh duyetCaBenh(Long caBenhId, NguoiDung nguoiQuanLy, boolean approved) {
+        CaBenh caBenh = caBenhRepository.findById(caBenhId)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy ca bệnh"));
+
+        if (approved) {
+            caBenh.setTrangThai(TrangThaiEnum.APPROVED);
+        } else {
+            caBenh.setTrangThai(TrangThaiEnum.REJECTED);
+        }
+
+        caBenh.setNguoiDuyet(nguoiQuanLy);
+        caBenh.setNgayDuyet(new Date(System.currentTimeMillis()));
+
+        return caBenhRepository.save(caBenh);
+    }
+
+    @Transactional(readOnly = true)
+    public List<CaBenh> findByTrangThai(TrangThaiEnum trangThaiEnum) {
+        return caBenhRepository.findByTrangThai(trangThaiEnum);
+    }
+
+    @Transactional(readOnly = true)
+    public CaBenh findById(Long id) {
+        return caBenhRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy ca bệnh với ID: " + id));
     }
 }

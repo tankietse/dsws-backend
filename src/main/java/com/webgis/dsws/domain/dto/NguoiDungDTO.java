@@ -1,4 +1,4 @@
-package com.webgis.dsws.dto;
+package com.webgis.dsws.domain.dto;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
@@ -25,4 +25,3 @@ public class NguoiDungDTO {
     private String chucVu;
     private Boolean trangThaiHoatDong;
 }
-

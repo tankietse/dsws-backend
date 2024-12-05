@@ -4,14 +4,24 @@ class MapLayers {
     this.currentLayer = null;
     this.boundaryLayer = null;
     this.legendControl = null;
-    this.map.createPane("boundaryPane");
-    this.map.getPane("boundaryPane").style.zIndex = 250;
 
     // Create a custom Canvas renderer with willReadFrequently set to true
     this.heatRenderer = L.canvas({ padding: 0.5, willReadFrequently: true });
   }
 
+  clearCurrentLayer() {
+    if (this.currentLayer) {
+      this.map.removeLayer(this.currentLayer);
+      this.currentLayer = null;
+    }
+    if (this.legendControl) {
+      this.map.removeControl(this.legendControl);
+      this.legendControl = null;
+    }
+  }
+
   getColorByMucDo(mucDo) {
+    console.log("getColorByMucDo called with:", mucDo);
     switch (mucDo) {
       case "CAP_DO_1":
       case "CAP_DO_3":
@@ -24,35 +34,35 @@ class MapLayers {
   }
 
   loadMarkers() {
-    if (this.currentLayer) {
-      this.map.removeLayer(this.currentLayer);
-    }
-    if (this.legendControl) {
-      this.map.removeControl(this.legendControl);
-    }
-    fetch("/api/v1/vung-dich/heatmap", {
-      credentials: "include",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
+    console.log("loadMarkers called");
+    return new Promise((resolve, reject) => {
+      this.clearCurrentLayer();
+      fetch("/api/v1/vung-dich/heatmap", {
+        credentials: "include",
       })
-      .then((data) => {
-        const markers = L.layerGroup();
-        data.forEach((point) => {
-          const color = this.getColorByMucDo(point.mucDo);
-          const marker = L.circleMarker([point.latitude, point.longitude], {
-            radius: 8 + point.intensity * 8,
-            fillColor: color,
-            color: "#000",
-            weight: 1,
-            opacity: 1,
-            fillOpacity: 0.7,
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const markers = L.layerGroup([], {
+            pane: "points",
+            renderer: L.canvas(), // Use canvas renderer for better performance
           });
+          data.forEach((point) => {
+            const color = this.getColorByMucDo(point.mucDo);
+            const marker = L.circleMarker([point.latitude, point.longitude], {
+              radius: 8 + point.intensity * 8,
+              fillColor: color,
+              color: "#000",
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.7,
+            });
 
-          const popupContent = `
+            const popupContent = `
                   <div class="stats-panel">
                     <div class="stats-title">
                       <i class="fas fa-map-marker-alt"></i>
@@ -82,157 +92,172 @@ class MapLayers {
                     </div>
                   </div>
                 `;
-          marker.bindPopup(popupContent);
-          markers.addLayer(marker);
-        });
-        this.currentLayer = markers;
-        this.currentLayer.addTo(this.map);
+            marker.bindPopup(popupContent);
+            markers.addLayer(marker);
+          });
+          this.currentLayer = markers;
+          this.currentLayer.addTo(this.map);
 
-        // Create new legend
-        this.legendControl = L.control({ position: "bottomright" });
-        this.legendControl.onAdd = function (map) {
-          const div = L.DomUtil.create("div", "stats-panel legend");
-          const grades = ["CAP_DO_1", "CAP_DO_2", "CAP_DO_3", "CAP_DO_4"];
-          const labels = ["Cấp độ 1", "Cấp độ 2", "Cấp độ 3", "Cấp độ 4"];
+          // Create new legend
+          this.legendControl = L.control({ position: "bottomright" });
+          this.legendControl.onAdd = function (map) {
+            const div = L.DomUtil.create("div", "stats-panel legend");
+            const grades = ["CAP_DO_1", "CAP_DO_2", "CAP_DO_3", "CAP_DO_4"];
+            const labels = ["Cấp độ 1", "Cấp độ 2", "Cấp độ 3", "Cấp độ 4"];
 
-          div.innerHTML = "<h4>Mức độ dịch bệnh</h4>";
-          for (let i = 0; i < grades.length; i++) {
-            div.innerHTML +=
-              '<i style="background:' +
-              this.getColorByMucDo(grades[i]) +
-              '"></i> ' +
-              labels[i] +
-              "<br>";
+            div.innerHTML = "<h4>Mức độ dịch bệnh</h4>";
+            for (let i = 0; i < grades.length; i++) {
+              div.innerHTML +=
+                '<i style="background:' +
+                this.getColorByMucDo(grades[i]) +
+                '"></i> ' +
+                labels[i] +
+                "<br>";
+            }
+            return div;
+          }.bind(this);
+          this.legendControl.addTo(this.map);
+          resolve();
+        })
+        .catch((error) => {
+          console.error("Error loading markers:", error);
+          if (error.status === 401) {
+            // Redirect to login if unauthorized
+            window.location.href = "/auth/login";
           }
-          return div;
-        }.bind(this);
-        this.legendControl.addTo(this.map);
-      })
-      .catch((error) => {
-        console.error("Error loading markers:", error);
-        if (error.status === 401) {
-          // Redirect to login if unauthorized
-          window.location.href = "/auth/login";
-        }
-      });
+          reject(error);
+        });
+    });
   }
 
   loadHeatmap() {
-    if (this.currentLayer) {
-      this.map.removeLayer(this.currentLayer);
-    }
-    fetch("/api/v1/vung-dich/heatmap", {
-      credentials: "include",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
+    return new Promise((resolve, reject) => {
+      this.clearCurrentLayer();
+      fetch("/api/v1/vung-dich/heatmap", {
+        credentials: "include",
       })
-      .then((data) => {
-        const heatData = data.map((d) => [
-          d.latitude,
-          d.longitude,
-          d.intensity * 100, // Scale up intensity for better visualization
-        ]);
-        this.currentLayer = L.heatLayer(heatData, {
-          radius: 25,
-          blur: 15,
-          maxZoom: 15,
-          gradient: {
-            0.2: "#4dff4d",
-            0.4: "#ffff4d",
-            0.6: "#ffa64d",
-            0.8: "#ff4d4d",
-          },
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const heatData = data.map((d) => [
+            d.latitude,
+            d.longitude,
+            d.intensity * 100, // Scale up intensity for better visualization
+          ]);
+          this.currentLayer = L.heatLayer(heatData, {
+            radius: 25,
+            blur: 15,
+            maxZoom: 15,
+            pane: "points",
+            gradient: {
+              0.2: "#4dff4d",
+              0.4: "#ffff4d",
+              0.6: "#ffa64d",
+              0.8: "#ff4d4d",
+            },
+          });
+          this.currentLayer.addTo(this.map);
+          resolve();
+        })
+        .catch((error) => {
+          console.error("Error loading heatmap:", error);
+          if (error.status === 401) {
+            window.location.href = "/auth/login";
+          }
+          reject(error);
         });
-        this.currentLayer.addTo(this.map);
-      })
-      .catch((error) => {
-        console.error("Error loading heatmap:", error);
-        if (error.status === 401) {
-          window.location.href = "/auth/login";
-        }
-      });
+    });
   }
 
   loadClusterSymbols() {
-    if (this.currentLayer) {
-      this.map.removeLayer(this.currentLayer);
-    }
-    fetch("/api/v1/vung-dich/cluster", {
-      credentials: "include",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
+    return new Promise((resolve, reject) => {
+      if (this.currentLayer) {
+        this.map.removeLayer(this.currentLayer);
+      }
+      fetch("/api/v1/vung-dich/cluster", {
+        credentials: "include",
       })
-      .then((data) => {
-        const markers = L.markerClusterGroup();
-        data.forEach((d) => {
-          // Validate coordinates
-          if (
-            typeof d.latitude !== "number" ||
-            typeof d.longitude !== "number"
-          ) {
-            console.warn(
-              `Invalid coordinates for cluster point: ${JSON.stringify(d)}`
-            );
-            return; // Skip this point
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
           }
+          return response.json();
+        })
+        .then((data) => {
+          const markers = L.markerClusterGroup();
+          data.forEach((d) => {
+            // Validate coordinates
+            if (
+              typeof d.latitude !== "number" ||
+              typeof d.longitude !== "number"
+            ) {
+              console.warn(
+                `Invalid coordinates for cluster point: ${JSON.stringify(d)}`
+              );
+              return; // Skip this point
+            }
 
-          const marker = L.marker([d.latitude, d.longitude]);
-          markers.addLayer(marker);
+            const marker = L.marker([d.latitude, d.longitude]);
+            markers.addLayer(marker);
+          });
+          this.currentLayer = markers;
+          this.currentLayer.addTo(this.map);
+          resolve();
+        })
+        .catch((error) => {
+          console.error("Error loading clusters:", error);
+          if (error.status === 401) {
+            window.location.href = "/auth/login";
+          }
+          reject(error);
         });
-        this.currentLayer = markers;
-        this.currentLayer.addTo(this.map);
-      })
-      .catch((error) => {
-        console.error("Error loading clusters:", error);
-        if (error.status === 401) {
-          window.location.href = "/auth/login";
-        }
-      });
+    });
   }
 
   loadAdminBoundaries() {
-    fetch("/api/v1/don-vi-hanh-chinh/cap/6/geojson", {
-      credentials: "include",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
+    console.log("loadAdminBoundaries called");
+    return new Promise((resolve, reject) => {
+      fetch("/api/v1/don-vi-hanh-chinh/cap/6/geojson", {
+        credentials: "include",
       })
-      .then((data) => {
-        if (!data || !data.features || data.features.length === 0) {
-          console.warn("No boundary data available");
-          return;
-        }
-        this.boundaryLayer = L.geoJSON(data, {
-          style: {
-            color: "#003399",
-            weight: 1,
-            opacity: 0.3,
-            fillOpacity: 0.1,
-          },
-          onEachFeature: function (feature, layer) {
-            layer.bindPopup(feature.properties.ten);
-          },
-          pane: "boundaryPane", // Assign to the custom pane
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          if (!data || !data.features || data.features.length === 0) {
+            console.warn("No boundary data available");
+            return;
+          }
+          this.boundaryLayer = L.geoJSON(data, {
+            pane: "boundaries",
+            style: {
+              color: "#003399",
+              weight: 1,
+              opacity: 0.3,
+              fillOpacity: 0.1,
+            },
+            onEachFeature: function (feature, layer) {
+              layer.bindPopup(feature.properties.ten);
+            },
+          });
+          this.boundaryLayer.addTo(this.map);
+          resolve();
+        })
+        .catch((error) => {
+          console.error("Error loading boundaries:", error);
+          if (error.status === 401) {
+            window.location.href = "/auth/login";
+          }
+          reject(error);
         });
-        this.boundaryLayer.addTo(this.map);
-      })
-      .catch((error) => {
-        console.error("Error loading boundaries:", error);
-        if (error.status === 401) {
-          window.location.href = "/auth/login";
-        }
-      });
+    });
   }
 
   toggleBoundaries() {
@@ -256,41 +281,41 @@ class MapLayers {
   }
 
   loadRegionCases() {
-    if (this.currentLayer) {
-      this.map.removeLayer(this.currentLayer);
-    }
-    if (this.legendControl) {
-      this.map.removeControl(this.legendControl);
-    }
+    return new Promise((resolve, reject) => {
+      this.clearCurrentLayer();
 
-    const statsPanel = document.getElementById("statsPanel");
-    const statsPanelContent = document.getElementById("statsPanelContent");
+      const statsPanel = document.getElementById("statsPanel");
+      const statsPanelContent = document.getElementById("statsPanelContent");
 
-    fetch("/api/v1/ca-benh/geojson-vung?capHanhChinh=6", {
-      credentials: "include",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
+      fetch("/api/v1/ca-benh/geojson-vung?capHanhChinh=6", {
+        credentials: "include",
       })
-      .then((data) => {
-        this.currentLayer = L.geoJSON(data, {
-          style: (feature) => ({
-            fillColor: this.getColorByCaseCount(feature.properties.totalCases),
-            weight: 2,
-            opacity: 1,
-            color: "white",
-            dashArray: "3",
-            fillOpacity: 0.7,
-          }),
-          onEachFeature: (feature, layer) => {
-            // Create detailed popup content
-            const diseases = feature.properties.diseaseTypes;
-            const totalCases = feature.properties.totalCases;
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          this.currentLayer = L.geoJSON(data, {
+            pane: "regions",
+            renderer: L.canvas(), // Use canvas renderer
+            style: (feature) => ({
+              fillColor: this.getColorByCaseCount(
+                feature.properties.totalCases
+              ),
+              weight: 2,
+              opacity: 1,
+              color: "white",
+              dashArray: "3",
+              fillOpacity: 0.7,
+            }),
+            onEachFeature: (feature, layer) => {
+              // Create detailed popup content
+              const diseases = feature.properties.diseaseTypes;
+              const totalCases = feature.properties.totalCases;
 
-            let popupContent = `
+              let popupContent = `
                         <div class="stats-panel">
                           <div class="stats-title">
                             <i class="fas fa-chart-pie"></i>
@@ -335,44 +360,44 @@ class MapLayers {
                         </div>
                     `;
 
-            layer.bindPopup(popupContent);
+              layer.bindPopup(popupContent);
 
-            // Add hover effect
-            layer.on({
-              mouseover: function (e) {
-                layer.setStyle({
-                  weight: 3,
-                  color: "LightSlateGray",
-                  fillOpacity: 0.9,
-                });
-                layer.bringToFront();
-              },
-              mouseout: function (e) {
-                layer.setStyle({
-                  weight: 2,
-                  color: "white",
-                  fillOpacity: 0.7,
-                });
-                layer.bringToBack();
-              },
-            });
-          },
-          coordsToLatLng: (coords) => {
-            // Swap longitude and latitude for Leaflet
-            return new L.LatLng(coords[1], coords[0]);
-          },
-        }).addTo(this.map);
+              // Add hover effect
+              layer.on({
+                mouseover: function (e) {
+                  layer.setStyle({
+                    weight: 3,
+                    color: "LightSlateGray",
+                    fillOpacity: 0.9,
+                  });
+                  layer.bringToFront();
+                },
+                mouseout: function (e) {
+                  layer.setStyle({
+                    weight: 2,
+                    color: "white",
+                    fillOpacity: 0.7,
+                  });
+                  layer.bringToBack();
+                },
+              });
+            },
+            coordsToLatLng: (coords) => {
+              // Swap longitude and latitude for Leaflet
+              return new L.LatLng(coords[1], coords[0]);
+            },
+          }).addTo(this.map);
 
-        // Add legend
-        this.legendControl = L.control({ position: "bottomleft" });
+          // Add legend
+          this.legendControl = L.control({ position: "bottomleft" });
 
-        this.legendControl.onAdd = (map) => {
-          var div = L.DomUtil.create("div", "info-legend");
+          this.legendControl.onAdd = (map) => {
+            var div = L.DomUtil.create("div", "info-legend");
 
-          const grades = [0, 10000, 20000, 50000, 100000];
-          const total = grades.reduce((acc, curr) => acc + curr, 0);
+            const grades = [0, 10000, 20000, 50000, 100000];
+            const total = grades.reduce((acc, curr) => acc + curr, 0);
 
-          div.innerHTML = `
+            div.innerHTML = `
             <div class="legend-header">
                 <svg width="24" height="24" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"></path>
@@ -402,20 +427,24 @@ class MapLayers {
             </div>
           `;
 
-          return div;
-        };
+            return div;
+          };
 
-        this.legendControl.addTo(this.map);
-      })
-      .catch((error) => {
-        console.error("Error loading region cases:", error);
-        if (error.status === 401) {
-          window.location.href = "/auth/login";
-        }
-      });
+          this.legendControl.addTo(this.map);
+          resolve();
+        })
+        .catch((error) => {
+          console.error("Error loading region cases:", error);
+          if (error.status === 401) {
+            window.location.href = "/auth/login";
+          }
+          reject(error);
+        });
+    });
   }
 
   getColorByCaseCount(caseCount) {
+    console.log("getColorByCaseCount called with:", caseCount);
     if (caseCount > 100000) return "#FF0000";
     if (caseCount > 50000) return "#FF4500";
     if (caseCount > 20000) return "#FFA500";
@@ -425,31 +454,32 @@ class MapLayers {
   }
 
   loadFarms() {
-    if (this.currentLayer) {
-      this.map.removeLayer(this.currentLayer);
-    }
-    fetch("/api/v1/trang-trai/geojson", {
-      credentials: "include",
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Network response was not ok");
-        }
-        return response.json();
+    return new Promise((resolve, reject) => {
+      if (this.currentLayer) {
+        this.map.removeLayer(this.currentLayer);
+      }
+      fetch("/api/v1/trang-trai/geojson", {
+        credentials: "include",
       })
-      .then((data) => {
-        const farmClusters = L.markerClusterGroup({
-          maxClusterRadius: 80, // Increase cluster radius for better performance
-          disableClusteringAtZoom: 14, // Disable clustering at higher zoom levels
-          chunkedLoading: true, // Enable chunked loading for large datasets
-          chunkProgress: updateProgressBar, // Optional: update progress bar during loading
-        });
-        data.features.forEach((feature) => {
-          const marker = L.marker([
-            feature.geometry.coordinates[1],
-            feature.geometry.coordinates[0],
-          ]);
-          marker.bindPopup(`
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error("Network response was not ok");
+          }
+          return response.json();
+        })
+        .then((data) => {
+          const farmClusters = L.markerClusterGroup({
+            maxClusterRadius: 80, // Increase cluster radius for better performance
+            disableClusteringAtZoom: 14, // Disable clustering at higher zoom levels
+            chunkedLoading: true, // Enable chunked loading for large datasets
+            chunkProgress: updateProgressBar, // Optional: update progress bar during loading
+          });
+          data.features.forEach((feature) => {
+            const marker = L.marker([
+              feature.geometry.coordinates[1],
+              feature.geometry.coordinates[0],
+            ]);
+            marker.bindPopup(`
             <div class="stats-panel">
               <div class="stats-title">
                 <i class="fas fa-tractor"></i>
@@ -467,17 +497,20 @@ class MapLayers {
               </div>
             </div>
           `);
-          farmClusters.addLayer(marker);
+            farmClusters.addLayer(marker);
+          });
+          this.currentLayer = farmClusters;
+          this.currentLayer.addTo(this.map);
+          resolve();
+        })
+        .catch((error) => {
+          console.error("Error loading farms:", error);
+          if (error.status === 401) {
+            window.location.href = "/auth/login";
+          }
+          reject(error);
         });
-        this.currentLayer = farmClusters;
-        this.currentLayer.addTo(this.map);
-      })
-      .catch((error) => {
-        console.error("Error loading farms:", error);
-        if (error.status === 401) {
-          window.location.href = "/auth/login";
-        }
-      });
+    });
   }
 }
 

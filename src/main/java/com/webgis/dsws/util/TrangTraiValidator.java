@@ -1,8 +1,9 @@
 
 package com.webgis.dsws.util;
 
-import com.webgis.dsws.dto.TrangTraiImportDTO;
 import org.springframework.stereotype.Component;
+
+import com.webgis.dsws.domain.dto.TrangTraiImportDTO;
 
 @Component
 public class TrangTraiValidator {

@@ -1,7 +1,7 @@
 package com.webgis.dsws.importer;
 
-import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.exception.DataImportException;
+import com.webgis.dsws.domain.dto.TrangTraiImportDTO;
 import com.webgis.dsws.domain.service.importer.TrangTraiImportBatchProcessor;
 import com.webgis.dsws.util.DataValidator;
 

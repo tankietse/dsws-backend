@@ -1,10 +1,27 @@
+/* Chỉ giữ lại các styles không thể thực hiện bằng Tailwind */
 :root {
   --primary-color: #003399;
   --secondary-color: #004ce6;
-  --background-color: #f0f2f5;
-  --glass-background: rgba(255, 255, 255, 0.7);
-  --glass-border: rgba(255, 255, 255, 0.25);
-  --glass-shadow: 0 8px 32px rgba(0, 51, 153, 0.1);
+}
+
+/* Custom scrollbar */
+.sidebar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar::-webkit-scrollbar-thumb {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+/* Backdrop filter styles */
+.glass-bg {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 
 body {
@@ -112,7 +129,6 @@ body {
 }
 
 footer {
-  margin-left: 250px;
   padding: 1.5rem;
   background: var(--glass-background);
   border-radius: 12px 12px 0 0;
@@ -120,15 +136,24 @@ footer {
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   border: 1px solid var(--glass-border);
-  margin: 0 16px 16px 266px;
 }
 
 section[layout\:fragment="content"] {
   background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
-  border-radius: 12px;
+  /* backdrop-filter: blur(8px); */
+  box-shadow: var(--glass-shadow);
+  border-radius: 8px;
   border: 1px solid var(--glass-border);
   padding: 20px;
   margin: 16px;
+}
+
+/* Ensure UI components appear above the map */
+header,
+.dropdown-menu,
+.account-button {
+  position: relative;
+  /* Position should be relative or absolute for z-index to take effect */
+  z-index: 1000;
+  /* Higher z-index to appear above the map */
 }

@@ -4,14 +4,13 @@ import com.webgis.dsws.domain.dto.RegisterRequest;
 import com.webgis.dsws.domain.model.NguoiDung;
 import com.webgis.dsws.domain.model.NguoiDungVaiTro;
 import com.webgis.dsws.domain.model.VaiTro;
-import com.webgis.dsws.dto.NguoiDungDTO;
+import com.webgis.dsws.domain.dto.NguoiDungDTO;
 import com.webgis.dsws.domain.model.enums.VaiTroEnum;
 import com.webgis.dsws.domain.repository.NguoiDungRepository;
 import com.webgis.dsws.domain.repository.NguoiDungVaiTroRepository;
 import com.webgis.dsws.domain.repository.VaiTroRepository;
 import jakarta.persistence.EntityNotFoundException;
 import jakarta.servlet.http.HttpSession;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.CacheConfig;
@@ -46,16 +45,16 @@ public class NguoiDungService implements UserDetailsService {
 
     private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
 
-    public void save(NguoiDungDTO nguoiDungDTO) {
+    public void save(com.webgis.dsws.domain.dto.NguoiDungDTO userDto) {
         NguoiDung nguoiDung = new NguoiDung();
-        nguoiDung.setTenDangNhap(nguoiDungDTO.getTenDangNhap());
-        nguoiDung.setEmail(nguoiDungDTO.getEmail());
-        nguoiDung.setHoTen(nguoiDungDTO.getHoTen());
-        nguoiDung.setSoDienThoai(nguoiDungDTO.getSoDienThoai());
-        nguoiDung.setChucVu(nguoiDungDTO.getChucVu());
-        nguoiDung.setTrangThaiHoatDong(nguoiDungDTO.getTrangThaiHoatDong());
+        nguoiDung.setTenDangNhap(userDto.getTenDangNhap());
+        nguoiDung.setEmail(userDto.getEmail());
+        nguoiDung.setHoTen(userDto.getHoTen());
+        nguoiDung.setSoDienThoai(userDto.getSoDienThoai());
+        nguoiDung.setChucVu(userDto.getChucVu());
+        nguoiDung.setTrangThaiHoatDong(userDto.getTrangThaiHoatDong());
         nguoiDung.setNgayTao(LocalDateTime.now());
-        nguoiDung.setMatKhauHash(passwordEncoder.encode(nguoiDungDTO.getMatKhauHash()));
+        nguoiDung.setMatKhauHash(passwordEncoder.encode(userDto.getMatKhauHash()));
         nguoiDungRepository.save(nguoiDung);
     }
 

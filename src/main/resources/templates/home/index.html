@@ -53,16 +53,23 @@
       </div> -->
 
       <div class="relative">
-        <div id="map" class="rounded-lg shadow-md"></div>
-
-        <div class="absolute top-4 right-4 flex flex-col space-y-2">
-          <button
-            id="heatmapBtn"
-            class="flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        <div id="map" class="rounded-lg shadow-md">
+          <div
+            id="map-loading"
+            class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50"
           >
+            <div class="text-center">
+              <div class="spinner-border text-primary" role="status"></div>
+              <p class="mt-2">Đang tải bản đồ...</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="map-controls leaflet-control glass">
+          <button id="heatmapBtn" class="control-btn heatmap-btn">
             <svg
               xmlns="http://www.w3.org/2000/svg"
-              class="w-5 h-5 mr-2"
+              class="h-5 w-5"
               viewBox="0 0 20 20"
               fill="currentColor"
             >
@@ -154,38 +161,11 @@
         <div class="stats-title">Thống kê chi tiết</div>
         <div id="statsPanelContent"></div>
       </div> -->
-
+      <!-- Include JS files -->
       <script th:src="@{/js/map/config.js}"></script>
       <script th:src="@{/js/map/layers.js}"></script>
       <script th:src="@{/js/map/controls.js}"></script>
-      <script>
-        // Đợi xác thực hoàn tất trước khi khởi tạo map
-        document.addEventListener("DOMContentLoaded", async function () {
-          if (!window._authInitialized) {
-            await new Promise((resolve) => {
-              const checkAuth = setInterval(() => {
-                if (window._authInitialized) {
-                  clearInterval(checkAuth);
-                  resolve();
-                }
-              }, 100);
-            });
-          }
-
-          const map = L.map("map", MAP_CONFIG);
-          map.setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
-
-          L.esri.Vector.vectorBasemapLayer(MAP_CONFIG.basemapEnum, {
-            token: MAP_CONFIG.accessToken,
-          }).addTo(map);
-
-          const mapLayers = new MapLayers(map);
-          const mapControls = new MapControls(mapLayers);
-
-          mapLayers.loadAdminBoundaries();
-          mapLayers.loadMarkers();
-        });
-      </script>
+      <script th:src="@{/js/map/init.js}"></script>
     </section>
   </body>
 </html>

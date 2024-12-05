@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Danh sách Bệnh</title>
+  </head>
+  <body>
+    <section layout:fragment="content">
+      <div layout:fragment="breadcrumb">
+        <span class="text-gray-500">/</span>
+        <a href="/benh" class="hover:text-blue-600">Quản lý bệnh</a>
+        <span class="text-gray-500">/</span>
+        <span class="text-gray-800">Danh sách</span>
+      </div>
+
+      <h1 layout:fragment="page-title">Danh sách Bệnh</h1>
+      <p layout:fragment="page-subtitle">
+        Quản lý thông tin các loại bệnh trong hệ thống
+      </p>
+
+      <div class="container mx-auto mt-6">
+        <div class="text-right mb-3">
+          <a
+            href="/benh/create"
+            class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >Thêm Bệnh</a
+          >
+        </div>
+        <table class="min-w-full bg-white border border-gray-200">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-4 py-2 border">ID</th>
+              <th class="px-4 py-2 border">Tên Bệnh</th>
+              <th class="px-4 py-2 border">Mô Tả</th>
+              <th class="px-4 py-2 border">Tác Nhân</th>
+              <th class="px-4 py-2 border">Triệu Chứng</th>
+              <th class="px-4 py-2 border">Thời Gian Ủ Bệnh</th>
+              <th class="px-4 py-2 border">Chẩn Đoán</th>
+              <th class="px-4 py-2 border">Phòng Ngừa</th>
+              <th class="px-4 py-2 border">Hành Động</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr th:each="benh : ${dsBenh}" class="border-t">
+              <td class="px-4 py-2 border" th:text="${benh.id}"></td>
+              <td class="px-4 py-2 border" th:text="${benh.tenBenh}"></td>
+              <td class="px-4 py-2 border" th:text="${benh.moTa}"></td>
+              <td
+                class="px-4 py-2 border"
+                th:text="${benh.tacNhanGayBenh}"
+              ></td>
+              <td class="px-4 py-2 border" th:text="${benh.trieuChung}"></td>
+              <td class="px-4 py-2 border" th:text="${benh.thoiGianUBenh}"></td>
+              <td
+                class="px-4 py-2 border"
+                th:text="${benh.phuongPhapChanDoan}"
+              ></td>
+              <td
+                class="px-4 py-2 border"
+                th:text="${benh.bienPhapPhongNgua}"
+              ></td>
+              <td class="px-4 py-2 border">
+                <a
+                  th:href="@{/benh/edit/{id}(id=${benh.id})}"
+                  class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded"
+                  >Sửa</a
+                >
+                <a
+                  th:href="@{/benh/delete/{id}(id=${benh.id})}"
+                  class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded"
+                  >Xóa</a
+                >
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </body>
+</html>

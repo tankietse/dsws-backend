@@ -1,11 +1,11 @@
 const MAP_CONFIG = {
-  center: [10.762622, 106.660172],
-  zoom: 20,
-  minZoom: 2,
-  maxZoom: 15,
+  center: [10.762622, 106.660172], // Tọa độ TP.HCM
+  zoom: 12, // Điều chỉnh zoom level phù hợp hơn
+  minZoom: 5,
+  maxZoom: 18,
   accessToken:
-    "AAPTxy8BH1VEsoebNVZXo8HurME8mhreBXGaRJgvnaN5cC43A7NYz5KT8CgGQ9vATF_rgvKUTryygEQpoMPspFmHjniacN1sL5amsa1xwzmFRMzugLvaz3d4mcveQ_cfwFT0zfr4tDV_0hfGc4_hCzy8tHKobl72caHgO1kp_ElXJsq1dPiqx39QaGyJguzoMpHsICSdSaKtjdaXXKkKPxwCqZ6aIICRSHSPjHj-DFPzOFWm3EQKm4uiOCuM1enCEx5bAT1_YdAd4C5N",
-  basemapEnum: "arcgis/light-gray",
+    "AAPTxy8BH1VEsoebNVZXo8HurME8mhreBXGaRJgvnaN5cC43A7NYz5KT8CgGQ9vATF_rgvKUTryygEQpoMPspFmHjniacN1sL5amsa1xwzmFRMzugLvaz3d4mcveQ_cfwFT0zfr4tDV_0hfGc4_hCzy8tHKobl72caHgO1kp_ElXJsq1dPiqx39QaGyJguzoMpHsICSdSaKtjdaXXKkKPxwCqZ6aIICRSHSPjHj-DFPzOFWm3EQKm4uiOCuM1enCEx5bAT1_YdAd4C5N", // Đảm bảo API key là hợp lệ
+  basemapEnum: "arcgis/light-gray", // Cập nhật enum mặc định
 };
 
 const SEVERITY_COLORS = {

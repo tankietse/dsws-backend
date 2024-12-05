@@ -1,4 +1,4 @@
-package com.webgis.dsws.dto;
+package com.webgis.dsws.domain.dto;
 
 import com.webgis.dsws.domain.model.Benh;
 import com.webgis.dsws.domain.model.CaBenh;

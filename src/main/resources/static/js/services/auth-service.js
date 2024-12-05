@@ -13,6 +13,7 @@ class AuthService {
 
       // Skip auth check on login page
       if (window.location.pathname === this.LOGIN_URL) return;
+      if (window.location.pathname.includes("/auth")) return;
 
       this.validateToken().then((isValid) => {
         if (!isValid) {
@@ -37,28 +38,39 @@ class AuthService {
     }
   }
 
+  // Helper function to set token cookie
+  static setTokenCookie(token) {
+    document.cookie = `token=${token}; path=/;`;
+  }
+
+  // Helper function to get token from cookie
+  static getTokenFromCookie() {
+    const name = "token=";
+    const decodedCookie = decodeURIComponent(document.cookie);
+    const ca = decodedCookie.split(";");
+    for (let c of ca) {
+      while (c.charAt(0) === " ") c = c.substring(1);
+      if (c.indexOf(name) === 0) return c.substring(name.length, c.length);
+    }
+    return "";
+  }
+
+  // Helper function to delete token cookie
+  static deleteTokenCookie() {
+    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+  }
+
   static async validateToken() {
+    const token = this.getTokenFromCookie();
+    if (!token) return false;
+
     try {
-      const response = await fetch(this.VALIDATION_URL, {
-        method: "GET",
-        cache: "no-store",
-        credentials: "include",
+      const response = await fetch("/api/v1/auth/validate", {
         headers: {
-          ...this.getAuthHeader(),
-          Accept: "application/json",
+          Authorization: "Bearer " + token,
         },
       });
-
-      if (!response.ok) return false;
-
       const data = await response.json();
-      if (data.valid) {
-        // Ensure token is stored if validation successful
-        const token = response.headers.get("Authorization");
-        if (token) {
-          sessionStorage.setItem("jwt_token", token.replace("Bearer ", ""));
-        }
-      }
       return data.valid === true;
     } catch (error) {
       console.error("Token validation failed:", error);
@@ -82,12 +94,15 @@ class AuthService {
 
       const data = await response.json();
 
-      // Save token to sessionStorage for future requests
+      // Save token to cookie for future requests
       if (data.token) {
-        sessionStorage.setItem("jwt_token", data.token);
+        this.setTokenCookie(data.token);
       }
 
-      window.location.href = data.redirectUrl || this.REDIRECT_URL;
+      const redirectUrl =
+        new URLSearchParams(window.location.search).get("redirect") ||
+        this.REDIRECT_URL;
+      window.location.href = redirectUrl;
       return true;
     } catch (error) {
       console.error("Login failed:", error);
@@ -96,12 +111,12 @@ class AuthService {
   }
 
   static getAuthHeader() {
-    const token = sessionStorage.getItem("jwt_token");
+    const token = this.getTokenFromCookie();
     return token ? { Authorization: `Bearer ${token}` } : {};
   }
 
   static logout() {
-    sessionStorage.removeItem("jwt_token");
+    this.deleteTokenCookie();
     sessionStorage.removeItem("authenticated");
     window.location.href = this.LOGIN_URL;
   }
@@ -113,9 +128,26 @@ class AuthService {
       if (!args[1]) args[1] = {};
       if (!args[1].headers) args[1].headers = {};
 
-      // Don't add auth headers for auth endpoints
+      // Extract the request URL safely
+      let requestUrl = "";
+      if (typeof args[0] === "string") {
+        requestUrl = args[0];
+      } else if (args[0] instanceof Request) {
+        requestUrl = args[0].url;
+      }
+
+      // Check if this is an external URL
+      const isExternalUrl =
+        requestUrl.startsWith("http") &&
+        !requestUrl.includes(window.location.host);
+
+      // Don't modify requests to external URLs
+      if (isExternalUrl) {
+        return originalFetch.apply(this, args);
+      }
+
       const isAuthEndpoint =
-        args[0].includes("/auth/") || args[0].includes("/api/v1/auth/");
+        requestUrl.includes("/auth/") || requestUrl.includes("/api/v1/auth/");
 
       if (!isAuthEndpoint) {
         const headers = AuthService.getAuthHeader();
@@ -126,7 +158,7 @@ class AuthService {
         };
       }
 
-      args[1].credentials = "include"; // Always include credentials
+      args[1].credentials = "include"; // Include credentials for same-origin requests
 
       return originalFetch.apply(this, args);
     };

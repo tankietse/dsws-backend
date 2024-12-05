@@ -1,8 +1,8 @@
 package com.webgis.dsws.domain.service.importer;
 
-import com.webgis.dsws.dto.TrangTraiImportDTO;
 import com.webgis.dsws.exception.DataImportException;
 import com.webgis.dsws.mapper.TrangTraiMapper;
+import com.webgis.dsws.domain.dto.TrangTraiImportDTO;
 import com.webgis.dsws.domain.model.TrangTrai;
 import com.webgis.dsws.domain.repository.TrangTraiRepository;
 

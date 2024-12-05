@@ -3,6 +3,8 @@ package com.webgis.dsws.domain.model;
 import java.util.Date;
 import java.util.Set;
 
+import com.webgis.dsws.domain.model.enums.TrangThaiEnum;
+
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
@@ -53,6 +55,10 @@ public class CaBenh {
     private Date ngayDuyet;
 
     private Boolean daKetThuc;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "trang_thai")
+    private TrangThaiEnum trangThai;
 
     @OneToMany(mappedBy = "caBenh")
     private Set<DienBienCaBenh> dienBienCaBenhs;

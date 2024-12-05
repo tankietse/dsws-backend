@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:sec="http://www.thymeleaf.org/thymeleaf-extras-springsecurity"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  layout:decorate="~{layout}"
+>
+  <head>
+    <title>Chỉnh sửa người dùng</title>
+  </head>
+  <body>
+    <section layout:fragment="content" class="container mt-5">
+      <div class="max-w-4xl mx-auto">
+        <div
+          class="bg-white bg-opacity-50 backdrop-blur-md rounded-xl shadow-lg p-8 border border-white border-opacity-20"
+        >
+          <h2 class="text-2xl font-semibold text-gray-800 mb-6">
+            Chỉnh sửa người dùng
+          </h2>
+          <form
+            th:action="@{/admin/users/edit/{id}(id=${user.id})}"
+            th:object="${user}"
+            method="post"
+            class="space-y-6"
+          >
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700"
+                  >Tên đăng nhập</label
+                >
+                <input
+                  type="text"
+                  th:field="*{username}"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p
+                  th:if="${#fields.hasErrors('username')}"
+                  th:errors="*{username}"
+                  class="mt-1 text-sm text-red-600"
+                ></p>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700"
+                  >Email</label
+                >
+                <input
+                  type="email"
+                  th:field="*{email}"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p
+                  th:if="${#fields.hasErrors('email')}"
+                  th:errors="*{email}"
+                  class="mt-1 text-sm text-red-600"
+                ></p>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700"
+                  >Số điện thoại</label
+                >
+                <input
+                  type="tel"
+                  th:field="*{phone}"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p
+                  th:if="${#fields.hasErrors('phone')}"
+                  th:errors="*{phone}"
+                  class="mt-1 text-sm text-red-600"
+                ></p>
+              </div>
+              <div class="space-y-2">
+                <label class="block text-sm font-medium text-gray-700"
+                  >Mật khẩu</label
+                >
+                <input
+                  type="password"
+                  th:field="*{password}"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+                <p
+                  th:if="${#fields.hasErrors('password')}"
+                  th:errors="*{password}"
+                  class="mt-1 text-sm text-red-600"
+                ></p>
+              </div>
+              <div class="space-y-2 md:col-span-2">
+                <label class="block text-sm font-medium text-gray-700"
+                  >Vai trò</label
+                >
+                <select
+                  multiple
+                  th:field="*{roles}"
+                  class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                >
+                  <option
+                    th:each="role : ${roles}"
+                    th:value="${role.id}"
+                    th:text="${role.name}"
+                  ></option>
+                </select>
+              </div>
+            </div>
+            <div class="flex space-x-4 pt-6">
+              <button
+                type="submit"
+                class="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:ring-4 focus:ring-blue-300 transition-colors duration-300"
+              >
+                Cập nhật
+              </button>
+              <a
+                th:href="@{/admin/users}"
+                class="px-6 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 focus:ring-4 focus:ring-gray-200 transition-colors duration-300"
+              >
+                Hủy
+              </a>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        document
+          .querySelector("form")
+          .addEventListener("submit", function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            fetch("/api/v1/auth/users/" + data.id, {
+              method: "PUT",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: "Bearer " + localStorage.getItem("token"),
+              },
+              body: JSON.stringify(data),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.message) {
+                  alert(data.message);
+                }
+              })
+              .catch((error) => console.error("Error updating user:", error));
+          });
+      });
+    </script>
+  </body>
+</html>

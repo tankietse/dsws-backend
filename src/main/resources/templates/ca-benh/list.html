@@ -1,0 +1,34 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Danh Sách Ca Bệnh Chờ Duyệt</title>
+</head>
+<body>
+<h1>Danh Sách Ca Bệnh Chờ Duyệt</h1>
+
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Ngày Phát Hiện</th>
+        <th>Mô Tả</th>
+        <th>Hành Động</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="caBenh : ${danhSachCaBenh}">
+        <td th:text="${caBenh.id}"></td>
+        <td th:text="${caBenh.ngayPhatHien}"></td>
+        <td th:text="${caBenh.moTaBanDau}"></td>
+        <td>
+            <form th:action="@{/ca-benh/quan-ly/duyet}" method="post">
+                <input type="hidden" name="caBenhId" th:value="${caBenh.id}" />
+                <button type="submit" name="approved" value="true">Duyệt</button>
+                <button type="submit" name="approved" value="false">Từ Chối</button>
+            </form>
+        </td>
+    </tr>
+    </tbody>
+</table>
+</body>
+</html>
