@@ -17,7 +17,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/don-vi-hanh-chinh")
 @Tag(name = "Đơn vị hành chính", description = "API quản lý đơn vị hành chính")
-@PreAuthorize("isAuthenticated()")  // Require authentication for all endpoints
+@PreAuthorize("isAuthenticated()") // Require authentication for all endpoints
 public class DonViHanhChinhApi {
 
     private final DonViHanhChinhService donViHanhChinhService;
@@ -57,13 +57,7 @@ public class DonViHanhChinhApi {
     public ResponseEntity<Map<String, Object>> getGeoJSONByCapHanhChinh(@PathVariable String capHanhChinh) {
         return ResponseEntity.ok(donViHanhChinhService.getGeoJSONByCapHanhChinh(capHanhChinh));
     }
-
-    @GetMapping("/cap/tinh")
-    @Operation(summary = "Get all provinces/cities")
-    public ResponseEntity<List<DonViHanhChinh>> getAllProvinces() {
-        return ResponseEntity.ok(donViHanhChinhService.findByCapHanhChinh("TINH"));
-    }
-
+    
     @PostMapping
     @Operation(summary = "Thêm mới đơn vị hành chính")
     public ResponseEntity<DonViHanhChinh> createDonViHanhChinh(@RequestBody DonViHanhChinh donViHanhChinh) {

@@ -52,11 +52,11 @@ public class DswsApplication {
     @Profile("!prod")
     public ApplicationRunner dataImporter() {
         return args -> {
-//            if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
-//                importBoundaryData();
-//                importFarmData();
-//                importVirusZones();
-//            }
+            if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
+                importBoundaryData();
+                importFarmData();
+                importVirusZones();
+            }
         };
     }
 

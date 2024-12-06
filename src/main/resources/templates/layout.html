@@ -133,7 +133,7 @@
               x-transition:leave-end="opacity-0 transform scale-y-0"
               style="display: none;">
             <li>
-              <a href="/map-trangtrai" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200">
+              <a href="/under-development" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200">
                 <i class="fas fa-map-marked-alt w-6"></i>
                 <span class="ml-2">Bản đồ trang trại</span>
               </a>
@@ -201,25 +201,25 @@
               x-transition:leave-end="opacity-0 transform scale-y-0"
               style="display: none;">
             <li>
-              <a href="/analytics" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200">
+              <a href="/under-development" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200">
                 <i class="fas fa-chart-line w-6"></i>
                 <span class="ml-2">Phân tích dữ liệu</span>
               </a>
             </li>
             <li>
-              <a href="/statistics" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200"></a>
+              <a href="/under-development" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200"></a>
                 <i class="fas fa-chart-pie w-6"></i>
                 <span class="ml-2">Thống kê</span>
               </a>
             </li>
             <li>
-              <a href="/reports" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200">
+              <a href="/under-development" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200">
                 <i class="fas fa-file-alt w-6"></i>
                 <span class="ml-2">Báo cáo</span>
               </a>
             </li>
-            <li></li>
-              <a href="/export" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200">
+            <li>
+              <a href="/under-development" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200">
                 <i class="fas fa-file-export w-6"></i>
                 <span class="ml-2">Xuất báo cáo</span>
               </a>
@@ -255,7 +255,20 @@
           </div>
 
           <!-- User Menu -->
-          <div class="relative" x-data="{ open: false }">
+          <div class="relative" x-data="{ open: false, user: { name: '', role: '' } }" x-init="
+            fetch('/api/v1/auth/profile', {
+              headers: {
+                Authorization: 'Bearer ' + sessionStorage.getItem('jwt_token')
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              user.name = data.hoTen || data.username;
+              user.role = data.roles?.[0] || 'User';
+              document.getElementById('user-name').innerText = user.name;
+            })
+            .catch(console.error)
+          ">
             <button @click="open = !open" 
                     class="flex items-center space-x-3 px-4 py-2 bg-white bg-opacity-90 hover:bg-opacity-100 rounded-full border border-white border-opacity-30 shadow-sm hover:shadow-md transition-all duration-300 group">
               <div class="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white border-2 border-white group-hover:scale-110 transition-transform">
@@ -278,8 +291,8 @@
                  style="display: none;">
               
               <div class="px-4 py-2 border-b border-gray-100">
-                <p class="text-sm font-medium text-gray-900" x-text="$store.user.name">John Doe</p>
-                <p class="text-xs text-gray-500" x-text="$store.user.role">Administrator</p>
+                <p class="text-sm font-medium text-gray-900" x-text="user.name"></p>
+                <p class="text-xs text-gray-500" x-text="user.role"></p>
               </div>
 
               <a href="/auth/profile" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
@@ -287,14 +300,14 @@
                 <span class="ml-2">Hồ sơ cá nhân</span>
               </a>
 
-              <a href="/auth/users" 
+              <a href="/under-development" 
                  class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
                  sec:authorize="hasRole('ROLE_ADMIN')">
                 <i class="fas fa-users-cog w-5"></i>
                 <span class="ml-2">Quản lý tài khoản</span>
               </a>
 
-              <a href="/settings" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+              <a href="/under-development" class="flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
                 <i class="fas fa-cog w-5"></i>
                 <span class="ml-2">Cài đặt</span>
               </a>
@@ -362,28 +375,6 @@
       defer
     ></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script>
-      // Add Alpine.js store for user data
-      document.addEventListener('alpine:init', () => {
-        Alpine.store('user', {
-          name: '',
-          role: '',
-          init() {
-            fetch("/api/v1/auth/profile", {
-              headers: {
-                Authorization: "Bearer " + sessionStorage.getItem("jwt_token"),
-              },
-            })
-            .then((response) => response.json())
-            .then((data) => {
-              this.name = data.username;
-              this.role = data.roles?.[0] || 'User';
-              document.getElementById("user-name").innerText = this.name;
-            })
-            .catch(console.error);
-          }
-        })
-      })
-    </script>
+
   </body>
 </html>

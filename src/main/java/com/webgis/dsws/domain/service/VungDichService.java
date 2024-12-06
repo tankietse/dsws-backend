@@ -318,7 +318,7 @@ public class VungDichService {
             clusterPoint.put("mucDo", vd.getMucDo());
             clusterPoint.put("color", vd.getMucDo().getMauHienThi());
             clusterPoint.put("tenVung", vd.getTenVung());
-            clusterPoint.put("banKinh", radius);
+            clusterPoint.put("banKinh", vd.getBanKinh());
             clusterPoint.put("color", SYMBOL_COLORS.get(vd.getMucDo()));
 
             clusterPoint.put("tenVung", vd.getTenVung());

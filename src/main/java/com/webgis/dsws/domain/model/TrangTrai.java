@@ -17,6 +17,7 @@ import java.util.HashSet;
 @NoArgsConstructor
 @AllArgsConstructor
 @Table(name = "trang_trai")
+@JsonIgnoreProperties({ "ranhGioi", "centerPoint", "dsDonViCon" })
 public class TrangTrai {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -37,7 +38,6 @@ public class TrangTrai {
 
     @ManyToOne
     @JoinColumn(name = "don_vi_hanh_chinh_id")
-    @JsonIgnoreProperties({"ranhGioi", "centerPoint", "donViCha", "donViCon"})
     private DonViHanhChinh donViHanhChinh;
 
     private Float dienTich;

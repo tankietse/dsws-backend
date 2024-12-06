@@ -47,4 +47,9 @@ public class HomeViewController {
     public String trangTrai(Model model) {
         return "trangtrai/ql-trangtrai";
     }
+
+    @GetMapping("/under-development")
+    public String underDevelopment(Model model) {
+        return "under-development";
+    }
 }

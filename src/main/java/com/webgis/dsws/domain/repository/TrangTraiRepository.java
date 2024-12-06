@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Map;
 
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -16,6 +17,9 @@ import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
 @Repository
 public interface TrangTraiRepository extends JpaRepository<TrangTrai, Long>, JpaSpecificationExecutor<TrangTrai> {
+        @EntityGraph(attributePaths = { "donViHanhChinh", "donViHanhChinh.donViCha" })
+        Optional<TrangTrai> findById(Long id);
+
         @Query(value = "SELECT t FROM TrangTrai t LEFT JOIN FETCH t.donViHanhChinh WHERE t.id = ?1")
         TrangTrai findByIdWithDonViHanhChinh(Long id);
 

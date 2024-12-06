@@ -6,6 +6,8 @@ import org.locationtech.jts.geom.Point;
 
 import com.webgis.dsws.domain.model.enums.AdminLevelEnum;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -14,15 +16,17 @@ import lombok.AllArgsConstructor;
 import lombok.ToString;
 
 import java.util.List;
+import java.util.Set;
 
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@ToString(exclude = { "donViCha", "dsDonViCon" }) // Thêm exclude để tránh lỗi vòng lặp vô hạn
+// @ToString(exclude = { "donViCha" }) // Thêm exclude để tránh lỗi vòng lặp vô
+// hạn
 @Entity
 @Table(name = "don_vi_hanh_chinh")
-@JsonIgnoreProperties({"ranhGioi", "centerPoint", "donViCha"})
+@JsonIdentityInfo(generator = ObjectIdGenerators.PropertyGenerator.class, property = "id")
 public class DonViHanhChinh {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -52,7 +56,7 @@ public class DonViHanhChinh {
     private DonViHanhChinh donViCha;
 
     @OneToMany(mappedBy = "donViCha", fetch = FetchType.LAZY)
-    private List<DonViHanhChinh> dsDonViCon;
+    private Set<DonViHanhChinh> dsDonViCon;
 
     @Column(name = "ranh_gioi", columnDefinition = "Geometry")
     private Geometry ranhGioi;

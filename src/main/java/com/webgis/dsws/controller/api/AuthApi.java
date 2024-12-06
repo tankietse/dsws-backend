@@ -4,6 +4,7 @@ import com.webgis.dsws.domain.dto.AuthRequest;
 import com.webgis.dsws.domain.dto.AuthResponse;
 import com.webgis.dsws.domain.dto.RegisterRequest;
 import com.webgis.dsws.domain.model.NguoiDung;
+import com.webgis.dsws.domain.model.enums.VaiTroEnum;
 import com.webgis.dsws.domain.service.NguoiDungService;
 import com.webgis.dsws.util.JwtUtil;
 import org.springframework.http.HttpStatus;
@@ -175,6 +176,34 @@ public class AuthApi {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Lỗi khi cập nhật người dùng");
+        }
+    }
+
+    @PutMapping("/api/v1/auth/users/{id}/roles")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> updateUserRoles(@PathVariable Long id, @RequestBody VaiTroEnum role) {
+        try {
+            nguoiDungService.addRoleToUser(id, role);
+            return ResponseEntity.ok("Cập nhật vai trò thành công");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi cập nhật vai trò: " + e.getMessage());
+        }
+    }
+
+    @DeleteMapping("/api/v1/auth/users/{id}/roles")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
+    public ResponseEntity<?> removeUserRole(@PathVariable Long id, @RequestBody VaiTroEnum role) {
+        try {
+            nguoiDungService.removeRoleFromUser(id, role);
+            return ResponseEntity.ok("Xóa vai trò thành công");
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Không tìm thấy người dùng");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Lỗi khi xóa vai trò: " + e.getMessage());
         }
     }
 

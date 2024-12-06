@@ -31,7 +31,7 @@ import java.util.stream.Collectors;
 
 @Service
 @Slf4j
-@Transactional  
+@Transactional
 @CacheConfig(cacheNames = "users")
 public class NguoiDungService implements UserDetailsService {
     @Autowired
@@ -63,11 +63,10 @@ public class NguoiDungService implements UserDetailsService {
                 user -> {
                     // Kiểm tra xem người dùng đã có vai trò chưa
                     if (user.getVaiTros().stream()
-                            .noneMatch(vt -> vt.getVaiTro().getMaVaiTro().equals(VaiTroEnum.USER.value))) {
-                        // Tạo một đối tượng NguoiDungVaiTro mới
-                        VaiTro defaultRole = vaiTroRepository.findVaiTroById(VaiTroEnum.USER.value);
+                            .noneMatch(vt -> vt.getVaiTro().getMaVaiTro().equals(VaiTroEnum.USER.getValue()))) {
+                        VaiTro defaultRole = vaiTroRepository.findVaiTroById(VaiTroEnum.USER.getValue());
                         NguoiDungVaiTro nguoiDungVaiTro = new NguoiDungVaiTro();
-                        nguoiDungVaiTro.setNguoiDung(user); // Gắn người dùng
+                        nguoiDungVaiTro.setNguoiDung(user);
                         nguoiDungVaiTro.setVaiTro(defaultRole); // Gắn vai trò
                         nguoiDungVaiTro.setNgayBatDau(LocalDateTime.now()); // Gắn ngày bắt đầu
 
@@ -160,11 +159,48 @@ public class NguoiDungService implements UserDetailsService {
         newUser.setTenDangNhap(request.getUsername());
         newUser.setMatKhauHash(encodedPassword);
         newUser.setEmail(request.getEmail());
+        newUser.setHoTen(request.getHoTen());         // Thêm họ tên
+        newUser.setSoDienThoai(request.getSoDienThoai()); // Thêm số điện thoại
         newUser.setNgayTao(LocalDateTime.now());
         newUser.setTrangThaiHoatDong(true);
-        // TODO: Thêm các thông tin khác của người dùng
-
+        
+        // Lưu người dùng trước
         nguoiDungRepository.save(newUser);
+        
+        // Sau đó mới set role
+        try {
+            setDefaultRole(request.getUsername());
+        } catch (Exception e) {
+            log.error("Error setting default role for user {}: {}", request.getUsername(), e.getMessage());
+        }
+    }
+
+    public void addRoleToUser(Long userId, VaiTroEnum vaiTro) {
+        NguoiDung nguoiDung = nguoiDungRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Người dùng không tồn tại"));
+
+        if (nguoiDung.getVaiTros().stream()
+                .noneMatch(vt -> vt.getVaiTro().getMaVaiTro().equals(vaiTro.getValue()))) {
+            VaiTro role = vaiTroRepository.findVaiTroById(vaiTro.getValue());
+            NguoiDungVaiTro nguoiDungVaiTro = new NguoiDungVaiTro();
+            nguoiDungVaiTro.setNguoiDung(nguoiDung);
+            nguoiDungVaiTro.setVaiTro(role);
+            nguoiDungVaiTro.setNgayBatDau(LocalDateTime.now());
+            nguoiDungVaiTroRepository.save(nguoiDungVaiTro);
+        }
+    }
+
+    public void removeRoleFromUser(Long userId, VaiTroEnum vaiTro) {
+        NguoiDung nguoiDung = nguoiDungRepository.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("Người dùng không tồn tại"));
+
+        nguoiDung.getVaiTros().stream()
+                .filter(vt -> vt.getVaiTro().getMaVaiTro().equals(vaiTro.getValue()))
+                .findFirst()
+                .ifPresent(vt -> {
+                    nguoiDung.getVaiTros().remove(vt);
+                    nguoiDungVaiTroRepository.delete(vt);
+                });
     }
 
     @Override
@@ -172,20 +208,25 @@ public class NguoiDungService implements UserDetailsService {
     @Cacheable(key = "#username")
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         try {
-            var nguoiDung = nguoiDungRepository.findByTenDangNhap(username)
-                    .orElseThrow(() -> new UsernameNotFoundException("Người dùng không tồn tại"));
+            NguoiDung nguoiDung = nguoiDungRepository.findByTenDangNhap(username)
+                    .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng: " + username));
+            
+            if (!nguoiDung.getTrangThaiHoatDong()) {
+                throw new UsernameNotFoundException("Tài khoản đã bị khóa");
+            }
+
             return org.springframework.security.core.userdetails.User
                     .withUsername(nguoiDung.getTenDangNhap())
                     .password(nguoiDung.getMatKhauHash())
                     .authorities(nguoiDung.getVaiTros().stream()
-                            .map(vt -> vt.getVaiTro().getTenVaiTro())
+                            .map(vt -> "ROLE_" + vt.getVaiTro().getTenVaiTro())
                             .toArray(String[]::new))
                     .accountLocked(false)
                     .disabled(false)
                     .build();
         } catch (Exception e) {
-            log.error("Error loading user by username: {}", username, e);
-            throw e;
+            log.error("Error loading user {}: {}", username, e.getMessage());
+            throw new UsernameNotFoundException("Lỗi xác thực người dùng: " + e.getMessage());
         }
     }
 }

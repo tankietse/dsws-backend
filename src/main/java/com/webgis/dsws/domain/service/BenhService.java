@@ -3,10 +3,12 @@ package com.webgis.dsws.domain.service;
 import com.webgis.dsws.domain.model.Benh;
 import java.util.List;
 import java.util.Optional;
+import org.springframework.transaction.annotation.Transactional;
 
 public interface BenhService {
     List<Benh> findAll();
 
+    @Transactional(readOnly = true) 
     Optional<Benh> findById(Long id);
 
     Optional<Benh> findByTenBenh(String tenBenh);

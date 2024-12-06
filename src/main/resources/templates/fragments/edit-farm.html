@@ -1,7 +1,190 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
   <body>
-    <div
-      th:fragment="farm-table"></div>
+    <div th:fragment="farm-table"></div>
+    <div th:fragment="edit-farm">
+      <div
+        id="editFarmModal"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300 z-500"
+      >
+        <div class="bg-white rounded-lg shadow-lg w-full max-w-4xl mx-auto p-6">
+          <div class="flex justify-between items-center mb-6">
+            <h2 class="text-xl font-bold">Chỉnh sửa thông tin trang trại</h2>
+            <button
+              id="closeEditModalBtn"
+              class="text-gray-500 hover:text-gray-700"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <form id="editFarmForm" class="grid grid-cols-2 gap-4">
+            <input type="hidden" id="editFarmId" name="id" />
+
+            <!-- Cột trái -->
+            <div class="space-y-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Thông tin cơ bản</label
+                >
+                <div class="mt-2 space-y-3">
+                  <input
+                    type="text"
+                    id="editMaTrangTrai"
+                    name="maTrangTrai"
+                    placeholder="Mã trang trại"
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    readonly
+                  />
+                  <input
+                    type="text"
+                    id="editTenTrangTrai"
+                    name="tenTrangTrai"
+                    placeholder="Tên trang trại"
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+
+              <!-- Similar structure to add-farm, but with edit- prefixed IDs -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Thông tin chủ sở hữu</label
+                >
+                <div class="mt-2 space-y-3">
+                  <input
+                    type="text"
+                    id="editTenChu"
+                    name="tenChu"
+                    placeholder="Tên chủ sở hữu"
+                    required
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="tel"
+                    id="editSoDienThoai"
+                    name="soDienThoai"
+                    placeholder="Số điện thoại"
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="email"
+                    id="editEmail"
+                    name="email"
+                    placeholder="Email"
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Cột phải -->
+            <div class="space-y-4">
+              <!-- Similar structure for address and operation info -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Địa chỉ</label
+                >
+                <div class="mt-2 space-y-3">
+                  <select
+                    id="editTinhThanh"
+                    name="tinhThanh"
+                    required
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Chọn Tỉnh/Thành phố</option>
+                  </select>
+                  <select
+                    id="editQuanHuyen"
+                    name="quanHuyen"
+                    required
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Chọn Quận/Huyện</option>
+                  </select>
+                  <select
+                    id="editPhuongXa"
+                    name="phuongXa"
+                    required
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Chọn Phường/Xã</option>
+                  </select>
+                  <input
+                    type="hidden"
+                    id="editDonViHanhChinhId"
+                    name="donViHanhChinh"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Thông tin hoạt động</label
+                >
+                <div class="mt-2 space-y-3">
+                  <input
+                    type="number"
+                    id="editDienTich"
+                    name="dienTich"
+                    placeholder="Diện tích (m²)"
+                    required
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="number"
+                    id="editTongDan"
+                    name="tongDan"
+                    placeholder="Tổng đàn"
+                    required
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <select
+                    id="editPhuongThucChanNuoi"
+                    name="phuongThucChanNuoi"
+                    required
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">Chọn phương thức chăn nuôi</option>
+                    <option value="CONG_NGHIEP">Công nghiệp</option>
+                    <option value="BAN_CONG_NGHIEP">Bán công nghiệp</option>
+                    <option value="CHAN_THA">Chăn thả</option>
+                  </select>
+                </div>
+              </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="col-span-2 flex justify-end space-x-3 mt-6">
+              <button
+                type="button"
+                onclick="closeEditModal()"
+                class="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50"
+              >
+                Hủy
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+              >
+                Cập nhật
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
   </body>
 </html>

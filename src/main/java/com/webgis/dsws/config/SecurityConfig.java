@@ -100,6 +100,7 @@ public class SecurityConfig {
                                                                 "/images/**",
                                                                 "/css/**",
                                                                 "/js/**",
+                                                                "/gif/**",
                                                                 "/fonts/**",
                                                                 "/auth/**",
                                                                 "/img/**",

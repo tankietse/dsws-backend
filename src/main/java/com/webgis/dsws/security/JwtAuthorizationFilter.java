@@ -114,6 +114,7 @@ public class JwtAuthorizationFilter extends OncePerRequestFilter {
                 path.startsWith("/v3/api-docs/") ||
                 path.startsWith("/css/") ||
                 path.startsWith("/js/") ||
+                path.startsWith("/gif/") ||
                 path.startsWith("/img/") ||
                 request.getRequestURI().contains("arcgis.com") ||
                 isStaticResource(path);

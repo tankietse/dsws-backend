@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
  * và xử lý danh sách bệnh cho trang trại.
  */
 @Service
+@Transactional
 @RequiredArgsConstructor
 public class BenhServiceImpl implements BenhService {
     private final BenhRepository benhRepository;
@@ -77,8 +78,15 @@ public class BenhServiceImpl implements BenhService {
      * @return Optional chứa thực thể Benh nếu tìm thấy, ngược lại là Optional rỗng
      */
     @Override
+    @Transactional(readOnly = true)
     public Optional<Benh> findById(Long id) {
-        return benhRepository.findById(id);
+        return benhRepository.findById(id)
+            .map(benh -> {
+                // Force initialize collections
+                benh.getMucDoBenhs().size();
+                benh.getLoaiVatNuoi().size();
+                return benh;
+            });
     }
 
     /**

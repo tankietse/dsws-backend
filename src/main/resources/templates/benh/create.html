@@ -6,19 +6,18 @@
     <title>Thêm Bệnh</title>
   </head>
   <body>
+    <div layout:fragment="breadcrumb">
+      <span class="text-gray-500">/</span>
+      <a href="/benh" class="hover:text-blue-600">Quản lý bệnh</a>
+      <span class="text-gray-500">/</span>
+      <span class="text-gray-800">Thêm mới</span>
+    </div>
+
+    <h1 layout:fragment="page-title">Thêm Bệnh Mới</h1>
+    <p layout:fragment="page-subtitle">
+      Nhập thông tin chi tiết về bệnh cần thêm vào hệ thống
+    </p>
     <section layout:fragment="content">
-      <div layout:fragment="breadcrumb">
-        <span class="text-gray-500">/</span>
-        <a href="/benh" class="hover:text-blue-600">Quản lý bệnh</a>
-        <span class="text-gray-500">/</span>
-        <span class="text-gray-800">Thêm mới</span>
-      </div>
-
-      <h1 layout:fragment="page-title">Thêm Bệnh Mới</h1>
-      <p layout:fragment="page-subtitle">
-        Nhập thông tin chi tiết về bệnh cần thêm vào hệ thống
-      </p>
-
       <div class="container mx-auto mt-6">
         <form
           action="#"

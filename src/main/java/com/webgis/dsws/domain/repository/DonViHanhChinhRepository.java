@@ -4,7 +4,7 @@ import com.webgis.dsws.domain.model.DonViHanhChinh;
 import com.webgis.dsws.domain.model.enums.AdminLevelEnum;
 
 import org.locationtech.jts.geom.Geometry;
-
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -34,6 +34,7 @@ public interface DonViHanhChinhRepository extends JpaRepository<DonViHanhChinh, 
     @Query("SELECT d FROM DonViHanhChinh d WHERE LOWER(FUNCTION('unaccent', d.ten)) LIKE LOWER(FUNCTION('unaccent', CONCAT('%', :ten, '%')))")
     List<DonViHanhChinh> findByTenContainingIgnoreCaseAndDiacritics(String ten);
 
+    @EntityGraph(attributePaths = { "donViCha"})
     Optional<DonViHanhChinh> findById(Integer maDonVi);
 
     List<DonViHanhChinh> findByTenAndCapHanhChinh(String ten, String capHanhChinh);

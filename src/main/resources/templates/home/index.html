@@ -40,6 +40,39 @@
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster-src.js"></script>
 
     <link rel="stylesheet" th:href="@{/css/map.css}" />
+    <!-- Modify cluster styling in index.html -->
+    <style>
+      .cluster {
+        background: rgba(255, 72, 0, 0.8);
+        border: 2px solid #fff;
+        border-radius: 0; /* Remove round corners */
+        clip-path: polygon(
+          50% 0%,
+          100% 50%,
+          50% 100%,
+          0% 50%
+        ); /* Diamond shape */
+
+        /* Or use octagon for warning zone look */
+        /* clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); */
+
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .cluster-small {
+        background: rgba(255, 174, 0, 0.8); /* Low severity */
+      }
+
+      .cluster-medium {
+        background: rgba(255, 72, 0, 0.8); /* Medium severity */
+      }
+
+      .cluster-large {
+        background: rgba(255, 0, 0, 0.8); /* High severity */
+      }
+    </style>
   </head>
   <body>
     <section layout:fragment="content" class="p-6">

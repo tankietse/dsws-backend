@@ -1,12 +1,18 @@
 package com.webgis.dsws.domain.model.enums;
 
-import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-@AllArgsConstructor
+@Getter
 public enum VaiTroEnum {
-    ADMIN(),
-    MANAGER(),
-    USER();
+    ADMIN(1L, "ROLE_ADMIN"),
+    MANAGER(2L, "ROLE_MANAGER"),
+    USER(3L, "ROLE_USER");
 
-    public final long value = 0;
+    private final long value;
+    private final String role;
+
+    VaiTroEnum(long value, String role) {
+        this.value = value;
+        this.role = role;
+    }
 }

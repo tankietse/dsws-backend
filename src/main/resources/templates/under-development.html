@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html
+  xmlns:th="http://www.thymeleaf.org"
+  xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+  layout:decorate="~{layout}"
+>
+  <head>
+    <title>Trang đang phát triển</title>
+  </head>
+  <body>
+    <span layout:fragment="breadcrumb">
+      <i class="fas fa-chevron-right mx-2 text-gray-400"></i>
+      <span>Trang đang phát triển</span>
+    </span>
+
+    <h1 layout:fragment="page-title">Trang đang phát triển</h1>
+
+    <section layout:fragment="content">
+      <div class="flex flex-col items-center justify-center space-y-6 p-8">
+        <img
+          th:src="@{/gif/dev2.gif}"
+          alt="Under Construction"
+          class="w-64 h-64 object-contain rounded-lg"
+        />
+
+        <div class="text-center space-y-4">
+          <h2 class="text-2xl font-bold text-blue-900">
+            Trang đang được phát triển
+          </h2>
+          <p class="text-gray-600">
+            Chúng tôi đang nỗ lực hoàn thiện các tính năng sau:
+          </p>
+        </div>
+
+        <style>
+          .gradient-border-card {
+            position: relative;
+            background: white;
+            border-radius: 0.5rem;
+          }
+
+          .gradient-border-card::before {
+            content: "";
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #12c2e9, #c471ed, #f64f59);
+            z-index: -1;
+            border-radius: 0.6rem;
+            background-size: 200% 200%;
+            opacity: 0;
+            transition: all 0.6s ease;
+          }
+
+          .gradient-border-card:hover::before {
+            opacity: 1;
+            animation: gradient 3s ease infinite;
+          }
+
+          @keyframes gradient {
+            0% {
+              background-position: 0% 50%;
+            }
+            50% {
+              background-position: 100% 50%;
+            }
+            100% {
+              background-position: 0% 50%;
+            }
+          }
+
+          .shine-button {
+            position: relative;
+            overflow: hidden;
+          }
+
+          .shine-button::after {
+            content: "";
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+              to right,
+              rgba(255, 255, 255, 0) 0%,
+              rgba(255, 255, 255, 0.3) 50%,
+              rgba(255, 255, 255, 0) 100%
+            );
+            transform: rotate(45deg);
+            transition: all 0.3s ease;
+            opacity: 0;
+          }
+
+          .shine-button:hover::after {
+            opacity: 1;
+            animation: shine 1.5s ease;
+          }
+
+          @keyframes shine {
+            0% {
+              left: -50%;
+            }
+            100% {
+              left: 150%;
+            }
+          }
+        </style>
+
+        <div
+          class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-4xl mt-8"
+        >
+          <!-- Card cho từng tính năng -->
+          <div
+            class="gradient-border-card shadow-md p-6 hover:shadow-xl transition-all duration-300"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="bg-blue-100 p-3 rounded-full">
+                <i class="fas fa-chart-pie text-blue-600"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Thống kê</h3>
+            </div>
+            <p class="text-gray-600 mt-3 text-sm">
+              Đang phát triển tính năng phân tích và thống kê dữ liệu
+            </p>
+          </div>
+
+          <div
+            class="gradient-border-card shadow-md p-6 hover:shadow-xl transition-all duration-300"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="bg-green-100 p-3 rounded-full">
+                <i class="fas fa-file-export text-green-600"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Xuất báo cáo</h3>
+            </div>
+            <p class="text-gray-600 mt-3 text-sm">
+              Đang xây dựng tính năng xuất báo cáo đa định dạng
+            </p>
+          </div>
+
+          <div
+            class="gradient-border-card shadow-md p-6 hover:shadow-xl transition-all duration-300"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="bg-purple-100 p-3 rounded-full">
+                <i class="fas fa-bell text-purple-600"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Hệ thống thông báo</h3>
+            </div>
+            <p class="text-gray-600 mt-3 text-sm">
+              Đang hoàn thiện hệ thống thông báo thời gian thực
+            </p>
+          </div>
+
+          <!-- Thẻ cho "Cài đặt" -->
+          <div
+            class="gradient-border-card shadow-md p-6 hover:shadow-xl transition-all duration-300"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="bg-yellow-100 p-3 rounded-full">
+                <i class="fas fa-cog text-yellow-600"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Cài đặt</h3>
+            </div>
+            <p class="text-gray-600 mt-3 text-sm">
+              Đang triển khai các tùy chỉnh cấu hình hệ thống
+            </p>
+          </div>
+
+          <!-- Thẻ cho "Cảnh báo" -->
+          <div
+            class="gradient-border-card shadow-md p-6 hover:shadow-xl transition-all duration-300"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="bg-red-100 p-3 rounded-full">
+                <i class="fas fa-exclamation-triangle text-red-600"></i>
+              </div>
+              <h3 class="font-semibold text-gray-800">Cảnh báo</h3>
+            </div>
+            <p class="text-gray-600 mt-3 text-sm">
+              Đang phát triển hệ thống cảnh báo và thông báo
+            </p>
+          </div>
+        </div>
+
+        <a
+          href="/"
+          class="shine-button mt-8 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-300 hover:shadow-lg"
+        >
+          <i class="fas fa-arrow-left mr-2"></i>
+          Quay lại trang chủ
+        </a>
+      </div>
+    </section>
+  </body>
+</html>
