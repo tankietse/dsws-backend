@@ -1,6 +1,8 @@
 package com.webgis.dsws.domain.model;
 
 import java.util.Date;
+
+import com.webgis.dsws.domain.model.ids.VungDichTrangTraiId;
 import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;

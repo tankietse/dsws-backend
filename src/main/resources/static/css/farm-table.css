@@ -3,7 +3,7 @@
     position: sticky;
     top: 0;
     background: #f3f4f6;
-    z-index: 10; /* Lower z-index */
+    z-index: 5; /* Giảm z-index xuống thấp hơn modal */
     /* Match bg-zinc-100 */
 }
 

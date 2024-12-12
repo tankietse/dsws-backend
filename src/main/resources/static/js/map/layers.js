@@ -47,86 +47,134 @@ class MapLayers {
           return response.json();
         })
         .then((data) => {
-          const markers = L.layerGroup([], {
-            pane: "points",
-            renderer: L.canvas(), // Use canvas renderer for better performance
+          const markers = L.markerClusterGroup({
+            iconCreateFunction: (cluster) => {
+              return this.createCustomClusterIcon(cluster);
+            },
+            showCoverageOnHover: false,
+            spiderfyOnMaxZoom: true,
+            maxClusterRadius: 40,
+            zoomToBoundsOnClick: true,
+
+            // Add custom hover functionality for clusters
+            chunkedLoading: true,
+            singleMarkerMode: false,
+
+            // Custom popup settings
+            spiderfyDistanceMultiplier: 2,
+
+            // Configure popup behavior for clusters
+            spiderfyShapePositions: function (count, centerPt) {
+              var distanceFromCenter = 35,
+                markerDistance = 45,
+                lineLength = markerDistance * (count - 1),
+                lineStart = centerPt.y - lineLength / 2;
+
+              return [...Array(count)].map((_, index) => {
+                return L.point(
+                  centerPt.x + distanceFromCenter,
+                  lineStart + markerDistance * index
+                );
+              });
+            },
           });
+
           data.forEach((point) => {
-            const color = this.getColorByMucDo(point.mucDo);
-            const marker = L.circleMarker([point.latitude, point.longitude], {
-              radius: 8 + point.intensity * 8,
-              fillColor: color,
-              color: "#000",
-              weight: 1,
-              opacity: 1,
-              fillOpacity: 0.7,
+            const marker = L.marker([point.latitude, point.longitude], {
+              // ...existing marker options...
             });
 
+            // Create detailed popup content
+            const formattedDate = new Date(point.ngayBatDau).toLocaleDateString(
+              "vi-VN",
+              {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+              }
+            );
+
+            const status = point.ngayKetThuc ? "Đã kết thúc" : "Đang hoạt động";
+            const statusClass = point.ngayKetThuc ? "inactive" : "active";
+
             const popupContent = `
-                  <div class="stats-panel">
-                    <div class="stats-title">
-                      <i class="fas fa-map-marker-alt"></i>
-                      ${point.tenVung}
-                    </div>
-                    <div class="stats-content">
-                      <div class="stats-row">
-                        <span class="stats-label">Bệnh:</span>
-                        <span class="stats-value">${point.tenBenh}</span>
-                      </div>
-                      <div class="stats-row">
-                        <span class="stats-label">Mức độ:</span>
-                        <span class="stats-badge severity-${point.mucDo.slice(
-                          -1
-                        )}">${point.mucDo}</span>
-                      </div>
-                      <div class="stats-row">
-                        <span class="stats-label">Ngày bắt đầu:</span>
-                        <span class="stats-value">${new Date(
-                          point.ngayBatDau
-                        ).toLocaleDateString()}</span>
-                      </div>
-                      <div class="stats-row">
-                        <span class="stats-label">Mô tả:</span>
-                        <span class="stats-value">${point.moTa}</span>
-                      </div>
-                    </div>
+              <div class="disease-zone-popup">
+                <div class="disease-zone-header" style="background-color: ${
+                  point.color
+                }">
+                  <h3>${point.tenVung}</h3>
+                  <span class="status-badge ${statusClass}">${status}</span>
+                </div>
+                <div class="disease-zone-content">
+                  <div class="info-row">
+                    <span class="label">Loại bệnh:</span>
+                    <span class="value">${point.tenBenh}</span>
                   </div>
-                `;
-            marker.bindPopup(popupContent);
+                  <div class="info-row">
+                    <span class="label">Mức độ:</span>
+                    <span class="value severity-badge">${point.mucDo.replace(
+                      "CAP_DO_",
+                      "Cấp độ "
+                    )}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Bắt đầu:</span>
+                    <span class="value">${formattedDate}</span>
+                  </div>
+                  <div class="info-row">
+                    <span class="label">Bán kính:</span>
+                    <span class="value">${(point.banKinh * 1000).toFixed(
+                      0
+                    )}m</span>
+                  </div>
+                  <div class="info-row description">
+                    <p>${point.moTa}</p>
+                  </div>
+                </div>
+              </div>
+            `;
+
+            marker.bindPopup(popupContent, {
+              maxWidth: 300,
+              className: "disease-zone-popup-container",
+            });
             markers.addLayer(marker);
           });
+
           this.currentLayer = markers;
           this.currentLayer.addTo(this.map);
-
-          // Create new legend
-          this.legendControl = L.control({ position: "bottomright" });
-          this.legendControl.onAdd = function (map) {
-            const div = L.DomUtil.create("div", "stats-panel legend");
-            const grades = ["CAP_DO_1", "CAP_DO_2", "CAP_DO_3", "CAP_DO_4"];
-            const labels = ["Cấp độ 1", "Cấp độ 2", "Cấp độ 3", "Cấp độ 4"];
-
-            div.innerHTML = "<h4>Mức độ dịch bệnh</h4>";
-            for (let i = 0; i < grades.length; i++) {
-              div.innerHTML +=
-                '<i style="background:' +
-                this.getColorByMucDo(grades[i]) +
-                '"></i> ' +
-                labels[i] +
-                "<br>";
-            }
-            return div;
-          }.bind(this);
-          this.legendControl.addTo(this.map);
           resolve();
         })
         .catch((error) => {
           console.error("Error loading markers:", error);
           if (error.status === 401) {
-            // Redirect to login if unauthorized
             window.location.href = "/auth/login";
           }
           reject(error);
         });
+    });
+  }
+
+  // Add new helper method for custom cluster icon
+  createCustomClusterIcon(cluster) {
+    const count = cluster.getChildCount();
+    const points = cluster.getAllChildMarkers();
+
+    // Get unique disease types and their colors
+    const diseases = new Set(points.map((p) => p.options.diseaseData?.tenBenh));
+    const colors = new Set(points.map((p) => p.options.diseaseData?.color));
+
+    let className = "disease-cluster-icon";
+    if (diseases.size > 1) {
+      className += " multi-disease";
+    }
+
+    return L.divIcon({
+      html: `<div><span>${count}</span></div>`,
+      className: className,
+      iconSize: L.point(40, 40),
     });
   }
 
@@ -470,7 +518,7 @@ class MapLayers {
         .then((data) => {
           const farmClusters = L.markerClusterGroup({
             maxClusterRadius: 80, // Increase cluster radius for better performance
-            disableClusteringAtZoom: 14, // Disable clustering at higher zoom levels
+            disableClusteringAtZoom: 14,
             chunkedLoading: true, // Enable chunked loading for large datasets
             chunkProgress: updateProgressBar, // Optional: update progress bar during loading
           });
@@ -479,24 +527,126 @@ class MapLayers {
               feature.geometry.coordinates[1],
               feature.geometry.coordinates[0],
             ]);
-            marker.bindPopup(`
-            <div class="stats-panel">
-              <div class="stats-title">
-                <i class="fas fa-tractor"></i>
-                ${feature.properties.tenTrangTrai}
-              </div>
-              <div class="stats-content">
+
+            // Format list thông tin về vật nuôi
+            const vatNuoiList = Object.entries(feature.properties.vatNuoi)
+              .map(
+                ([ten, soLuong]) => `
                 <div class="stats-row">
-                  <span class="stats-label">Loại vật nuôi:</span>
-                  <span class="stats-value">${feature.properties.loaiVatNuoi}</span>
+                  <span class="stats-label">${ten}:</span>
+                  <span class="stats-value">${soLuong} con</span>
                 </div>
-                <div class="stats-row">
-                  <span class="stats-label">Số lượng:</span>
-                  <span class="stats-value">${feature.properties.soLuong}</span>
+              `
+              )
+              .join("");
+
+            // Format lại date cho thông tin trang trại
+            const ngayCapNhat = new Date(feature.properties.ngayCapNhat);
+            const formattedDate = new Intl.DateTimeFormat("vi-VN", {
+              day: "2-digit",
+              month: "2-digit",
+              year: "numeric",
+              hour: "2-digit",
+              minute: "2-digit",
+            }).format(ngayCapNhat);
+
+            marker.bindPopup(
+              `
+              <div class="farm-form-popup">
+                <div class="farm-form-header">
+                  <h3 class="text-lg font-semibold">${
+                    feature.properties.tenTrangTrai || "Trang trại không tên"
+                  }</h3>
+                  <p class="text-sm opacity-90">${
+                    feature.properties.donViHanhChinh || "Chưa cập nhật"
+                  }</p>
                 </div>
-              </div>
-            </div>
-          `);
+                
+                <div class="farm-form-content">
+                  <div class="farm-form-group">
+                    <div class="farm-form-row">
+                      <label class="farm-form-label">Chủ sở hữu</label>
+                      <div class="farm-form-value">${
+                        feature.properties.tenChu || "Chưa cập nhật"
+                      }</div>
+                    </div>
+                    <div class="farm-form-row">
+                      <label class="farm-form-label">Liên hệ</label>
+                      <div class="farm-form-value">${
+                        feature.properties.soDienThoai || "Chưa cập nhật"
+                      }</div>
+                    </div>
+                  </div>
+          
+                  <div class="farm-form-group">
+                    <div class="farm-form-row">
+                      <label class="farm-form-label">Thông tin đàn</label>
+                      <div class="farm-animal-stats">
+                        ${Object.entries(feature.properties.vatNuoi)
+                          .map(
+                            ([ten, soLuong]) => `
+                              <div class="farm-animal-item">
+                                <div class="farm-animal-icon">
+                                  <img src="/img/icons/${ten}.png" alt="${ten}" class="farm-animal-icon-img">
+                                </div>
+                                <div class="farm-animal-info">
+                                  <div class="farm-animal-name">${ten}</div>
+                                  <div class="farm-animal-count">${soLuong.toLocaleString(
+                                    "vi-VN"
+                                  )} con</div>
+                                </div>
+                              </div>
+                            `
+                          )
+                          .join("")}
+                        <div class="farm-total-count">
+                          <div class="farm-total-icon">
+                            <i class="fas fa-calculator"></i>
+                          </div>
+                          <div class="farm-total-info">
+                            <div class="farm-total-label">Tổng đàn</div>
+                            <div class="farm-total-value">${
+                              feature.properties.tongDan?.toLocaleString(
+                                "vi-VN"
+                              ) || 0
+                            } con</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+          
+                    <div class="farm-form-group">
+                      <div class="farm-form-row">
+                        <label class="farm-form-label">Địa chỉ</label>
+                        <div class="farm-form-value">${
+                          feature.properties.diaChiDayDu || "Chưa cập nhật"
+                        }</div>
+                      </div>
+                      <div class="farm-form-row">
+                        <label class="farm-form-label">Phương thức chăn nuôi</label>
+                        <div class="farm-form-value">${
+                          feature.properties.phuongThucChanNuoi ||
+                          "Chưa cập nhật"
+                        }</div>
+                      </div>
+                    </div>
+                  </div>
+          
+                  <div class="farm-form-footer">
+                    <button class="view-farm-btn" onclick="window.location.href='/trang-trai/${
+                      feature.properties.id
+                    }'">
+                      <i class="fas fa-external-link-alt"></i>
+                      Xem chi tiết
+                    </button>
+                  </div>
+                </div>
+              `,
+              {
+                maxWidth: 400,
+                className: "farm-popup-container",
+              }
+            );
             farmClusters.addLayer(marker);
           });
           this.currentLayer = farmClusters;
@@ -511,6 +661,138 @@ class MapLayers {
           reject(error);
         });
     });
+  }
+
+  // Add method to load disease outbreaks with special symbols
+  loadDiseaseOutbreaks() {
+    fetch("/api/v1/ca-benh/geojson", {
+      credentials: "include",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const outbreakMarkers = L.geoJSON(data, {
+          pointToLayer: (feature, latlng) => {
+            return L.marker(latlng, {
+              icon: this.getDiseaseIcon(feature.properties),
+            });
+          },
+          onEachFeature: (feature, layer) => {
+            layer.on("click", () => {
+              this.showDiseaseDetails(feature.properties);
+            });
+          },
+        });
+        outbreakMarkers.addTo(this.map);
+      })
+      .catch((error) => {
+        console.error("Error loading disease outbreaks:", error);
+      });
+  }
+
+  getDiseaseIcon(properties) {
+    const severity = properties.mucDo || "default";
+    const iconSize = [25, 25];
+
+    return L.divIcon({
+      className: `disease-icon severity-${severity.toLowerCase()}`,
+      html: `<i class="fas fa-exclamation-triangle"></i>`,
+      iconSize: iconSize,
+    });
+  }
+
+  // Get icon for farms based on type
+  getFarmIcon(properties) {
+    const farmType = properties.loaiHinh || "default";
+    const iconSize = [25, 25];
+
+    return L.divIcon({
+      className: `farm-icon type-${farmType.toLowerCase()}`,
+      html: `<i class="fas fa-home"></i>`,
+      iconSize: iconSize,
+    });
+  }
+
+  // Show detailed disease information in a popup
+  showDiseaseDetails(properties) {
+    const popup = L.popup({
+      maxWidth: 300,
+      className: "disease-details-popup",
+    });
+
+    const content = `
+      <div class="disease-details">
+        <h3>${properties.tenBenh}</h3>
+        <p><strong>Mức độ:</strong> ${properties.mucDo}</p>
+        <p><strong>Ngày phát hiện:</strong> ${new Date(
+          properties.ngayPhatHien
+        ).toLocaleDateString()}</p>
+        <p><strong>Số ca nhiễm:</strong> ${properties.soCaNhiem}</p>
+        <p>${properties.moTa || ""}</p>
+      </div>
+    `;
+
+    popup.setContent(content);
+    return popup;
+  }
+
+  // Show detailed farm information in a popup
+  showFarmDetails(properties) {
+    const popup = L.popup({
+      maxWidth: 300,
+      className: "farm-details-popup",
+    });
+
+    const content = `
+      <div class="farm-details">
+        <h3>${properties.tenTrangTrai}</h3>
+        <p><strong>Chủ sở hữu:</strong> ${properties.chuSoHuu}</p>
+        <p><strong>Loại hình:</strong> ${properties.loaiHinh}</p>
+        <p><strong>Quy mô:</strong> ${properties.quyMo}</p>
+        <p><strong>Địa chỉ:</strong> ${properties.diaChi}</p>
+      </div>
+    `;
+
+    popup.setContent(content);
+    return popup;
+  }
+
+  // Add method to load risk zones and set up alerts
+  loadRiskZones() {
+    fetch("/api/v1/vung-dich/heatmap", {
+      credentials: "include",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        const riskZones = L.geoJSON(data, {
+          style: this.getRiskZoneStyle,
+        });
+        riskZones.addTo(this.map);
+        this.setupProximityAlerts(riskZones);
+      })
+      .catch((error) => {
+        console.error("Error loading risk zones:", error);
+      });
+  }
+
+  // Add method to set up proximity alerts
+  setupProximityAlerts(riskZones) {
+    this.map.on("locationfound", (e) => {
+      const userLocation = e.latlng;
+      riskZones.eachLayer((layer) => {
+        const withinZone = layer.getBounds().contains(userLocation);
+        if (withinZone) {
+          alert("Bạn đang ở gần khu vực nguy hiểm!");
+        }
+      });
+    });
+  }
+
+  // Add method to get real-time updates
+  setupRealtimeUpdates() {
+    setInterval(() => {
+      this.loadDiseaseOutbreaks();
+      this.loadFarms();
+    }, 60000); // Update every 60 seconds
   }
 }
 

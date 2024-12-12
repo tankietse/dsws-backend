@@ -3,6 +3,7 @@ class MapControls {
     this.mapLayers = mapLayers;
     console.log("Initializing MapControls...");
     this.initializeControls();
+    this.initializeCollapseButton();
   }
 
   initializeControls() {
@@ -39,6 +40,26 @@ class MapControls {
     });
 
     this.handleActiveStates();
+  }
+
+  initializeCollapseButton() {
+    const mapControls = document.querySelector(".map-controls");
+    const collapseBtn = document.querySelector(".collapse-btn");
+
+    // Toggle collapse state
+    collapseBtn.addEventListener("click", () => {
+      mapControls.classList.toggle("collapsed");
+      // Save state to localStorage
+      localStorage.setItem(
+        "mapControlsCollapsed",
+        mapControls.classList.contains("collapsed")
+      );
+    });
+
+    // Restore previous state
+    if (localStorage.getItem("mapControlsCollapsed") === "true") {
+      mapControls.classList.add("collapsed");
+    }
   }
 
   handleActiveStates() {

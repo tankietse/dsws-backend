@@ -416,7 +416,7 @@
                   />
                 </div>
 
-                <!-- ...other register fields... -->
+                <!-- TODO: thêm các trường dữ liệu cần  -->
 
                 <button
                   type="submit"
@@ -561,30 +561,33 @@
 
         // Handle register form submission
         document
-          .getElementById("registerFormElement")
-          .addEventListener("submit", async (e) => {
+          .getElementById("registerForm")
+          .addEventListener("submit", function (e) {
             e.preventDefault();
-            const formData = new FormData(e.target);
-            try {
-              const response = await fetch("/api/v1/auth/register", {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify(Object.fromEntries(formData)),
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            fetch("/api/v1/auth/register", {
+              method: "POST",
+              credentials: "include",
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify(data),
+            })
+              .then((response) => {
+                if (response.ok) {
+                  alert("Đăng ký thành công");
+                  switchForms("register", "login");
+                } else {
+                  return response.json().then((data) => {
+                    throw new Error(data.message || "Đăng ký thất bại");
+                  });
+                }
+              })
+              .catch((error) => {
+                alert("Lỗi khi đăng ký: " + error.message);
               });
-
-              if (response.ok) {
-                alert("Đăng ký thành công! Vui lòng đăng nhập.");
-                switchForms("register", "login");
-              } else {
-                const error = await response.json();
-                alert(error.message || "Đăng ký thất bại. Vui lòng thử lại.");
-              }
-            } catch (error) {
-              console.error("Registration error:", error);
-              alert("Đã xảy ra lỗi khi đăng ký. Vui lòng thử lại.");
-            }
           });
       });
     </script>

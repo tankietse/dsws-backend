@@ -19,6 +19,7 @@ class MapInitializer {
       // Create map container first
       console.log("Creating map instance...");
       this.map = L.map("map", {
+        attributionControl: false,
         ...MAP_CONFIG,
         layers: [], // Start with empty layers
       });

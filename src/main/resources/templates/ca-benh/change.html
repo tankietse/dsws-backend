@@ -1,38 +1,108 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
-<head>
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Thay Đổi Thông Tin Ca Bệnh</title>
-</head>
-<body>
-<form th:action="@{/ca-benh/change}" th:object="${caBenh}" method="post">
-    <input type="hidden" th:field="*{id}" />
-
-    <div>
-        <label>Ngày Phát Hiện:</label>
-        <input type="date" th:field="*{ngayPhatHien}" />
+  </head>
+  <body>
+    <div layout:fragment="breadcrumb">
+      <span class="text-gray-500">/</span>
+      <a href="/benh" class="hover:text-blue-600">Quản lý bệnh</a>
+      <span class="text-gray-500">/</span>
+      <a href="/ca-benh/list" class="hover:text-blue-600">Quản lý ca bệnh</a>
+      <span class="text-gray-500">/</span>
+      <span class="text-gray-800">Thay đổi thông tin</span>
     </div>
 
-    <div>
-        <label>Mô Tả Ban Đầu:</label>
-        <textarea th:field="*{moTaBanDau}"></textarea>
-    </div>
+    <h1 layout:fragment="page-title">Thay Đổi Thông Tin Ca Bệnh</h1>
+    <p layout:fragment="page-subtitle">
+      Cập nhật thông tin chi tiết của ca bệnh
+    </p>
 
-    <div>
-        <label>Số Ca Nhiễm:</label>
-        <input type="number" th:field="*{soCaNhiemBanDau}" />
-    </div>
+    <section layout:fragment="content">
+      <div class="container mx-auto mt-6">
+        <form
+          th:action="@{/ca-benh/thayDoiCaBenh}"
+          th:object="${caBenh}"
+          method="post"
+          class="max-w-2xl mx-auto bg-white shadow-md rounded-lg p-6 space-y-6"
+        >
+          <input type="hidden" th:field="*{id}" />
 
-    <div>
-        <label>Số Ca Tử Vong:</label>
-        <input type="number" th:field="*{soCaTuVongBanDau}" />
-    </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700"
+                >Ngày Phát Hiện:</label
+              >
+              <input
+                type="date"
+                th:field="*{ngayPhatHien}"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
 
-    <div>
-        <label>Nguyên Nhân Dự Đoán:</label>
-        <input type="text" th:field="*{nguyenNhanDuDoan}" />
-    </div>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700"
+                >Số Ca Nhiễm:</label
+              >
+              <input
+                type="number"
+                th:field="*{soCaNhiemBanDau}"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
 
-    <button type="submit">Gửi Thay Đổi</button>
-</form>
-</body>
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700"
+                >Số Ca Tử Vong:</label
+              >
+              <input
+                type="number"
+                th:field="*{soCaTuVongBanDau}"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+
+            <div class="space-y-2">
+              <label class="block text-sm font-medium text-gray-700"
+                >Nguyên Nhân Dự Đoán:</label
+              >
+              <input
+                type="text"
+                th:field="*{nguyenNhanDuDoan}"
+                class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+              />
+            </div>
+          </div>
+
+          <div class="space-y-2">
+            <label class="block text-sm font-medium text-gray-700"
+              >Mô Tả Ban Đầu:</label
+            >
+            <textarea
+              th:field="*{moTaBanDau}"
+              rows="4"
+              class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+            ></textarea>
+          </div>
+
+          <div class="flex justify-end space-x-3 pt-4">
+            <a
+              href="/ca-benh/list"
+              class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Hủy
+            </a>
+            <button
+              type="submit"
+              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+            >
+              Lưu Thay Đổi
+            </button>
+          </div>
+        </form>
+      </div>
+    </section>
+  </body>
 </html>

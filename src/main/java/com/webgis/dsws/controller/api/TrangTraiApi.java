@@ -18,6 +18,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import java.util.List;
 import java.util.Set;
 import java.util.Map;
+import java.util.Date;
+import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
 @RequestMapping("/api/v1/trang-trai")
@@ -165,7 +167,7 @@ public class TrangTraiApi {
     }
 
     /**
-     * Lấy dữ liệu trang trại dạng GeoJSON để hiển thị trên bản đồ
+     * Lấy dữ liệu trang trại dạng GeoJSON để hiển thị trên b��n đồ
      *
      * @param loaiVatNuoi Loại vật nuôi để lọc (không bắt buộc)
      * @return ResponseEntity chứa dữ liệu GeoJSON
@@ -214,5 +216,59 @@ public class TrangTraiApi {
     public ResponseEntity<Map<String, Object>> getFeatureLayerSymbols(
             @RequestParam(required = false) String loaiVatNuoi) {
         return ResponseEntity.ok(trangTraiService.getFeatureLayerSymbols(loaiVatNuoi));
+    }
+
+    /**
+     * Lấy chi tiết trang trại bao gồm thông tin dịch bệnh
+     */
+    @GetMapping("/{id}/chi-tiet")
+    @Operation(summary = "Lấy chi tiết trang trại và thông tin dịch bệnh")
+    public ResponseEntity<Map<String, Object>> getTrangTraiDetail(@PathVariable Long id) {
+        return ResponseEntity.ok(trangTraiService.getTrangTraiDetail(id));
+    }
+
+    /**
+     * Phân tích và đánh giá nguy cơ dịch bệnh cho trang trại
+     */
+    @GetMapping("/{id}/phan-tich-nguy-co")
+    @Operation(summary = "Phân tích và đánh giá nguy cơ dịch bệnh")
+    public ResponseEntity<Map<String, Object>> getPhanTichNguyCo(
+            @PathVariable Long id,
+            @RequestParam(required = false) Double radius) {
+        return ResponseEntity.ok(trangTraiService.getPhanTichNguyCo(id, radius));
+    }
+
+    /**
+     * Thống kê theo loại bệnh và thời gian
+     */             
+    @GetMapping("/thong-ke-benh")
+    @Operation(summary = "Thống kê theo loại bệnh và thời gian")
+    public ResponseEntity<Map<String, Object>> getThongKeTheoBenh(
+            @RequestParam(required = false) String loaiVatNuoi,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate) {
+        return ResponseEntity.ok(trangTraiService.getThongKeTheoBenh(loaiVatNuoi, fromDate, toDate));
+    }
+
+    /**
+     * Lấy dữ liệu heatmap phân bố mật độ trang trại
+     */
+    @GetMapping("/heatmap")
+    @Operation(summary = "Lấy dữ liệu heatmap phân bố mật độ trang trại")
+    public ResponseEntity<Map<String, Object>> getHeatmapData(
+            @RequestParam(required = false) String loaiVatNuoi,
+            @RequestParam(required = false) String capHanhChinh) {
+        return ResponseEntity.ok(trangTraiService.getHeatmapData(loaiVatNuoi, capHanhChinh));
+    }
+
+    /**
+     * Lấy cảnh báo dịch bệnh cho trang trại
+     */
+    @GetMapping("/{id}/canh-bao")
+    @Operation(summary = "Lấy cảnh báo dịch bệnh cho trang trại")
+    public ResponseEntity<List<Map<String, Object>>> getCanhBaoDichBenh(
+            @PathVariable Long id,
+            @RequestParam(required = false) Double radius) {
+        return ResponseEntity.ok(trangTraiService.getCanhBaoDichBenh(id, radius));
     }
 }

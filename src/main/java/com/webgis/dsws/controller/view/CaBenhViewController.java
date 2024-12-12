@@ -24,7 +24,7 @@ public class CaBenhViewController {
     public String hienThiFormThayDoi(@PathVariable Long id, Model model) {
         CaBenh caBenh = caBenhService.findById(id);
         model.addAttribute("caBenh", caBenh);
-        return "ca-benh/thay-doi";
+        return "ca-benh/change";
     }
 
     // Xử lý thay đổi ca bệnh
@@ -32,7 +32,7 @@ public class CaBenhViewController {
     public String thayDoiCaBenh(@ModelAttribute CaBenh caBenh,
             @AuthenticationPrincipal NguoiDung nguoiDung) {
         caBenhService.thayDoiCaBenh(caBenh, nguoiDung);
-        return "redirect:/ca-benh/danh-sach";
+        return "redirect:/ca-benh/list";
     }
 
     // Cập nhật đường dẫn nếu cần thiết
@@ -51,4 +51,24 @@ public class CaBenhViewController {
         caBenhService.duyetCaBenh(caBenhId, nguoiQuanLy, approved);
         return "redirect:/ca-benh/list";
     }
+
+    // @ModelAttribute("pendingCases")
+    // public Long getPendingCasesCount() {
+    // return caBenhService.countByTrangThai(TrangThaiEnum.PENDING);
+    // }
+
+    // // Add create case mapping
+    // @GetMapping("/create")
+    // public String showCreateForm(Model model) {
+    // model.addAttribute("caBenh", new CaBenh());
+    // return "ca-benh/create";
+    // }
+
+    // @PostMapping("/create")
+    // public String createCaBenh(@ModelAttribute CaBenh caBenh,
+    // @AuthenticationPrincipal NguoiDung nguoiDung) {
+    // caBenh.setTrangThai(TrangThaiEnum.PENDING);
+    // caBenhService.create(caBenh, nguoiDung);
+    // return "redirect:/ca-benh/list";
+    // }
 }

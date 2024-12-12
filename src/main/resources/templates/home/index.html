@@ -40,42 +40,11 @@
     <script src="https://unpkg.com/leaflet.markercluster/dist/leaflet.markercluster-src.js"></script>
 
     <link rel="stylesheet" th:href="@{/css/map.css}" />
-    <!-- Modify cluster styling in index.html -->
-    <style>
-      .cluster {
-        background: rgba(255, 72, 0, 0.8);
-        border: 2px solid #fff;
-        border-radius: 0; /* Remove round corners */
-        clip-path: polygon(
-          50% 0%,
-          100% 50%,
-          50% 100%,
-          0% 50%
-        ); /* Diamond shape */
-
-        /* Or use octagon for warning zone look */
-        /* clip-path: polygon(30% 0%, 70% 0%, 100% 30%, 100% 70%, 70% 100%, 30% 100%, 0% 70%, 0% 30%); */
-
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-
-      .cluster-small {
-        background: rgba(255, 174, 0, 0.8); /* Low severity */
-      }
-
-      .cluster-medium {
-        background: rgba(255, 72, 0, 0.8); /* Medium severity */
-      }
-
-      .cluster-large {
-        background: rgba(255, 0, 0, 0.8); /* High severity */
-      }
-    </style>
+    <!-- Add styles for new controls and panels -->
+    <link rel="stylesheet" href="/static/css/map-controls.css" />
   </head>
   <body>
-    <section layout:fragment="content" class="p-6">
+    <section layout:fragment="content">
       <!-- <div class="mb-6">
         <h1 class="text-2xl font-bold text-gray-800 mb-2">
           Bản đồ phân vùng dịch bệnh
@@ -86,19 +55,34 @@
       </div> -->
 
       <div class="relative">
-        <div id="map" class="rounded-lg shadow-md">
-          <div
-            id="map-loading"
-            class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50"
-          >
-            <div class="text-center">
-              <div class="spinner-border text-primary" role="status"></div>
-              <p class="mt-2">Đang tải bản đồ...</p>
-            </div>
+        <div id="map" class="rounded-lg shadow-md"></div>
+        <div
+          id="map-loading"
+          class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50"
+        >
+          <div class="text-center">
+            <div class="spinner-border text-primary" role="status"></div>
+            <p class="mt-2">Đang tải bản đồ...</p>
           </div>
         </div>
 
         <div class="map-controls leaflet-control glass">
+          <!-- Add search bar -->
+          <input type="text" id="searchInput" placeholder="Tìm kiếm..." />
+
+          <button class="collapse-btn">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 20 20"
+              fill="currentColor"
+            >
+              <path
+                fill-rule="evenodd"
+                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                clip-rule="evenodd"
+              />
+            </svg>
+          </button>
           <button id="heatmapBtn" class="control-btn heatmap-btn">
             <svg
               xmlns="http://www.w3.org/2000/svg"
@@ -189,6 +173,16 @@
           </button>
         </div>
       </div>
+
+      <!-- Add container for statistics and charts -->
+      <div id="statsPanel">
+        <div id="statsPanelContent">
+          <!-- Content will be populated dynamically -->
+          <canvas id="casesChart"></canvas>
+          <canvas id="spreadRateChart"></canvas>
+        </div>
+        <button id="collapseStatsBtn">Thu gọn</button>
+      </div>
       <!-- 
       <div id="statsPanel" class="stats-panel fixed">
         <div class="stats-title">Thống kê chi tiết</div>
@@ -199,6 +193,9 @@
       <script th:src="@{/js/map/layers.js}"></script>
       <script th:src="@{/js/map/controls.js}"></script>
       <script th:src="@{/js/map/init.js}"></script>
+      <!-- Include new JavaScript files -->
+      <script src="/static/js/map/controls.js"></script>
+      <script src="/static/js/map/layers.js"></script>
     </section>
   </body>
 </html>

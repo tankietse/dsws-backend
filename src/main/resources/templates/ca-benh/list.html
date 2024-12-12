@@ -1,34 +1,92 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html lang="vi" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
 <head>
-    <title>Danh Sách Ca Bệnh Chờ Duyệt</title>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Quản lý Ca Bệnh</title>
 </head>
 <body>
-<h1>Danh Sách Ca Bệnh Chờ Duyệt</h1>
+    <div layout:fragment="breadcrumb">
+        <span class="text-gray-500">/</span>
+        <a href="/benh" class="hover:text-blue-600">Quản lý bệnh</a>
+        <span class="text-gray-500">/</span>
+        <span class="text-gray-800">Quản lý ca bệnh</span>
+    </div>
 
-<table>
-    <thead>
-    <tr>
-        <th>ID</th>
-        <th>Ngày Phát Hiện</th>
-        <th>Mô Tả</th>
-        <th>Hành Động</th>
-    </tr>
-    </thead>
-    <tbody>
-    <tr th:each="caBenh : ${danhSachCaBenh}">
-        <td th:text="${caBenh.id}"></td>
-        <td th:text="${caBenh.ngayPhatHien}"></td>
-        <td th:text="${caBenh.moTaBanDau}"></td>
-        <td>
-            <form th:action="@{/ca-benh/quan-ly/duyet}" method="post">
-                <input type="hidden" name="caBenhId" th:value="${caBenh.id}" />
-                <button type="submit" name="approved" value="true">Duyệt</button>
-                <button type="submit" name="approved" value="false">Từ Chối</button>
-            </form>
-        </td>
-    </tr>
-    </tbody>
-</table>
+    <h1 layout:fragment="page-title">Quản lý Ca Bệnh</h1>
+    <p layout:fragment="page-subtitle">Theo dõi và quản lý các ca bệnh trong hệ thống</p>
+
+    <section layout:fragment="content">
+        <div class="container mx-auto mt-6">
+            <div class="flex justify-between items-center mb-6">
+                <div class="flex space-x-2">
+                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center space-x-2">
+                        <i class="fas fa-filter"></i>
+                        <span>Lọc</span>
+                    </button>
+                    <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center space-x-2">
+                        <i class="fas fa-download"></i>
+                        <span>Xuất Excel</span>
+                    </button>
+                </div>
+                <a href="/ca-benh/create" 
+                   class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center space-x-2">
+                    <i class="fas fa-plus"></i>
+                    <span>Thêm Ca Bệnh</span>
+                </a>
+            </div>
+
+            <div class="bg-white rounded-lg shadow overflow-hidden">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày Phát Hiện</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Ca Nhiễm</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Ca Tử Vong</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                        <tr th:each="caBenh : ${danhSachCaBenh}" class="hover:bg-gray-50">
+                            <td class="px-6 py-4 whitespace-nowrap" th:text="${caBenh.id}"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" th:text="${#temporals.format(caBenh.ngayPhatHien, 'dd/MM/yyyy')}"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" th:text="${caBenh.soCaNhiemBanDau}"></td>
+                            <td class="px-6 py-4 whitespace-nowrap" th:text="${caBenh.soCaTuVongBanDau}"></td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span th:class="${'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
+                                    (caBenh.trangThai == 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
+                                    caBenh.trangThai == 'APPROVED' ? 'bg-green-100 text-green-800' : 
+                                    'bg-red-100 text-red-800')}"
+                                    th:text="${caBenh.trangThai}">
+                                </span>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                                <a th:href="@{/ca-benh/chi-tiet/{id}(id=${caBenh.id})}"
+                                   class="text-blue-600 hover:text-blue-900">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                                <a th:href="@{/ca-benh/hienThiFormThayDoi/{id}(id=${caBenh.id})}"
+                                   class="text-yellow-600 hover:text-yellow-900">
+                                    <i class="fas fa-edit"></i>
+                                </a>
+                                <a th:if="${caBenh.trangThai == 'PENDING'}" 
+                                   th:href="@{/ca-benh/quan-ly/duyet(caBenhId=${caBenh.id},approved=true)}"
+                                   class="text-green-600 hover:text-green-900">
+                                    <i class="fas fa-check"></i>
+                                </a>
+                                <a th:if="${caBenh.trangThai == 'PENDING'}"
+                                   th:href="@{/ca-benh/quan-ly/duyet(caBenhId=${caBenh.id},approved=false)}"
+                                   class="text-red-600 hover:text-red-900">
+                                    <i class="fas fa-times"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
 </body>
 </html>

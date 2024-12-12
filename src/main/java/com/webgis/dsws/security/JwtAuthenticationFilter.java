@@ -90,23 +90,21 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         // Add Authorization header
         response.addHeader("Authorization", "Bearer " + token);
 
-        // Set cookie
-        StringBuilder cookieValue = new StringBuilder();
-        cookieValue.append("JWT_TOKEN=").append(token)
-                .append("; Max-Age=").append(jwtUtil.getExpirationInSeconds())
-                .append("; Path=/")
-                .append("; HttpOnly");
+        // Set HTTP-only cookie
+        jakarta.servlet.http.Cookie cookie = new jakarta.servlet.http.Cookie("JWT_TOKEN", token);
+        cookie.setPath("/");
+        cookie.setHttpOnly(true);
+        cookie.setMaxAge((int) jwtUtil.getExpirationInSeconds());
         if (request.isSecure()) {
-            cookieValue.append("; Secure");
+            cookie.setSecure(true);
         }
-        cookieValue.append("; SameSite=Lax");
+        response.addCookie(cookie);
 
-        response.addHeader("Set-Cookie", cookieValue.toString());
-
+        // Send response body
         Map<String, Object> responseBody = new HashMap<>();
         responseBody.put("success", true);
         responseBody.put("redirectUrl", "/");
-        responseBody.put("token", token); // Include token in response body
+        responseBody.put("JWT_TOKEN", token);
 
         new ObjectMapper().writeValue(response.getOutputStream(), responseBody);
     }

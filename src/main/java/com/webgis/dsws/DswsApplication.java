@@ -4,6 +4,7 @@ import com.webgis.dsws.exception.DataImportException;
 import com.webgis.dsws.importer.DonViHanhChinhImporter;
 import com.webgis.dsws.importer.TrangtraiDataImporter;
 import com.webgis.dsws.domain.service.VungDichAutoImportService;
+import com.webgis.dsws.domain.service.DienBienCaBenhService;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ public class DswsApplication {
     private final DonViHanhChinhImporter boundaryImporter;
     private final TrangtraiDataImporter farmImporter;
     private final VungDichAutoImportService vungDichAutoImportService;
+    private final DienBienCaBenhService dienBienCaBenhService;
 
     @Value("${app.hochiminh-boundary-path:}")
     private String hoChiMinhBoundaryPath;
@@ -38,10 +40,12 @@ public class DswsApplication {
 
     public DswsApplication(DonViHanhChinhImporter boundaryImporter,
             TrangtraiDataImporter farmImporter,
-            VungDichAutoImportService vungDichAutoImportService) {
+            VungDichAutoImportService vungDichAutoImportService,
+            DienBienCaBenhService dienBienCaBenhService) {
         this.boundaryImporter = boundaryImporter;
         this.farmImporter = farmImporter;
         this.vungDichAutoImportService = vungDichAutoImportService;
+        this.dienBienCaBenhService = dienBienCaBenhService;
     }
 
     public static void main(String[] args) {
@@ -52,11 +56,11 @@ public class DswsApplication {
     @Profile("!prod")
     public ApplicationRunner dataImporter() {
         return args -> {
-            if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
-                importBoundaryData();
-                importFarmData();
-                importVirusZones();
-            }
+//            if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
+//                importBoundaryData();
+//                importFarmData();
+//                importVirusZones();
+//            }
         };
     }
 
@@ -72,7 +76,7 @@ public class DswsApplication {
     private void importFarmData() {
         try {
             farmImporter.importData(farmPath);
-            log.info("Đã import thành công dữ liệu trang trại");
+            log.info("Đã import thành công dữ liệu trang trại và ca bệnh");
         } catch (DataImportException e) {
             log.error("Lỗi khi import dữ liệu trang trại: {}", e.getMessage(), e);
         }
@@ -81,7 +85,7 @@ public class DswsApplication {
     private void importVirusZones() {
 
         // Import cho cấp phường/xã (8)
-        vungDichAutoImportService.autoCreateFromData(8, 1); // Chỉ cần 1 ca để tạo vùng cấp xã
+        vungDichAutoImportService.autoCreateFromData(8); // Chỉ cần 1 ca để tạo vùng cấp xã
 
         log.info("Đã import thành công vùng dịch cho các cấp hành chính");
     }

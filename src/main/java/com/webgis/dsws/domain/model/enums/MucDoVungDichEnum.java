@@ -18,4 +18,13 @@ public enum MucDoVungDichEnum {
         this.moTa = moTa;
         this.mauHienThi = mauHienThi;
     }
+
+    public static MucDoVungDichEnum fromSeverityLevel(int severityLevel) {
+        for (MucDoVungDichEnum mucDo : values()) {
+            if (mucDo.mucDo == severityLevel) {
+                return mucDo;
+            }
+        }
+        return CAP_DO_1;
+    }
 }

@@ -23,7 +23,7 @@ public class LoaiVatNuoi {
 
     private String moTa;
 
-    @OneToMany(mappedBy = "loaiVatNuoi")
+    @OneToMany(mappedBy = "loaiVatNuoi", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<BenhVatNuoi> benhVatNuois = new HashSet<>();
 
     @OneToMany(mappedBy = "loaiVatNuoi")

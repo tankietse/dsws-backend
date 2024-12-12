@@ -11,6 +11,7 @@ import com.webgis.dsws.domain.model.VungDichTrangTrai;
 import com.webgis.dsws.domain.model.enums.MucDoVungDichEnum;
 import com.webgis.dsws.domain.repository.TrangTraiRepository;
 import com.webgis.dsws.domain.repository.VungDichRepository;
+import com.webgis.dsws.domain.repository.VungDichTrangTraiRepository;
 import com.webgis.dsws.domain.model.BienPhapPhongChong;
 import com.webgis.dsws.domain.model.TrangTrai;
 
@@ -33,12 +34,16 @@ public class VungDichService {
     private final TrangTraiRepository trangTraiRepository;
     private final GeometryFactory geometryFactory;
     private final GeometryService geometryService;
+    private final VungDichTrangTraiRepository vungDichTrangTraiRepository;
 
-    public VungDichService(VungDichRepository vungDichRepository, TrangTraiRepository trangTraiRepository) {
+    public VungDichService(VungDichRepository vungDichRepository, TrangTraiRepository trangTraiRepository,
+            VungDichTrangTraiRepository vungDichTrangTraiRepository) {
         this.vungDichRepository = vungDichRepository;
         this.trangTraiRepository = trangTraiRepository;
         this.geometryService = new GeometryService();
         this.geometryFactory = new GeometryFactory();
+        this.vungDichTrangTraiRepository = vungDichTrangTraiRepository;
+
     }
 
     private static final Map<MucDoVungDichEnum, String> SYMBOL_COLORS = Map.of(
@@ -103,7 +108,7 @@ public class VungDichService {
         VungDich vungDich = vungDichRepository.findById(vungDichId).orElse(null);
         if (vungDich != null) {
             if (vungDich.getMucDo() == MucDoVungDichEnum.CAP_DO_4) {
-                return "Cảnh báo: Vùng dịch " + vungDich.getTenVung() + " đang ở mức nghiêm trọng.";
+                return "Cảnh báo: Vùng dịch " + vungDich.getTenVung() + " đang ở mức nghi��m trọng.";
             }
             return "Vùng dịch " + vungDich.getTenVung() + " an toàn.";
         }
@@ -393,13 +398,8 @@ public class VungDichService {
         return symbolData;
     }
 
-    private void associateAffectedFarms(VungDich vungDich) {
-        if (vungDich.getTrangTrais() == null) {
-            vungDich.setTrangTrais(new HashSet<>());
-        } else {
-            vungDich.getTrangTrais().clear();
-        }
-
+    @Transactional
+    protected void associateAffectedFarms(VungDich vungDich) {
         List<TrangTrai> affectedFarms = trangTraiRepository.findFarmsWithinDistance(
                 vungDich.getGeom(), vungDich.getBanKinh());
 
@@ -407,10 +407,31 @@ public class VungDichService {
             VungDichTrangTrai vdt = new VungDichTrangTrai();
             vdt.setVungDich(vungDich);
             vdt.setTrangTrai(trangTrai);
-            float distance = (float) geometryService.calculateDistance(
+
+            // Tính khoảng cách giữa trang trại và vùng dịch
+            double distance = geometryService.calculateDistance(
                     vungDich.getGeom(), trangTrai.getPoint());
-            vdt.setKhoangCach(distance);
-            vungDich.getTrangTrais().add(vdt);
+            vdt.setKhoangCach((float) distance);
+
+            // Xác định mức độ ảnh hưởng dựa trên khoảng cách
+            vdt.setMucDoAnhHuong(determineImpactLevel(distance));
+
+            // Thiết lập ngày bắt đầu và kết thúc ảnh hưởng
+            vdt.setNgayBatDauAnhHuong(vungDich.getNgayBatDau());
+            vdt.setNgayKetThucAnhHuong(vungDich.getNgayKetThuc());
+
+            vungDichTrangTraiRepository.save(vdt);
+        }
+    }
+
+    private String determineImpactLevel(double distance) {
+        // Logic xác định mức độ ảnh hưởng
+        if (distance <= 1000) {
+            return "Cao";
+        } else if (distance <= 5000) {
+            return "Trung bình";
+        } else {
+            return "Thấp";
         }
     }
 }

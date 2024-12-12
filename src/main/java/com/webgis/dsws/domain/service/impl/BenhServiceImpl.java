@@ -5,6 +5,7 @@ import com.webgis.dsws.domain.model.CaBenh;
 import com.webgis.dsws.domain.model.TrangTrai;
 import com.webgis.dsws.domain.model.TrangTraiVatNuoi;
 import com.webgis.dsws.domain.model.constant.BenhRegistry;
+import com.webgis.dsws.domain.model.enums.TrangThaiEnum;
 import com.webgis.dsws.domain.repository.BenhRepository;
 import com.webgis.dsws.domain.service.BenhService;
 import com.webgis.dsws.domain.service.processor.BenhProcessor;
@@ -81,12 +82,12 @@ public class BenhServiceImpl implements BenhService {
     @Transactional(readOnly = true)
     public Optional<Benh> findById(Long id) {
         return benhRepository.findById(id)
-            .map(benh -> {
-                // Force initialize collections
-                benh.getMucDoBenhs().size();
-                benh.getLoaiVatNuoi().size();
-                return benh;
-            });
+                .map(benh -> {
+                    // Force initialize collections
+                    benh.getMucDoBenhs().size();
+                    benh.getLoaiVatNuoi().size();
+                    return benh;
+                });
     }
 
     /**
@@ -175,8 +176,12 @@ public class BenhServiceImpl implements BenhService {
                     Benh benh = findOrCreateBenh(cleanBenhName);
 
                     for (TrangTraiVatNuoi vatNuoi : trangTrai.getTrangTraiVatNuois()) {
-                        CaBenh newCabenh = benhProcessor.createInitialCaBenh(benh, vatNuoi);
-                        danhSachCaBenh.add(newCabenh);
+                        CaBenh cabenh = benhProcessor.createInitialCaBenh(benh, vatNuoi);
+
+                        cabenh.setTrangThai(TrangThaiEnum.PENDING);
+                        cabenh.setNguoiTao(trangTrai.getNguoiQuanLy());
+
+                        danhSachCaBenh.add(cabenh);
                     }
                 }
             }

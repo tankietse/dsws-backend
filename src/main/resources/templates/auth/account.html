@@ -17,79 +17,88 @@
       <div class="container mt-5" style="margin-top: 0px">
         <h1>Quản lý tài khoản người dùng</h1>
         <div class="mb-3">
-            <a href="/auth/users/add" class="btn btn-primary">Thêm người dùng mới</a>
+          <a href="/auth/users/add" class="btn btn-primary"
+            >Thêm người dùng mới</a
+          >
         </div>
         <table class="table table-striped">
-            <thead>
-                <tr>
-                    <th>Tên đăng nhập</th>
-                    <th>Họ tên</th>
-                    <th>Email</th>
-                    <th>Số điện thoại</th>
-                    <th>Chức vụ</th>
-                    <th>Trạng thái</th>
-                    <th>Thao tác</th>
-                </tr>
-            </thead>
-            <tbody id="userTableBody">
-            </tbody>
+          <thead>
+            <tr>
+              <th>Tên đăng nhập</th>
+              <th>Họ tên</th>
+              <th>Email</th>
+              <th>Số điện thoại</th>
+              <th>Chức vụ</th>
+              <th>Trạng thái</th>
+              <th>Thao tác</th>
+            </tr>
+          </thead>
+          <tbody id="userTableBody"></tbody>
         </table>
       </div>
     </section>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-      document.addEventListener('DOMContentLoaded', function() {
+      document.addEventListener("DOMContentLoaded", function () {
         loadUsers();
 
         function loadUsers() {
-            fetch('/api/v1/auth/users', {
-                headers: {
-                    'Authorization': 'Bearer ' + localStorage.getItem('token')
-                }
-            })
-            .then(response => response.json())
-            .then(users => {
-                const tbody = document.getElementById('userTableBody');
-                tbody.innerHTML = '';
-                users.forEach(user => {
-                    const tr = document.createElement('tr');
-                    tr.innerHTML = `
+          fetch("/api/v1/auth/users", {
+            credentials: "include", // Bao gồm cookie trong yêu cầu
+            headers: {
+              Accept: "application/json",
+            },
+          })
+            .then((response) => response.json())
+            .then((users) => {
+              const tbody = document.getElementById("userTableBody");
+              tbody.innerHTML = "";
+              users.forEach((user) => {
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
                         <td>${user.tenDangNhap}</td>
                         <td>${user.hoTen}</td>
                         <td>${user.email}</td>
                         <td>${user.soDienThoai}</td>
-                        <td>${user.chucVu || ''}</td>
-                        <td>${user.trangThaiHoatDong ? 'Hoạt động' : 'Khóa'}</td>
+                        <td>${user.chucVu || ""}</td>
+                        <td>${
+                          user.trangThaiHoatDong ? "Hoạt động" : "Khóa"
+                        }</td>
                         <td>
-                            <a href="/auth/users/edit/${user.id}" class="btn btn-warning btn-sm">Sửa</a>
-                            <button onclick="deleteUser(${user.id})" class="btn btn-danger btn-sm">Xóa</button>
+                            <a href="/auth/users/edit/${
+                              user.id
+                            }" class="btn btn-warning btn-sm">Sửa</a>
+                            <button onclick="deleteUser(${
+                              user.id
+                            })" class="btn btn-danger btn-sm">Xóa</button>
                         </td>
                     `;
-                    tbody.appendChild(tr);
-                });
+                tbody.appendChild(tr);
+              });
             })
-            .catch(error => console.error('Error loading users:', error));
+            .catch((error) => console.error("Error loading users:", error));
         }
 
-        window.deleteUser = function(id) {
-            if (confirm('Bạn có chắc muốn xóa người dùng này?')) {
-                fetch(`/api/v1/auth/users/${id}`, {
-                    method: 'DELETE',
-                    headers: {
-                        'Authorization': 'Bearer ' + localStorage.getItem('token')
-                    }
-                })
-                .then(response => {
-                    if (response.ok) {
-                        alert('Xóa người dùng thành công');
-                        loadUsers();
-                    } else {
-                        alert('Lỗi khi xóa người dùng');
-                    }
-                })
-                .catch(error => console.error('Error deleting user:', error));
-            }
-        }
+        window.deleteUser = function (id) {
+          if (confirm("Bạn có chắc muốn xóa người dùng này?")) {
+            fetch(`/api/v1/auth/users/${id}`, {
+              method: "DELETE",
+              credentials: "include",
+              headers: {
+                Accept: "application/json",
+              },
+            })
+              .then((response) => {
+                if (response.ok) {
+                  alert("Xóa người dùng thành công");
+                  loadUsers();
+                } else {
+                  alert("Lỗi khi xóa người dùng");
+                }
+              })
+              .catch((error) => console.error("Error deleting user:", error));
+          }
+        };
       });
     </script>
   </body>

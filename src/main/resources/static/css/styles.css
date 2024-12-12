@@ -154,6 +154,6 @@ header,
 .account-button {
   position: relative;
   /* Position should be relative or absolute for z-index to take effect */
-  z-index: 1000;
+  z-index: 900;
   /* Higher z-index to appear above the map */
 }

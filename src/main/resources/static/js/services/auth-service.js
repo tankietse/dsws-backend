@@ -38,42 +38,45 @@ class AuthService {
     }
   }
 
-  // Helper function to set token cookie
-  static setTokenCookie(token) {
-    document.cookie = `token=${token}; path=/;`;
+  // Helper function to set JWT_TOKEN cookie
+  static setTokenCookie(JWT_TOKEN) {
+    const secure = window.location.protocol === "https:" ? "; Secure" : "";
+    document.cookie = `JWT_TOKEN=${JWT_TOKEN}; path=/; SameSite=Lax${secure}`;
   }
 
-  // Helper function to get token from cookie
+  // Helper function to get JWT_TOKEN from cookie
   static getTokenFromCookie() {
-    const name = "token=";
+    const name = "JWT_TOKEN=";
     const decodedCookie = decodeURIComponent(document.cookie);
-    const ca = decodedCookie.split(";");
-    for (let c of ca) {
-      while (c.charAt(0) === " ") c = c.substring(1);
-      if (c.indexOf(name) === 0) return c.substring(name.length, c.length);
+    console.log("Decoded cookie:", decodedCookie); // Debug line
+
+    const cookies = decodedCookie.split(";").map((c) => c.trim());
+    for (let cookie of cookies) {
+      if (cookie.startsWith(name)) {
+        const token = cookie.substring(name.length);
+        console.log("Found token:", token); // Debug line
+        return token;
+      }
     }
+    console.log("No JWT_TOKEN found in cookies"); // Debug line
     return "";
   }
 
-  // Helper function to delete token cookie
+  // Helper function to delete JWT_TOKEN cookie
   static deleteTokenCookie() {
-    document.cookie = "token=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+    document.cookie =
+      "JWT_TOKEN=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
   }
 
   static async validateToken() {
-    const token = this.getTokenFromCookie();
-    if (!token) return false;
-
     try {
       const response = await fetch("/api/v1/auth/validate", {
-        headers: {
-          Authorization: "Bearer " + token,
-        },
+        credentials: "include", // Ensure cookies are sent
       });
       const data = await response.json();
       return data.valid === true;
     } catch (error) {
-      console.error("Token validation failed:", error);
+      console.error("JWT_TOKEN validation failed:", error);
       return false;
     }
   }
@@ -93,10 +96,12 @@ class AuthService {
       }
 
       const data = await response.json();
+      console.log("Login response:", data); // Debug logging
 
-      // Save token to cookie for future requests
-      if (data.token) {
-        this.setTokenCookie(data.token);
+      // Update to use token from response
+      if (data.JWT_TOKEN) {
+        console.log("Setting token:", data.JWT_TOKEN); // Debug logging
+        this.setTokenCookie(data.JWT_TOKEN);
       }
 
       const redirectUrl =
@@ -110,18 +115,12 @@ class AuthService {
     }
   }
 
-  static getAuthHeader() {
-    const token = this.getTokenFromCookie();
-    return token ? { Authorization: `Bearer ${token}` } : {};
-  }
-
   static logout() {
     this.deleteTokenCookie();
     sessionStorage.removeItem("authenticated");
     window.location.href = this.LOGIN_URL;
   }
 
-  // Modify fetch interceptor to handle both cookie and header auth
   static setupFetchInterceptor() {
     const originalFetch = window.fetch;
     window.fetch = async function (...args) {
@@ -150,15 +149,14 @@ class AuthService {
         requestUrl.includes("/auth/") || requestUrl.includes("/api/v1/auth/");
 
       if (!isAuthEndpoint) {
-        const headers = AuthService.getAuthHeader();
+        // Remove adding Authorization header
         args[1].headers = {
           ...args[1].headers,
-          ...headers,
           Accept: "application/json",
         };
       }
 
-      args[1].credentials = "include"; // Include credentials for same-origin requests
+      args[1].credentials = "include"; // Include cookies in requests
 
       return originalFetch.apply(this, args);
     };

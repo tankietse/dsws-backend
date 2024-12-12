@@ -106,8 +106,18 @@
             </li>
             <li>
               <a href="/ca-benh/list" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200">
-                <i class="fas fa-clipboard-list w-6"></i>
+                <i class="fas fa-clipboard-check w-6"></i>
                 <span class="ml-2">Quản lý ca bệnh</span>
+                <span th:if="${pendingCases > 0}" 
+                      class="ml-2 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  [[${pendingCases}]]
+                </span>
+              </a>
+            </li>
+            <li>
+              <a href="/ca-benh/create" class="block px-4 py-2 text-white hover:bg-blue-800 transition-colors duration-200">
+                <i class="fas fa-file-medical w-6"></i>
+                <span class="ml-2">Thêm ca bệnh mới</span>
               </a>
             </li>
           </ul>
@@ -257,8 +267,9 @@
           <!-- User Menu -->
           <div class="relative" x-data="{ open: false, user: { name: '', role: '' } }" x-init="
             fetch('/api/v1/auth/profile', {
+              credentials: 'include',
               headers: {
-                Authorization: 'Bearer ' + sessionStorage.getItem('jwt_token')
+                Accept: 'application/json',
               }
             })
             .then(response => response.json())
@@ -350,31 +361,31 @@
         </div>
       </footer>
     </div>
-    <!-- <script>
-      document.addEventListener("DOMContentLoaded", function () {
-        fetch("/api/v1/auth/profile", {
-          headers: {
-            Authorization: "Bearer " + sessionStorage.getItem("jwt_token"),
-          },
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            if (data.username) {
-              document.getElementById("user-name").innerText = data.username;
-            }
-          })
-          .catch((error) =>
-            console.error("Error fetching user profile:", error)
-          );
-      });
-    </script> -->
-
     <!-- Alpine.js for dropdowns -->
     <script
       src="https://cdn.jsdelivr.net/gh/alpinejs/alpine@v2.x.x/dist/alpine.min.js"
       defer
     ></script>
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <script>
+      document.addEventListener('alpine:init', () => {
+        Alpine.store('userStore', {
+          name: '',
+          role: '',
+        });
 
+        fetch('/api/v1/auth/profile', {
+          credentials: 'include', // Bao gồm cookie trong yêu cầu
+        })
+          .then(response => response.json())
+          .then(data => {
+            const user = Alpine.store('userStore');
+            user.name = data.hoTen || data.username;
+            user.role = data.roles?.[0] || 'User';
+            document.getElementById('user-name').innerText = user.name;
+          })
+          .catch(console.error);
+      });
+    </script>
   </body>
 </html>

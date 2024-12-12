@@ -2,6 +2,7 @@ package com.webgis.dsws.domain.service.impl;
 
 import com.google.common.base.Preconditions;
 import com.webgis.dsws.domain.model.BenhVatNuoi;
+import com.webgis.dsws.domain.model.ids.BenhVatNuoiId;
 import com.webgis.dsws.domain.repository.BenhVatNuoiRepository;
 import com.webgis.dsws.domain.service.BenhVatNuoiService;
 import org.springframework.stereotype.Service;
@@ -27,7 +28,7 @@ public class BenhVatNuoiServiceImpl implements BenhVatNuoiService {
     }
 
     @Override
-    public Optional<BenhVatNuoi> findById(Long id) {
+    public Optional<BenhVatNuoi> findById(BenhVatNuoiId id) {
         return benhVatNuoiRepository.findById(id);
     }
 
@@ -38,18 +39,37 @@ public class BenhVatNuoiServiceImpl implements BenhVatNuoiService {
     }
 
     @Override
-    public BenhVatNuoi update(Long id, BenhVatNuoi benhVatNuoiDetails) {
+    public BenhVatNuoi update(BenhVatNuoiId id, BenhVatNuoi benhVatNuoiDetails) {
         BenhVatNuoi existing = findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy bệnh vật nuôi với ID: " + id));
 
         existing.setBenh(benhVatNuoiDetails.getBenh());
         existing.setLoaiVatNuoi(benhVatNuoiDetails.getLoaiVatNuoi());
-        // TODO: Update other fields
+        existing.setTiLeLayNhiem(benhVatNuoiDetails.getTiLeLayNhiem());
+        existing.setTiLeChet(benhVatNuoiDetails.getTiLeChet());
+        existing.setTiLeHoiPhuc(benhVatNuoiDetails.getTiLeHoiPhuc());
+        existing.setDatDiemRieng(benhVatNuoiDetails.getDatDiemRieng());
+
         return benhVatNuoiRepository.save(existing);
     }
 
     @Override
-    public void deleteById(Long id) {
+    public void deleteById(BenhVatNuoiId id) {
+        if (!benhVatNuoiRepository.existsById(id)) {
+            throw new EntityNotFoundException("Không tìm thấy bệnh vật nuôi với ID: " + id);
+        }
         benhVatNuoiRepository.deleteById(id);
+    }
+
+    public Optional<BenhVatNuoi> findByBenhAndLoaiVatNuoi(Long benhId, Long loaiVatNuoiId) {
+        return benhVatNuoiRepository.findByBenh_IdAndLoaiVatNuoi_Id(benhId, loaiVatNuoiId);
+    }
+
+    public List<BenhVatNuoi> findByBenhId(Long benhId) {
+        return benhVatNuoiRepository.findByBenhId(benhId);
+    }
+
+    public List<BenhVatNuoi> findByLoaiVatNuoiId(Long loaiVatNuoiId) {
+        return benhVatNuoiRepository.findByLoaiVatNuoiId(loaiVatNuoiId);
     }
 }

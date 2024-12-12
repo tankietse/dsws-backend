@@ -1,4 +1,3 @@
-
 package com.webgis.dsws.domain.model.ids;
 
 import java.io.Serializable;
@@ -8,7 +7,8 @@ public class VungDichTrangTraiId implements Serializable {
     private Long vungDich;
     private Long trangTrai;
 
-    public VungDichTrangTraiId() {}
+    public VungDichTrangTraiId() {
+    }
 
     public VungDichTrangTraiId(Long vungDich, Long trangTrai) {
         this.vungDich = vungDich;
@@ -17,11 +17,13 @@ public class VungDichTrangTraiId implements Serializable {
 
     @Override
     public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+        if (this == o)
+            return true;
+        if (o == null || getClass() != o.getClass())
+            return false;
         VungDichTrangTraiId that = (VungDichTrangTraiId) o;
         return Objects.equals(vungDich, that.vungDich) &&
-               Objects.equals(trangTrai, that.trangTrai);
+                Objects.equals(trangTrai, that.trangTrai);
     }
 
     @Override

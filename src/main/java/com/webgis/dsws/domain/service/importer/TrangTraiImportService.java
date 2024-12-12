@@ -53,7 +53,7 @@ public class TrangTraiImportService {
                     .collect(Collectors.toList());
             trangTraiRepository.saveAll(trangTrais);
         } catch (Exception e) {
-            // ...handle exceptions...
+            
             errors.append(e.getMessage()).append("\n");
         }
     }

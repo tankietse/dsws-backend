@@ -20,7 +20,7 @@ public class CaBenh {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trang_trai_id")
     private TrangTrai trangTrai;
 

@@ -24,4 +24,5 @@ public class NguoiDungDTO {
     private String soDienThoai;
     private String chucVu;
     private Boolean trangThaiHoatDong;
+    private String vaiTros;
 }

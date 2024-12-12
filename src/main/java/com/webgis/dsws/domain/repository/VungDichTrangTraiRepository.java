@@ -1,9 +1,9 @@
 package com.webgis.dsws.domain.repository;
 
+import com.webgis.dsws.domain.model.ids.VungDichTrangTraiId;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import com.webgis.dsws.domain.model.VungDichTrangTrai;
-import com.webgis.dsws.domain.model.VungDichTrangTraiId;
 import com.webgis.dsws.domain.model.VungDich;
 import com.webgis.dsws.domain.model.TrangTrai;
 
@@ -14,4 +14,6 @@ public interface VungDichTrangTraiRepository extends JpaRepository<VungDichTrang
     List<VungDichTrangTrai> findByVungDich(VungDich vungDich);
 
     List<VungDichTrangTrai> findByTrangTrai(TrangTrai trangTrai);
+
+    List<VungDichTrangTrai> findByTrangTraiAndKhoangCachLessThan(TrangTrai trangTrai, Double radius);
 }

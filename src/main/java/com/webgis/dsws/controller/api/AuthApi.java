@@ -7,6 +7,9 @@ import com.webgis.dsws.domain.model.NguoiDung;
 import com.webgis.dsws.domain.model.enums.VaiTroEnum;
 import com.webgis.dsws.domain.service.NguoiDungService;
 import com.webgis.dsws.util.JwtUtil;
+
+import io.swagger.v3.oas.annotations.Operation;
+
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -21,12 +24,16 @@ import java.util.List;
 import org.springframework.security.access.prepost.PreAuthorize;
 import com.webgis.dsws.domain.dto.NguoiDungDTO;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
+import java.util.stream.Collectors;
 
 /**
  * Controller xử lý các yêu cầu xác thực (Authentication) như đăng nhập, đăng
  * ký.
  */
 @RestController
+@RequestMapping("/api/v1/auth")
 public class AuthApi {
 
     private final AuthenticationManager authenticationManager;
@@ -45,7 +52,8 @@ public class AuthApi {
      * @param request Đối tượng chứa thông tin đăng nhập (tên đăng nhập và mật khẩu)
      * @return ResponseEntity chứa token JWT nếu đăng nhập thành công
      */
-    @PostMapping("/api/v1/auth/login")
+    @PostMapping("/login")
+    @Operation(summary = "Đăng nhập")
     public ResponseEntity<AuthResponse> login(@Valid @RequestBody AuthRequest request) {
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
@@ -61,7 +69,8 @@ public class AuthApi {
      *                email, v.v.)
      * @return ResponseEntity chứa thông báo hoặc thông tin người dùng mới tạo
      */
-    @PostMapping("/api/v1/auth/register")
+    @PostMapping("/register")
+    @Operation(summary = "Đăng ký người dùng mới")
     public ResponseEntity<String> register(@Valid @RequestBody RegisterRequest request) {
         // Thực hiện logic đăng ký người dùng
         // Kiểm tra xem tên người dùng đã tồn tại chưa
@@ -80,35 +89,47 @@ public class AuthApi {
      * @param bearerToken Chuỗi token cần xác thực
      * @return ResponseEntity cho biết token hợp lệ hay không
      */
-    @GetMapping("/api/v1/auth/validate")
-    public ResponseEntity<?> validateToken(@RequestHeader("Authorization") String bearerToken) {
-        try {
-            if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-                String token = bearerToken.substring(7);
-                if (jwtUtil.validateToken(token)) {
-                    Map<String, Object> response = new HashMap<>();
-                    response.put("valid", true);
-                    response.put("username", jwtUtil.getUsernameFromToken(token));
-                    // Có thể thêm các thông tin khác như roles, expirationTime, etc.
-                    return ResponseEntity.ok(response);
+    @GetMapping("/validate")
+    @Operation(summary = "Xác thực token JWT")
+    public ResponseEntity<?> validateToken(
+            @RequestHeader(value = "Authorization", required = false) String bearerToken,
+            HttpServletRequest request) {
+        String token = null;
+        // Try to get token from Authorization header
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            token = bearerToken.substring(7);
+        } else {
+            // Try to get token from cookies
+            if (request.getCookies() != null) {
+                for (Cookie cookie : request.getCookies()) {
+                    if ("JWT_TOKEN".equals(cookie.getName())) {
+                        token = cookie.getValue();
+                        break;
+                    }
                 }
             }
+        }
+        if (token != null && jwtUtil.validateToken(token)) {
+            Map<String, Object> response = new HashMap<>();
+            response.put("valid", true);
+            response.put("username", jwtUtil.getUsernameFromToken(token));
+            // TODO: Add user roles to response
+            return ResponseEntity.ok(response);
+        } else {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("valid", false, "error", "Invalid token"));
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("valid", false, "error", e.getMessage()));
         }
     }
 
     /**
      * Lấy thông tin profile của user hiện tại
      */
-    @GetMapping("/api/v1/auth/profile")
-    @PreAuthorize("isAuthenticated()") // Add this annotation
+    @GetMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Lấy thông tin người dùng hiện tại")
     public ResponseEntity<?> getCurrentUserProfile() {
         try {
-            NguoiDung currentUser = nguoiDungService.getCurrentUser();
+            NguoiDung currentUser = nguoiDungService.getCurrentUserWithCollections();
             if (currentUser == null) {
                 return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                         .body(Map.of("error", "User not authenticated"));
@@ -116,11 +137,21 @@ public class AuthApi {
 
             Map<String, Object> response = new HashMap<>();
             response.put("id", currentUser.getId());
+            response.put("tenDangNhap", currentUser.getTenDangNhap());
             response.put("hoTen", currentUser.getHoTen());
             response.put("email", currentUser.getEmail());
             response.put("soDienThoai", currentUser.getSoDienThoai());
             response.put("chucVu", currentUser.getChucVu());
+            response.put("donVi", currentUser.getDonVi());
+            response.put("ngayTao", currentUser.getNgayTao());
+            response.put("lanDangNhapCuoi", currentUser.getLanDangNhapCuoi());
             response.put("trangThaiHoatDong", currentUser.getTrangThaiHoatDong());
+
+            // Lấy role
+            List<String> roles = currentUser.getVaiTros().stream()
+                    .map(vaiTro -> vaiTro.getVaiTro().getMaVaiTro())
+                    .collect(Collectors.toList());
+            response.put("vaiTro", roles);
 
             return ResponseEntity.ok(response);
         } catch (Exception e) {
@@ -132,7 +163,9 @@ public class AuthApi {
     /**
      * Cập nhật thông tin profile
      */
-    @PutMapping("/api/v1/auth/profile")
+    @PutMapping("/profile")
+    @PreAuthorize("isAuthenticated()")
+    @Operation(summary = "Cập nhật thông tin người dùng hiện tại")
     public ResponseEntity<?> updateProfile(@Valid @RequestBody NguoiDungDTO userDto) {
         try {
             NguoiDung currentUser = nguoiDungService.getCurrentUser();
@@ -151,8 +184,9 @@ public class AuthApi {
     /**
      * Thêm người dùng mới (Admin only)
      */
-    @PostMapping("/api/v1/auth/users")
+    @PostMapping("/users")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Thêm người dùng mới")
     public ResponseEntity<?> addUser(@Valid @RequestBody NguoiDungDTO userDto) {
         try {
             nguoiDungService.save(userDto);
@@ -167,6 +201,7 @@ public class AuthApi {
      */
     @PutMapping("/api/v1/auth/users/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Cập nhật thông tin người dùng")
     public ResponseEntity<?> updateUser(@PathVariable Long id, @Valid @RequestBody NguoiDungDTO userDto) {
         try {
             userDto.setId(id);
@@ -181,6 +216,7 @@ public class AuthApi {
 
     @PutMapping("/api/v1/auth/users/{id}/roles")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Cập nhật vai trò người dùng")
     public ResponseEntity<?> updateUserRoles(@PathVariable Long id, @RequestBody VaiTroEnum role) {
         try {
             nguoiDungService.addRoleToUser(id, role);
@@ -195,6 +231,7 @@ public class AuthApi {
 
     @DeleteMapping("/api/v1/auth/users/{id}/roles")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Xóa vai trò người dùng")
     public ResponseEntity<?> removeUserRole(@PathVariable Long id, @RequestBody VaiTroEnum role) {
         try {
             nguoiDungService.removeRoleFromUser(id, role);
@@ -212,6 +249,7 @@ public class AuthApi {
      */
     @DeleteMapping("/api/v1/auth/users/{id}")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Xóa người dùng (Admin only)")
     public ResponseEntity<?> deleteUser(@PathVariable Long id) {
         try {
             nguoiDungService.deleteById(id);
@@ -226,6 +264,7 @@ public class AuthApi {
      */
     @GetMapping("/api/v1/auth/users")
     @PreAuthorize("hasRole('ROLE_ADMIN')")
+    @Operation(summary = "Lấy danh sách người dùng (Admin only)")
     public ResponseEntity<?> getAllUsers() {
         try {
             List<NguoiDungDTO> users = nguoiDungService.findAll();

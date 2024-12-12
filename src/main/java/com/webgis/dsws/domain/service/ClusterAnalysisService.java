@@ -44,17 +44,9 @@ public class ClusterAnalysisService {
 
     // Khoảng cách để kiểm tra mật độ trang trại
     private static final double DENSITY_CHECK_RADIUS = 2000.0; // 2km
-    private static final double AREA_IN_SQ_KM = Math.PI * Math.pow(DENSITY_CHECK_RADIUS / 1000, 2); // Area in km²
+    private static final double AREA_IN_SQ_KM = Math.PI * Math.pow(DENSITY_CHECK_RADIUS / 1000, 2);
     private static final double AVERAGE_FARM_SIZE = 10000.0; // 1 hectare = 10000m²
-    private static final double FARM_SPACING = 50.0; // Minimum spacing between farms in meters
-
-    // Base factors cho các loại bệnh theo phân loại
-    private static final Map<MucDoBenhEnum, Double> DISEASE_SEVERITY_FACTORS = Map.of(
-            MucDoBenhEnum.BANG_A, 1.0, // Nghiêm trọng nhất
-            MucDoBenhEnum.BANG_B, 0.8,
-            MucDoBenhEnum.NGUY_HIEM, 0.7,
-            MucDoBenhEnum.PHONG_BENH_BAT_BUOC, 0.5,
-            MucDoBenhEnum.THONG_THUONG, 0.3);
+    private static final double FARM_SPACING = 50.0; // Khoảng cách tối thiểu giữa các trang trại
 
     /**
      * Nhóm các ca bệnh theo khoảng cách địa lý
@@ -77,7 +69,8 @@ public class ClusterAnalysisService {
         return clusters;
     }
 
-    private List<CaBenh> buildCluster(CaBenh center, List<CaBenh> remainingCases) {
+    @Transactional
+    protected List<CaBenh> buildCluster(CaBenh center, List<CaBenh> remainingCases) {
         List<CaBenh> cluster = new ArrayList<>();
         cluster.add(center);
 
@@ -136,10 +129,15 @@ public class ClusterAnalysisService {
             return 0.5;
         }
 
-        return mucDoSet.stream()
-                .mapToDouble(mucDo -> DISEASE_SEVERITY_FACTORS.getOrDefault(mucDo, 0.3))
+        int maxSeverityLevel = mucDoSet.stream()
+                .mapToInt(MucDoBenhEnum::getSeverityLevel)
                 .max()
-                .orElse(0.5);
+                .orElse(1);
+
+        // Chuẩn hóa severityLevel (1-5) thành factor (0.2 - 1.0)
+        double severityFactor = maxSeverityLevel / 5.0;
+
+        return severityFactor;
     }
 
     private double calculateDensityFactor(TrangTrai trangTrai) {

@@ -65,15 +65,5 @@ public class VungDich {
     private Set<VungDichBienPhap> vungDichBienPhaps = new HashSet<>(); // Initialize empty set
 
     private String moTa;
-
-    // Helper method để quản lý quan hệ 2 chiều
-    public void addVungDichBienPhap(VungDichBienPhap vungDichBienPhap) {
-        vungDichBienPhaps.add(vungDichBienPhap);
-        vungDichBienPhap.setVungDich(this);
-    }
-
-    public void removeVungDichBienPhap(VungDichBienPhap vungDichBienPhap) {
-        vungDichBienPhaps.remove(vungDichBienPhap);
-        vungDichBienPhap.setVungDich(null);
-    }
+    private String colorCode;
 }

@@ -35,8 +35,8 @@ public class Benh {
     @OneToMany(mappedBy = "benh", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<VungDich> vungDichs = new HashSet<>();
 
-    @ElementCollection(targetClass = MucDoBenhEnum.class)
-    @CollectionTable(name = "benh_phan_loai", joinColumns = @JoinColumn(name = "benh_id"))
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "benh_muc_do", joinColumns = @JoinColumn(name = "benh_id"))
     @Column(name = "muc_do")
     @Enumerated(EnumType.STRING)
     private Set<MucDoBenhEnum> mucDoBenhs = new HashSet<>();

@@ -23,6 +23,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.hibernate.Hibernate;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -100,14 +101,23 @@ public class NguoiDungService implements UserDetailsService {
         nguoiDungRepository.save(nguoiDung);
     }
 
+    @Transactional(readOnly = true)
     public List<NguoiDungDTO> findAll() {
         return nguoiDungRepository.findAll().stream()
-                .map(this::convertToDTO)
+                .map(nguoiDung -> {
+                    initializeCollections(nguoiDung);
+                    return convertToDTO(nguoiDung);
+                })
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public Optional<NguoiDungDTO> findById(Long id) {
-        return nguoiDungRepository.findById(id).map(this::convertToDTO);
+        return nguoiDungRepository.findById(id)
+                .map(nguoiDung -> {
+                    initializeCollections(nguoiDung);
+                    return convertToDTO(nguoiDung);
+                });
     }
 
     public void deleteById(Long id) {
@@ -124,6 +134,25 @@ public class NguoiDungService implements UserDetailsService {
         return nguoiDungRepository.findByTenDangNhap(username).orElse(null);
     }
 
+    @Transactional(readOnly = true)
+    public NguoiDung getCurrentUserWithCollections() {
+        NguoiDung nguoiDung = getCurrentUser();
+        if (nguoiDung != null) {
+            initializeCollections(nguoiDung);
+        }
+        return nguoiDung;
+    }
+
+    private void initializeCollections(NguoiDung nguoiDung) {
+        Hibernate.initialize(nguoiDung.getVaiTros());
+        Hibernate.initialize(nguoiDung.getCaBenhTao());
+        Hibernate.initialize(nguoiDung.getCaBenhDuyet());
+        Hibernate.initialize(nguoiDung.getDienBienCapNhat());
+        Hibernate.initialize(nguoiDung.getVungDichTao());
+        Hibernate.initialize(nguoiDung.getBienPhapThucHien());
+        Hibernate.initialize(nguoiDung.getCanhBaoTao());
+    }
+
     private NguoiDungDTO convertToDTO(NguoiDung nguoiDung) {
         return new NguoiDungDTO(
                 nguoiDung.getId(),
@@ -133,7 +162,8 @@ public class NguoiDungService implements UserDetailsService {
                 nguoiDung.getHoTen(),
                 nguoiDung.getSoDienThoai(),
                 nguoiDung.getChucVu(),
-                nguoiDung.getTrangThaiHoatDong());
+                nguoiDung.getTrangThaiHoatDong(),
+                nguoiDung.getVaiTros().toString());
     }
 
     /**
@@ -159,14 +189,14 @@ public class NguoiDungService implements UserDetailsService {
         newUser.setTenDangNhap(request.getUsername());
         newUser.setMatKhauHash(encodedPassword);
         newUser.setEmail(request.getEmail());
-        newUser.setHoTen(request.getHoTen());         // Thêm họ tên
+        newUser.setHoTen(request.getHoTen()); // Thêm họ tên
         newUser.setSoDienThoai(request.getSoDienThoai()); // Thêm số điện thoại
         newUser.setNgayTao(LocalDateTime.now());
         newUser.setTrangThaiHoatDong(true);
-        
+
         // Lưu người dùng trước
         nguoiDungRepository.save(newUser);
-        
+
         // Sau đó mới set role
         try {
             setDefaultRole(request.getUsername());
@@ -210,7 +240,7 @@ public class NguoiDungService implements UserDetailsService {
         try {
             NguoiDung nguoiDung = nguoiDungRepository.findByTenDangNhap(username)
                     .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy người dùng: " + username));
-            
+
             if (!nguoiDung.getTrangThaiHoatDong()) {
                 throw new UsernameNotFoundException("Tài khoản đã bị khóa");
             }

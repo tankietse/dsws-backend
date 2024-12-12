@@ -18,6 +18,7 @@
           </h2>
 
           <form
+            id="addUserForm"
             th:action="@{/admin/users/add}"
             th:object="${user}"
             method="post"
@@ -124,5 +125,32 @@
         </div>
       </div>
     </section>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        document
+          .getElementById("addUserForm")
+          .addEventListener("submit", function (event) {
+            event.preventDefault();
+            const formData = new FormData(this);
+            const data = Object.fromEntries(formData.entries());
+            fetch("/api/v1/auth/users", {
+              method: "POST",
+              credentials: "include", // Bao gồm cookie trong yêu cầu
+              headers: {
+                "Content-Type": "application/json",
+                Accept: "application/json",
+              },
+              body: JSON.stringify(data),
+            })
+              .then((response) => response.json())
+              .then((data) => {
+                if (data.message) {
+                  alert(data.message);
+                }
+              })
+              .catch((error) => console.error("Error adding user:", error));
+          });
+      });
+    </script>
   </body>
 </html>

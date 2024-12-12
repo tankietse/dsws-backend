@@ -33,6 +33,7 @@ public class TrangTrai {
     private String tenDuong;
     private String khuPho;
     private String diaChiDayDu;
+
     @Column(columnDefinition = "geometry(Point,4326)")
     private Point point;
 

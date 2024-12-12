@@ -8,6 +8,7 @@ import com.webgis.dsws.domain.model.enums.TrangThaiEnum;
 import com.webgis.dsws.domain.model.Benh;
 import com.webgis.dsws.domain.repository.CaBenhRepository;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -15,6 +16,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import org.locationtech.jts.geom.Geometry;
+import org.springframework.data.jpa.domain.Specification;
 
 @Service
 @RequiredArgsConstructor
@@ -26,8 +28,10 @@ public class CaBenhService {
     @Transactional(readOnly = true)
     public Map<String, Object> getCaBenhGeoJSON(Date fromDate, Date toDate, String maTinhThanh, String loaiBenh,
             boolean chiHienThiChuaKetThuc) {
-        List<CaBenh> caBenhs = caBenhRepository.findByFilters(fromDate, toDate, maTinhThanh, loaiBenh,
+        Specification<CaBenh> spec = buildCaBenhSpecification(fromDate, toDate, maTinhThanh, loaiBenh,
                 chiHienThiChuaKetThuc);
+
+        List<CaBenh> caBenhs = caBenhRepository.findAll(spec);
 
         Map<String, Object> featureCollection = new HashMap<>();
         featureCollection.put("type", "FeatureCollection");
@@ -72,7 +76,10 @@ public class CaBenhService {
     @Transactional(readOnly = true)
     public Map<String, Object> getThongKeCaBenh(String maTinhThanh, Date fromDate, Date toDate, String loaiBenh,
             boolean chiHienThiChuaKetThuc) {
-        List<CaBenh> caBenhs = caBenhRepository.findByFilters(fromDate, toDate, maTinhThanh, null, false);
+        Specification<CaBenh> spec = buildCaBenhSpecification(fromDate, toDate, maTinhThanh, loaiBenh,
+                chiHienThiChuaKetThuc);
+
+        List<CaBenh> caBenhs = caBenhRepository.findAll(spec);
 
         Map<String, Object> thongKe = new HashMap<>();
         thongKe.put("tongSoCa", caBenhs.size());
@@ -91,6 +98,33 @@ public class CaBenhService {
         thongKe.put("thongKeTheoBenhTuVong", thongKeTuVong);
 
         return thongKe;
+    }
+
+    // Add a method to build the specification
+    private Specification<CaBenh> buildCaBenhSpecification(Date fromDate, Date toDate, String maTinhThanh,
+            String loaiBenh, boolean chiHienThiChuaKetThuc) {
+        return (root, query, criteriaBuilder) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            if (fromDate != null) {
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("ngayPhatHien"), fromDate));
+            }
+            if (toDate != null) {
+                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("ngayPhatHien"), toDate));
+            }
+            if (maTinhThanh != null) {
+                predicates.add(
+                        criteriaBuilder.equal(root.join("trangTrai").join("donViHanhChinh").get("id"), maTinhThanh));
+            }
+            if (loaiBenh != null) {
+                predicates.add(criteriaBuilder.equal(root.join("benh").get("tenBenh"), loaiBenh));
+            }
+            if (chiHienThiChuaKetThuc) {
+                predicates.add(criteriaBuilder.isFalse(root.get("daKetThuc")));
+            }
+
+            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+        };
     }
 
     @Transactional

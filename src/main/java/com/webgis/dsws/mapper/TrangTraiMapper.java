@@ -4,6 +4,7 @@ import com.webgis.dsws.domain.repository.BenhVatNuoiRepository;
 import com.webgis.dsws.util.StringUtils;
 import com.webgis.dsws.domain.dto.TrangTraiImportDTO;
 import com.webgis.dsws.domain.model.*;
+import com.webgis.dsws.domain.model.enums.MucDoBenhEnum;
 import com.webgis.dsws.domain.repository.DonViHanhChinhRepository;
 import com.webgis.dsws.domain.service.impl.BenhServiceImpl;
 import com.webgis.dsws.domain.service.importer.AddressService;
@@ -22,6 +23,7 @@ import java.util.Collections;
 import java.util.Arrays;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 
 /**
  * Lớp chuyển đổi dữ liệu từ DTO sang Entity cho TrangTrai.
@@ -183,6 +185,17 @@ public class TrangTraiMapper {
                 BenhVatNuoi benhVatNuoi = new BenhVatNuoi();
                 benhVatNuoi.setBenh(benh);
                 benhVatNuoi.setLoaiVatNuoi(trangTraiVatNuoi.getLoaiVatNuoi());
+
+                // Get highest severity level from disease categories
+                MucDoBenhEnum highestSeverity = benh.getMucDoBenhs().stream()
+                        .max(Comparator.comparingInt(MucDoBenhEnum::getSeverityLevel))
+                        .orElse(MucDoBenhEnum.THONG_THUONG);
+
+                // Set rates based on disease severity
+                benhVatNuoi.setTiLeLayNhiem(highestSeverity.getTiLeLayNhiem());
+                benhVatNuoi.setTiLeChet(highestSeverity.getTiLeChet());
+                benhVatNuoi.setTiLeHoiPhuc(highestSeverity.getTiLeHoiPhuc());
+
                 benhVatNuoiRepository.save(benhVatNuoi);
             }
         });
