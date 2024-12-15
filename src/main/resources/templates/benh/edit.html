@@ -1,50 +1,109 @@
 <!DOCTYPE html>
 <html lang="en" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <script src="/static/js/benh/benh.js" defer></script>
     <title>Chỉnh sửa Bệnh</title>
-  </head>
-  <body>
-    <section layout:fragment="content">
-      <div class="container mx-auto my-4">
-        <h1 class="text-center text-2xl font-bold mb-4">Chỉnh sửa Bệnh</h1>
-        <form
-          action="#"
-          th:action="@{/benh/edit/{id}(id=${benh.id})}"
-          th:object="${benh}"
-          method="post"
-          class="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          <div>
-            <label for="tenBenh" class="block text-sm font-medium text-gray-700"
-              >Tên Bệnh</label
-            >
-            <input
-              type="text"
-              id="tenBenh"
-              th:field="*{tenBenh}"
-              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
-              required
-            />
-          </div>
-          <!-- Các trường khác giống như trong create.html -->
-          <div class="col-span-full text-center">
-            <button
-              type="submit"
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Cập Nhật
-            </button>
-            <a
-              href="/benh"
-              class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Hủy
-            </a>
-          </div>
+</head>
+<body>
+<div layout:fragment="breadcrumb">
+    <span class="text-gray-500">/</span>
+    <a href="/benh" class="hover:text-blue-600">Quản lý bệnh</a>
+    <span class="text-gray-500">/</span>
+    <span class="text-gray-800">Chỉnh sửa</span>
+</div>
+
+<h1 layout:fragment="page-title">Chỉnh sửa Bệnh</h1>
+<p layout:fragment="page-subtitle">
+    Cập nhật thông tin bệnh trong hệ thống
+</p>
+<section layout:fragment="content">
+    <div class="container mx-auto px-4 mt-6">
+        <form th:action="@{/benh/edit/{id}(id=${benh.id})}" method="post" th:object="${benh}" class="max-w-2xl mx-auto">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <!-- Tên Bệnh -->
+                <div>
+                    <label for="tenBenh" class="block text-sm font-medium text-gray-700">Tên Bệnh</label>
+                    <input type="text" id="tenBenh" th:field="*{tenBenh}"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           required/>
+                    <p th:if="${#fields.hasErrors('tenBenh')}" th:errors="*{tenBenh}" class="text-red-500 text-sm mt-1"></p>
+                </div>
+
+                <!-- Mô Tả -->
+                <div>
+                    <label for="moTa" class="block text-sm font-medium text-gray-700">Mô Tả</label>
+                    <textarea id="moTa" th:field="*{moTa}"
+                              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              rows="3" required></textarea>
+                    <p th:if="${#fields.hasErrors('moTa')}" th:errors="*{moTa}" class="text-red-500 text-sm mt-1"></p>
+                </div>
+
+                <!-- Tác Nhân -->
+                <div>
+                    <label for="tacNhan" class="block text-sm font-medium text-gray-700">Tác Nhân</label>
+                    <input type="text" id="tacNhan" th:field="*{tacNhanGayBenh}"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           required/>
+                    <p th:if="${#fields.hasErrors('tacNhanGayBenh')}" th:errors="*{tacNhanGayBenh}" class="text-red-500 text-sm mt-1"></p>
+                </div>
+
+                <!-- Triệu Chứng -->
+                <div>
+                    <label for="trieuChung" class="block text-sm font-medium text-gray-700">Triệu Chứng</label>
+                    <textarea id="trieuChung" th:field="*{trieuChung}"
+                              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              rows="3" required></textarea>
+                    <p th:if="${#fields.hasErrors('trieuChung')}" th:errors="*{trieuChung}" class="text-red-500 text-sm mt-1"></p>
+                </div>
+
+                <!-- Thời Gian Ủ Bệnh -->
+                <div>
+                    <label for="thoiGianUBenh" class="block text-sm font-medium text-gray-700">Thời Gian Ủ Bệnh</label>
+                    <input type="text" id="thoiGianUBenh" th:field="*{thoiGianUBenh}"
+                           class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                           required/>
+                    <p th:if="${#fields.hasErrors('thoiGianUBenh')}" th:errors="*{thoiGianUBenh}" class="text-red-500 text-sm mt-1"></p>
+                </div>
+
+                <!-- Phương Pháp Chẩn Đoán -->
+                <div>
+                    <label for="phuongPhapChanDoan" class="block text-sm font-medium text-gray-700">Phương Pháp Chẩn Đoán</label>
+                    <textarea id="phuongPhapChanDoan" th:field="*{phuongPhapChanDoan}"
+                              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              rows="3" required></textarea>
+                    <p th:if="${#fields.hasErrors('phuongPhapChanDoan')}" th:errors="*{phuongPhapChanDoan}" class="text-red-500 text-sm mt-1"></p>
+                </div>
+
+                <!-- Biện Pháp Phòng Ngừa -->
+                <div>
+                    <label for="bienPhapPhongNgua" class="block text-sm font-medium text-gray-700">Biện Pháp Phòng Ngừa</label>
+                    <textarea id="bienPhapPhongNgua" th:field="*{bienPhapPhongNgua}"
+                              class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                              rows="3" required></textarea>
+                    <p th:if="${#fields.hasErrors('bienPhapPhongNgua')}" th:errors="*{bienPhapPhongNgua}" class="text-red-500 text-sm mt-1"></p>
+                </div>
+
+                <!-- Button group with Update and Delete -->
+                <div class="col-span-full flex flex-col sm:flex-row justify-between mt-6 space-y-4 sm:space-y-0">
+                    <a th:href="@{/benh/delete/{id}(id=${benh.id})}"
+                       class="bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded text-center"
+                       onclick="return confirm('Bạn có chắc chắn muốn xóa bệnh này?')">
+                        Xóa Bệnh
+                    </a>
+                    <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                        <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+                            Cập Nhật
+                        </button>
+                        <a href="/benh" class="text-gray-600 hover:text-blue-600 py-2 px-4 text-center sm:text-left">
+                            Hủy
+                        </a>
+                    </div>
+                </div>
+            </div>
         </form>
-      </div>
-    </section>
-  </body>
+    </div>
+</section>
+</body>
 </html>

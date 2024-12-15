@@ -1,5 +1,6 @@
 package com.webgis.dsws.domain.service.impl;
 
+import com.webgis.dsws.domain.dto.BenhDTO;
 import com.webgis.dsws.domain.model.Benh;
 import com.webgis.dsws.domain.model.CaBenh;
 import com.webgis.dsws.domain.model.TrangTrai;
@@ -10,6 +11,9 @@ import com.webgis.dsws.domain.repository.BenhRepository;
 import com.webgis.dsws.domain.service.BenhService;
 import com.webgis.dsws.domain.service.processor.BenhProcessor;
 import jakarta.persistence.EntityNotFoundException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -222,6 +226,12 @@ public class BenhServiceImpl implements BenhService {
         return benhSet;
     }
 
+    @Override
+    public Page<Benh> searchBenh(String keyword, Pageable pageable) {
+        // Tìm kiếm theo tên bệnh, mô tả, tác nhân, triệu chứng
+        return benhRepository.findByKeyword(keyword, pageable);
+    }
+
     /**
      * Xóa một bệnh khỏi hệ thống theo mã định danh.
      *
@@ -231,5 +241,73 @@ public class BenhServiceImpl implements BenhService {
     @Transactional
     public void deleteById(Long id) {
         benhRepository.deleteById(id);
+    }
+
+    public Page<Benh> findAll(Pageable pageable) {
+        return benhRepository.findAll(pageable);
+    }
+
+    @Override
+    public List<BenhDTO> findAllDTO() {
+        return findAll().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<BenhDTO> findDTOById(Long id) {
+        return findById(id)
+                .map(this::convertToDTO);
+    }
+
+    @Override
+    public BenhDTO findOrCreateBenhDTO(String tenBenh) {
+        Benh benh = findOrCreateBenh(tenBenh);
+        return convertToDTO(benh);
+    }
+
+    @Override
+    @Transactional
+    public void deleteDTOById(Long id) {
+        deleteById(id);
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Optional<BenhDTO> findDTOByTenBenh(String tenBenh) {
+        return findByTenBenh(tenBenh)
+                .map(this::convertToDTO);
+    }
+
+    @Override
+    public BenhDTO saveDTO(BenhDTO benhDTO) {
+        Benh benh = convertToEntity(benhDTO);
+        Benh savedBenh = save(benh);
+        return convertToDTO(savedBenh);
+    }
+
+    @Override
+    @Transactional
+    public BenhDTO updateDTO(Long id, BenhDTO benhDTO) {
+        Benh existingBenh = findById(id).orElseThrow(() ->
+                new EntityNotFoundException("Không tìm thấy bệnh với ID: " + id));
+        existingBenh.setTenBenh(benhDTO.getTenBenh());
+        existingBenh.setMoTa(benhDTO.getMoTa());
+        existingBenh.setTacNhanGayBenh(benhDTO.getTacNhanGayBenh());
+        existingBenh.setTrieuChung(benhDTO.getTrieuChung());
+        existingBenh.setThoiGianUBenh(benhDTO.getThoiGianUBenh());
+        existingBenh.setPhuongPhapChanDoan(benhDTO.getPhuongPhapChanDoan());
+        existingBenh.setBienPhapPhongNgua(benhDTO.getBienPhapPhongNgua());
+        existingBenh.setMucDoBenhs(benhDTO.getMucDoBenhs());
+        existingBenh.setCanCongBoDich(benhDTO.getCanCongBoDich());
+        existingBenh.setCanPhongBenhBatBuoc(benhDTO.getCanPhongBenhBatBuoc());
+        benhProcessor.processBenh(existingBenh);
+        Benh updatedBenh = save(existingBenh);
+        return convertToDTO(updatedBenh);
+    }
+
+    public Page<Benh> findAllPaginated(int page, int size) {
+        return benhRepository.findAll(PageRequest.of(page, size));
     }
 }
