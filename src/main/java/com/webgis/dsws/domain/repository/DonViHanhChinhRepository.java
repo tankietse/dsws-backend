@@ -48,4 +48,8 @@ public interface DonViHanhChinhRepository extends JpaRepository<DonViHanhChinh, 
             "SELECT d.id FROM don_vi_hanh_chinh d JOIN dvhc_tree dt ON d.id_cha = dt.id)" +
             "SELECT id FROM dvhc_tree", nativeQuery = true)
     List<Integer> findAllDescendantIds(@Param("rootId") Integer rootId);
+
+    List<DonViHanhChinh> findByCapHanhChinhAndTenContainingIgnoreCase(String capHanhChinh, String ten);
+
+    List<DonViHanhChinh> findByTenContainingIgnoreCase(String ten);
 }

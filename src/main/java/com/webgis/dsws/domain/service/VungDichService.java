@@ -1,6 +1,5 @@
 package com.webgis.dsws.domain.service;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.locationtech.jts.geom.Coordinate;
@@ -12,11 +11,14 @@ import com.webgis.dsws.domain.model.enums.MucDoVungDichEnum;
 import com.webgis.dsws.domain.repository.TrangTraiRepository;
 import com.webgis.dsws.domain.repository.VungDichRepository;
 import com.webgis.dsws.domain.repository.VungDichTrangTraiRepository;
+import com.webgis.dsws.domain.dto.VungDichMapDTO;
 import com.webgis.dsws.domain.model.BienPhapPhongChong;
+import com.webgis.dsws.domain.model.CaBenh;
+import com.webgis.dsws.domain.model.DonViHanhChinh;
 import com.webgis.dsws.domain.model.TrangTrai;
 
 import jakarta.persistence.EntityNotFoundException;
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
@@ -108,7 +110,7 @@ public class VungDichService {
         VungDich vungDich = vungDichRepository.findById(vungDichId).orElse(null);
         if (vungDich != null) {
             if (vungDich.getMucDo() == MucDoVungDichEnum.CAP_DO_4) {
-                return "Cảnh báo: Vùng dịch " + vungDich.getTenVung() + " đang ở mức nghi��m trọng.";
+                return "Cảnh báo: Vùng dịch " + vungDich.getTenVung() + " đang ở mức nghiêm trọng.";
             }
             return "Vùng dịch " + vungDich.getTenVung() + " an toàn.";
         }
@@ -145,10 +147,16 @@ public class VungDichService {
      * @return Vùng dịch đã được lưu.
      */
     @Transactional
-    public VungDich save(VungDich vungDich) {
+    public VungDich save(VungDich vungDich, List<CaBenh> caBenhs) {
         vungDich = vungDichRepository.save(vungDich);
-        associateAffectedFarms(vungDich);
+        associateAffectedFarms(vungDich, caBenhs);
         return vungDich;
+    }
+
+    // Overloaded save method for backward compatibility
+    @Transactional
+    public VungDich save(VungDich vungDich) {
+        return save(vungDich, Collections.emptyList());
     }
 
     /**
@@ -159,7 +167,7 @@ public class VungDichService {
      * @return Vùng dịch đã được cập nhật.
      */
     @Transactional
-    public VungDich update(Long id, VungDich vungDichDetails) {
+    public VungDich update(Long id, VungDich vungDichDetails, List<CaBenh> caBenhs) {
         VungDich vungDich = getVungDichById(id);
         vungDich.setTenVung(vungDichDetails.getTenVung());
         vungDich.setMucDo(vungDichDetails.getMucDo());
@@ -169,8 +177,14 @@ public class VungDichService {
         vungDich.setNgayBatDau(vungDichDetails.getNgayBatDau());
         vungDich.setNgayKetThuc(vungDichDetails.getNgayKetThuc());
         vungDich = vungDichRepository.save(vungDich);
-        associateAffectedFarms(vungDich);
+        associateAffectedFarms(vungDich, caBenhs);
         return vungDich;
+    }
+
+    // Overloading method update để hỗ trợ việc cập nhật thông tin vùng dịch
+    @Transactional
+    public VungDich update(Long id, VungDich vungDichDetails) {
+        return update(id, vungDichDetails, Collections.emptyList());
     }
 
     /**
@@ -338,6 +352,34 @@ public class VungDichService {
     }
 
     /**
+     * Get cluster data for active outbreak zones
+     */
+    public List<Map<String, Object>> getClusterData() {
+        Specification<VungDich> spec = (root, query, cb) -> cb.isNull(root.get("ngayKetThuc"));
+        List<VungDich> activeZones = vungDichRepository.findAll(spec);
+
+        return activeZones.stream().map(vd -> {
+            Map<String, Object> cluster = new HashMap<>();
+            Point centroid = vd.getGeom().getCentroid();
+
+            cluster.put("id", vd.getId());
+            cluster.put("latitude", centroid.getY());
+            cluster.put("longitude", centroid.getX());
+            cluster.put("tenVung", vd.getTenVung());
+            cluster.put("mucDo", vd.getMucDo().toString());
+            cluster.put("banKinh", vd.getBanKinh());
+            cluster.put("moTa", vd.getMoTa());
+            cluster.put("color", vd.getMucDo().getMauHienThi());
+
+            if (vd.getBenh() != null) {
+                cluster.put("tenBenh", vd.getBenh().getTenBenh());
+            }
+
+            return cluster;
+        }).collect(Collectors.toList());
+    }
+
+    /**
      * Lấy dữ liệu symbols cho feature layer theo mức độ
      */
     public Map<String, Object> getFeatureLayerSymbols(MucDoVungDichEnum mucDo) {
@@ -399,24 +441,34 @@ public class VungDichService {
     }
 
     @Transactional
-    protected void associateAffectedFarms(VungDich vungDich) {
-        List<TrangTrai> affectedFarms = trangTraiRepository.findFarmsWithinDistance(
+    protected void associateAffectedFarms(VungDich vungDich, List<CaBenh> caBenhs) {
+        // Collect farms from the disease cases
+        Set<TrangTrai> caBenhFarms = caBenhs.stream()
+                .map(CaBenh::getTrangTrai)
+                .collect(Collectors.toSet());
+
+        // Find nearby farms within the epidemic zone radius
+        List<TrangTrai> nearbyFarms = trangTraiRepository.findFarmsWithinDistance(
                 vungDich.getGeom(), vungDich.getBanKinh());
+
+        // Combine both sets of farms
+        Set<TrangTrai> affectedFarms = new HashSet<>(nearbyFarms);
+        affectedFarms.addAll(caBenhFarms);
 
         for (TrangTrai trangTrai : affectedFarms) {
             VungDichTrangTrai vdt = new VungDichTrangTrai();
             vdt.setVungDich(vungDich);
             vdt.setTrangTrai(trangTrai);
 
-            // Tính khoảng cách giữa trang trại và vùng dịch
+            // Calculate the distance between the farm and the epidemic zone center
             double distance = geometryService.calculateDistance(
                     vungDich.getGeom(), trangTrai.getPoint());
             vdt.setKhoangCach((float) distance);
 
-            // Xác định mức độ ảnh hưởng dựa trên khoảng cách
+            // Determine the impact level based on distance
             vdt.setMucDoAnhHuong(determineImpactLevel(distance));
 
-            // Thiết lập ngày bắt đầu và kết thúc ảnh hưởng
+            // Set the start and end date of impact
             vdt.setNgayBatDauAnhHuong(vungDich.getNgayBatDau());
             vdt.setNgayKetThucAnhHuong(vungDich.getNgayKetThuc());
 
@@ -433,5 +485,131 @@ public class VungDichService {
         } else {
             return "Thấp";
         }
+    }
+
+    /**
+     * Lấy dữ liệu vùng dịch cho hiển thị bản đồ kèm trang trại và đơn vị hành chính
+     */
+    @Transactional(readOnly = true)
+    public List<VungDichMapDTO> getVungDichMapData() {
+        // Use JPQL to fetch data eagerly
+        List<VungDich> vungDichs = vungDichRepository.findByNgayKetThucIsNullWithTrangTrais();
+
+        return vungDichs.stream()
+                .map(this::convertToMapDTO)
+                .collect(Collectors.toList());
+    }
+
+    private VungDichMapDTO convertToMapDTO(VungDich vd) {
+        VungDichMapDTO dto = new VungDichMapDTO();
+        dto.setId(vd.getId());
+        dto.setTenVung(vd.getTenVung());
+        dto.setCenterPoint(vd.getGeom().getCentroid());
+        dto.setBanKinh(vd.getBanKinh());
+        dto.setMucDo(vd.getMucDo());
+        dto.setColorCode(vd.getMucDo().getMauHienThi());
+
+        Set<VungDichTrangTrai> trangTrais = vd.getTrangTrais();
+        if (trangTrais != null && !trangTrais.isEmpty()) {
+            dto.setTrangTrais(convertTrangTrais(trangTrais));
+
+            // Get administrative unit from first farm
+            VungDichTrangTrai firstTrangTrai = trangTrais.iterator().next();
+            if (firstTrangTrai != null && firstTrangTrai.getTrangTrai() != null) {
+                dto.setDonViHanhChinh(convertDonViHanhChinh(
+                        firstTrangTrai.getTrangTrai().getDonViHanhChinh()));
+            }
+        }
+
+        return dto;
+    }
+
+    private Set<VungDichMapDTO.TrangTraiSimpleDTO> convertTrangTrais(Set<VungDichTrangTrai> trangTrais) {
+        return trangTrais.stream()
+                .map(vdt -> {
+                    var ttDto = new VungDichMapDTO.TrangTraiSimpleDTO();
+                    ttDto.setId(vdt.getTrangTrai().getId());
+                    ttDto.setTenTrangTrai(vdt.getTrangTrai().getTenTrangTrai());
+                    ttDto.setTenChu(vdt.getTrangTrai().getTenChu());
+                    ttDto.setDiaChi(vdt.getTrangTrai().getDiaChiDayDu());
+                    ttDto.setLocation(vdt.getTrangTrai().getPoint());
+                    ttDto.setKhoangCach(vdt.getKhoangCach());
+                    return ttDto;
+                })
+                .collect(Collectors.toSet());
+    }
+
+    private VungDichMapDTO.DonViHanhChinhSimpleDTO convertDonViHanhChinh(DonViHanhChinh dvhc) {
+        if (dvhc == null)
+            return null;
+        var dvhcDto = new VungDichMapDTO.DonViHanhChinhSimpleDTO();
+        dvhcDto.setId(dvhc.getId());
+        dvhcDto.setTen(dvhc.getTen());
+        dvhcDto.setCapHanhChinh(dvhc.getCapHanhChinh());
+        dvhcDto.setBoundary(dvhc.getRanhGioi());
+        return dvhcDto;
+    }
+
+    public List<VungDich> findBySeverity(MucDoVungDichEnum mucDo) {
+        return vungDichRepository.findByMucDo(mucDo);
+    }
+
+    public List<VungDich> findByTimeRange(Date startDate, Date endDate) {
+        Specification<VungDich> spec = Specification.where(null);
+
+        if (startDate != null && endDate != null) {
+            spec = spec.and((root, query, cb) -> cb.between(root.get("ngayBatDau"), startDate, endDate));
+        } else if (startDate != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("ngayBatDau"), startDate));
+        } else if (endDate != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("ngayBatDau"), endDate));
+        } else {
+            // If no dates provided, return all
+            return vungDichRepository.findAll();
+        }
+
+        return vungDichRepository.findAll(spec);
+    }
+
+    @Transactional(readOnly = true)
+    public List<VungDichMapDTO> getVungDichByAnimalTypeAndDisease(Long loaiVatNuoiId, Long benhId) {
+        List<VungDich> vungDichList = vungDichRepository.findByAnimalTypeAndDisease(loaiVatNuoiId, benhId);
+        List<VungDichMapDTO> vungDichDetails = vungDichList.stream()
+                .map(vungDich -> {
+                    VungDichMapDTO dto = new VungDichMapDTO();
+                    dto.setId(vungDich.getId());
+                    dto.setTenVung(vungDich.getTenVung());
+                    dto.setMucDo(vungDich.getMucDo());
+                    dto.setColorCode(vungDich.getMucDo().getMauHienThi());
+                    dto.setBanKinh(vungDich.getBanKinh());
+                    dto.setCenterPoint(vungDich.getGeom().getCentroid());
+
+                    List<VungDichTrangTrai> newVDTT = vungDichTrangTraiRepository.findByVungDichId(vungDich.getId());
+                    // Lấy danh sách trang trại bị ảnh hưởng
+                    Set<VungDichMapDTO.TrangTraiSimpleDTO> trangTrais = newVDTT.stream()
+                            .map(vdt -> {
+                                var ttDto = new VungDichMapDTO.TrangTraiSimpleDTO();
+                                ttDto.setId(vdt.getTrangTrai().getId());
+                                ttDto.setTenTrangTrai(vdt.getTrangTrai().getTenTrangTrai());
+                                ttDto.setTenChu(vdt.getTrangTrai().getTenChu());
+                                ttDto.setDiaChi(vdt.getTrangTrai().getDiaChiDayDu());
+                                ttDto.setLocation(vdt.getTrangTrai().getPoint());
+                                ttDto.setKhoangCach(vdt.getKhoangCach());
+                                return ttDto;
+                            })
+                            .collect(Collectors.toSet());
+                    dto.setTrangTrais(trangTrais);
+
+                    if (!newVDTT.isEmpty()) {
+                        VungDichTrangTrai firstTrangTrai = newVDTT.get(0);
+                        if (firstTrangTrai != null && firstTrangTrai.getTrangTrai() != null) {
+                            dto.setDonViHanhChinh(convertDonViHanhChinh(
+                                    firstTrangTrai.getTrangTrai().getDonViHanhChinh()));
+                        }
+                    }
+                    return dto;
+                })
+                .collect(Collectors.toList());
+        return vungDichDetails;
     }
 }

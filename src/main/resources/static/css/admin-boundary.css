@@ -1,0 +1,53 @@
+.table-fixed th,
+.table-fixed td {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Column widths */
+.table-fixed th:nth-child(1),
+.table-fixed td:nth-child(1) {
+    width: 100px;
+    /* Mã đơn vị */
+}
+
+.table-fixed th:nth-child(2),
+.table-fixed td:nth-child(2) {
+    width: 200px;
+    /* Tên đơn vị */
+}
+
+.table-fixed th:nth-child(3),
+.table-fixed td:nth-child(3) {
+    width: 150px;
+    /* Cấp hành chính */
+}
+
+.table-fixed th:nth-child(4),
+.table-fixed td:nth-child(4) {
+    width: 200px;
+    /* Đơn vị cha */
+}
+
+.table-fixed th:nth-child(5),
+.table-fixed td:nth-child(5) {
+    width: 100px;
+    /* Thao tác */
+}
+
+/* Map styles */
+#map {
+    border: 1px solid #ccc;
+    background-color: #f8f9fa;
+}
+
+/* Modal styles */
+#modal {
+    z-index: 1100;
+}
+
+.modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+}

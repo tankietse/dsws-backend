@@ -6,6 +6,8 @@ import org.locationtech.jts.geom.Point;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIdentityReference;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -39,6 +41,7 @@ public class TrangTrai {
 
     @ManyToOne
     @JoinColumn(name = "don_vi_hanh_chinh_id")
+    @JsonIdentityReference(alwaysAsId = true)
     private DonViHanhChinh donViHanhChinh;
 
     private Float dienTich;
@@ -62,6 +65,7 @@ public class TrangTrai {
     @OneToMany(mappedBy = "trangTrai")
     private Set<CaBenh> danhSachCaBenh;
 
+    @JsonManagedReference
     @OneToMany(mappedBy = "trangTrai")
     private Set<VungDichTrangTrai> danhSachVungDich;
 
@@ -69,14 +73,17 @@ public class TrangTrai {
     private Set<CanhBaoTrangTrai> danhSachCanhBao;
 
     @OneToMany(mappedBy = "trangTrai")
+    @JsonManagedReference
     private Set<VungDichTrangTrai> vungDichs;
 
     @OneToMany(mappedBy = "trangTrai")
     private Set<CanhBaoTrangTrai> canhBaos;
 
     @OneToMany(mappedBy = "trangTrai", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private Set<CaBenh> caBenhs = new HashSet<>();
 
     @OneToMany(mappedBy = "trangTrai", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private Set<TrangTraiVatNuoi> trangTraiVatNuois = new HashSet<>();
 }

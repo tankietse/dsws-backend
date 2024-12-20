@@ -4,6 +4,7 @@ import com.webgis.dsws.domain.model.CaBenh;
 import com.webgis.dsws.domain.model.DonViHanhChinh;
 import com.webgis.dsws.domain.model.NguoiDung;
 import com.webgis.dsws.domain.model.TrangTrai;
+import com.webgis.dsws.domain.model.enums.MucDoBenhEnum;
 import com.webgis.dsws.domain.model.enums.TrangThaiEnum;
 import com.webgis.dsws.domain.model.Benh;
 import com.webgis.dsws.domain.repository.CaBenhRepository;
@@ -23,6 +24,7 @@ import org.springframework.data.jpa.domain.Specification;
 public class CaBenhService {
     private final CaBenhRepository caBenhRepository;
     private final TrangTraiService trangTraiService;
+    private final GeometryService geometryService;
     private final DonViHanhChinhService donViHanhChinhService;
 
     @Transactional(readOnly = true)
@@ -407,5 +409,119 @@ public class CaBenhService {
     public CaBenh findById(Long id) {
         return caBenhRepository.findById(id)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy ca bệnh với ID: " + id));
+    }
+
+    @Transactional(readOnly = true)
+    public Map<String, Object> getCaBenhByRegionGeoJSON(
+            String capHanhChinh,
+            Long benhId,
+            String mucDoBenh,
+            Long loaiVatNuoiId,
+            Date fromDate,
+            Date toDate) {
+
+        try {
+            final MucDoBenhEnum mucDoBenhEnum = mucDoBenh != null ? MucDoBenhEnum.valueOf(mucDoBenh.toUpperCase())
+                    : MucDoBenhEnum.BANG_A;
+            if (mucDoBenh != null) {
+                try {
+                    MucDoBenhEnum.valueOf(mucDoBenh.toUpperCase());
+                } catch (IllegalArgumentException e) {
+                    throw new IllegalArgumentException("Mức độ bệnh không hợp lệ: " + mucDoBenh);
+                }
+            }
+
+            // Build specification
+            Specification<CaBenh> spec = (root, query, cb) -> {
+                List<Predicate> predicates = new ArrayList<>();
+
+                if (capHanhChinh != null) {
+                    predicates.add(cb.equal(
+                            root.join("trangTrai").join("donViHanhChinh").get("capHanhChinh"), capHanhChinh));
+                }
+                if (benhId != null) {
+                    predicates.add(cb.equal(root.join("benh").get("id"), benhId));
+                }
+                if (mucDoBenhEnum != null) {
+                    predicates.add(cb.isMember(mucDoBenhEnum, root.join("benh").get("mucDoBenhs")));
+                }
+                if (loaiVatNuoiId != null) {
+                    predicates.add(cb.equal(
+                            root.join("trangTrai").join("trangTraiVatNuois").join("loaiVatNuoi").get("id"),
+                            loaiVatNuoiId));
+                }
+                if (fromDate != null) {
+                    predicates.add(cb.greaterThanOrEqualTo(root.get("ngayPhatHien"), fromDate));
+                }
+                if (toDate != null) {
+                    predicates.add(cb.lessThanOrEqualTo(root.get("ngayPhatHien"), toDate));
+                }
+                // Ensure ranhGioi is not null
+                predicates.add(cb.isNotNull(root.join("trangTrai").join("donViHanhChinh").get("ranhGioi")));
+
+                return cb.and(predicates.toArray(new Predicate[0]));
+            };
+
+            List<CaBenh> caBenhs = caBenhRepository.findAll(spec);
+
+            Map<String, Object> featureCollection = new HashMap<>();
+            featureCollection.put("type", "FeatureCollection");
+
+            List<Map<String, Object>> features = processFeatures(caBenhs);
+            featureCollection.put("features", features);
+
+            return featureCollection;
+
+        } catch (Exception e) {
+            throw new RuntimeException("Error processing data: " + e.getMessage(), e);
+        }
+    }
+
+    // Extract feature processing to separate method
+    private List<Map<String, Object>> processFeatures(List<CaBenh> caBenhs) {
+        // Group cases by administrative region
+        Map<DonViHanhChinh, List<CaBenh>> casesByRegion = caBenhs.stream()
+                .collect(Collectors.groupingBy(caBenh -> caBenh.getTrangTrai().getDonViHanhChinh()));
+
+        return casesByRegion.entrySet().stream()
+                .map(entry -> createFeature(entry.getKey(), entry.getValue()))
+                .collect(Collectors.toList());
+    }
+
+    private Map<String, Object> createFeature(DonViHanhChinh region, List<CaBenh> cases) {
+        Map<String, Object> feature = new HashMap<>();
+        feature.put("type", "Feature");
+
+        // Add geometry
+        Map<String, Object> geometry = new HashMap<>();
+        geometry.put("type", region.getRanhGioi().getGeometryType());
+        geometry.put("coordinates", geometryService.extractCoordinates(region.getRanhGioi()));
+        feature.put("geometry", geometry);
+
+        // Add properties
+        Map<String, Object> properties = new HashMap<>();
+        properties.put("id", region.getId());
+        properties.put("ten", region.getTen());
+        properties.put("capHanhChinh", region.getCapHanhChinh());
+        properties.put("totalCases", cases.size());
+        properties.put("caBenhs", getDetailedCaseInfo(cases));
+        feature.put("properties", properties);
+
+        return feature;
+    }
+
+    private List<Map<String, Object>> getDetailedCaseInfo(List<CaBenh> caBenhs) {
+        return caBenhs.stream()
+                .map(caBenh -> {
+                    Map<String, Object> caseInfo = new HashMap<>();
+                    caseInfo.put("id", caBenh.getId());
+                    caseInfo.put("benh", caBenh.getBenh().getTenBenh());
+                    caseInfo.put("ngayPhatHien", caBenh.getNgayPhatHien());
+                    caseInfo.put("soCaNhiem", caBenh.getSoCaNhiemBanDau());
+                    caseInfo.put("trangThai", caBenh.getTrangThai());
+                    caseInfo.put("daKetThuc", caBenh.getDaKetThuc());
+                    return caseInfo;
+                })
+                .collect(Collectors.toList());
     }
 }

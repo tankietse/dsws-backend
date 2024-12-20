@@ -124,6 +124,51 @@ public class DonViHanhChinhService {
         return featureCollection;
     }
 
+    public Map<String, Object> getGeoJSON(String capHanhChinh, String name) {
+        List<DonViHanhChinh> donViHanhChinhs;
+
+        if (capHanhChinh != null && !capHanhChinh.isEmpty() && name != null && !name.isEmpty()) {
+            donViHanhChinhs = donViHanhChinhRepository.findByCapHanhChinhAndTenContainingIgnoreCase(capHanhChinh, name);
+        } else if (capHanhChinh != null && !capHanhChinh.isEmpty()) {
+            donViHanhChinhs = findByCapHanhChinh(capHanhChinh);
+        } else if (name != null && !name.isEmpty()) {
+            donViHanhChinhs = donViHanhChinhRepository.findByTenContainingIgnoreCase(name);
+        } else {
+            donViHanhChinhs = findAll();
+        }
+
+        Map<String, Object> featureCollection = new HashMap<>();
+        featureCollection.put("type", "FeatureCollection");
+
+        List<Map<String, Object>> features = donViHanhChinhs.stream()
+                .filter(dv -> dv.getRanhGioi() != null)
+                .map(dv -> {
+                    Map<String, Object> feature = new HashMap<>();
+                    feature.put("type", "Feature");
+
+                    // Add geometry directly from ranhGioi
+                    Map<String, Object> geometry = new HashMap<>();
+                    geometry.put("type", dv.getRanhGioi().getGeometryType());
+                    geometry.put("coordinates", extractCoordinates(dv.getRanhGioi()));
+                    feature.put("geometry", geometry);
+
+                    // Add properties
+                    Map<String, Object> properties = new HashMap<>();
+                    properties.put("id", dv.getId());
+                    properties.put("ten", dv.getTen());
+                    properties.put("tenTiengAnh", dv.getTenTiengAnh());
+                    properties.put("capHanhChinh", dv.getCapHanhChinh());
+                    properties.put("adminLevel", dv.getAdminLevel());
+                    feature.put("properties", properties);
+
+                    return feature;
+                })
+                .collect(Collectors.toList());
+
+        featureCollection.put("features", features);
+        return featureCollection;
+    }
+
     public Object extractCoordinates(Geometry geometry) {
         if (geometry == null) {
             return null;

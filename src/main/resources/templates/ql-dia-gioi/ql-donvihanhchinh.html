@@ -16,86 +16,160 @@
       rel="stylesheet"
     />
     <link href="/css/map.css" rel="stylesheet" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      crossorigin=""
+    />
+    <script
+      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      crossorigin=""
+    ></script>
+    <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
+    <script src="https://unpkg.com/esri-leaflet-vector@4.2.5/dist/esri-leaflet-vector.js"></script>
+    <link rel="stylesheet" th:href="@{/css/map.css}" />
   </head>
   <body>
-    <section layout:fragment="content" class="p-6">
-      <h1 class="text-2xl font-bold mb-4">Quản lý Địa giới Hành chính</h1>
-
-      <div class="mb-4">
-        <button id="btnAdd" class="bg-blue-500 text-white px-4 py-2 rounded">
-          Thêm Đơn Vị Hành Chính
-        </button>
-        <input
-          type="text"
-          id="searchInput"
-          placeholder="Tìm kiếm theo tên..."
-          class="border p-2 rounded"
-        />
-        <button
-          id="btnSearch"
-          class="bg-green-500 text-white px-4 py-2 rounded"
-        >
-          Tìm kiếm
-        </button>
-      </div>
-
-      <table id="donViTable" class="min-w-full bg-white border border-gray-300">
-        <thead>
-          <tr>
-            <th class="border px-4 py-2">ID</th>
-            <th class="border px-4 py-2">Tên</th>
-            <th class="border px-4 py-2">Cấp hành chính</th>
-            <th class="border px-4 py-2">Hành động</th>
-          </tr>
-        </thead>
-        <tbody id="tableBody">
-          <!-- Dữ liệu sẽ được chèn vào đây từ JavaScript -->
-        </tbody>
-      </table>
-    </section>
-
-    <!-- Popup Modal -->
-    <div
-      id="modal"
-      class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 hidden"
-    >
-      <div class="bg-white p-6 rounded shadow-lg w-1/3">
-        <h2 class="text-xl font-bold mb-4" id="modalTitle">
-          Thêm Đơn Vị Hành Chính
-        </h2>
-        <input type="hidden" id="donViId" />
-        <div class="mb-4">
-          <label for="ten" class="block">Tên:</label>
-          <input
-            type="text"
-            id="ten"
-            class="border p-2 rounded w-full"
-            required
-          />
-        </div>
-        <div class="mb-4">
-          <label for="capHanhChinh" class="block">Cấp hành chính:</label>
-          <input
-            type="text"
-            id="capHanhChinh"
-            class="border p-2 rounded w-full"
-            required
-          />
-        </div>
-        <button id="btnSave" class="bg-blue-500 text-white px-4 py-2 rounded">
-          Lưu
-        </button>
-        <button
-          id="btnClose"
-          class="bg-gray-400 text-white px-4 py-2 rounded ml-2"
-        >
-          Đóng
-        </button>
-      </div>
+    <!-- Add breadcrumb -->
+    <div layout:fragment="breadcrumb">
+      <span class="text-gray-500">/</span>
+      <a href="/ql-dia-gioi" class="hover:text-blue-600"
+        >Quản lý Địa giới Hành chính</a
+      >
+      <span class="text-gray-500">/</span>
+      <span class="text-gray-800">Danh sách</span>
     </div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone-min.js"></script>
-    <script src="/js/admin-boundary.js"></script>
+    <h1 class="text-2xl font-bold mb-4" layout:fragment="page-title">
+      Quản lý Địa giới Hành chính
+    </h1>
+
+    <section layout:fragment="content" class="p-6">
+      <div class="flex">
+        <!-- Left side - Table section -->
+        <div class="w-2/3 pr-4">
+          <div
+            class="flex items-center justify-between p-4 bg-white bg-opacity-30 backdrop-filter backdrop-blur-md rounded-lg mb-4"
+          >
+            <button
+              id="btnAdd"
+              class="bg-gradient-to-r from-green-400 to-blue-500 text-white font-bold py-2 px-6 rounded-full shadow-lg transform transition-transform duration-300 hover:scale-105 hover:shadow-xl"
+            >
+              THÊM ĐƠN VỊ HÀNH CHÍNH
+            </button>
+            <div class="flex items-center space-x-4">
+              <label for="entries" class="mr-2">Hiển thị</label>
+              <select id="entries" class="border rounded p-1 mr-4">
+                <option value="10">10 mục mỗi trang</option>
+                <option value="25">25 mục mỗi trang</option>
+                <option value="50">50 mục mỗi trang</option>
+              </select>
+
+              <label for="capFilter" class="mr-2">Cấp hành chính</label>
+              <select id="capFilter" class="border rounded p-1">
+                <option value="">Tất cả</option>
+                <option value="Tỉnh/Thành phố">Tỉnh/Thành phố</option>
+                <option value="Quận/Huyện">Quận/Huyện</option>
+                <option value="Xã/Phường">Xã/Phường</option>
+              </select>
+
+              <label for="nameFilter" class="mr-2">Tên đơn vị</label>
+              <input
+                id="nameFilter"
+                type="text"
+                placeholder="Tìm kiếm"
+                class="border border-gray-300 rounded-md px-3 py-1 bg-white bg-opacity-50 focus:outline-none"
+              />
+
+              <button
+                class="border border-gray-300 text-gray-700 hover:bg-gray-100 px-4 py-2 rounded-md"
+              >
+                XUẤT FILE
+              </button>
+            </div>
+          </div>
+
+          <div class="overflow-x-auto">
+            <div class="max-h-[600px] overflow-y-auto">
+              <table
+                class="min-w-full bg-white border border-zinc-300 table-fixed"
+              >
+                <thead class="sticky top-0 bg-zinc-100 z-10">
+                  <tr>
+                    <th class="border px-4 py-2">Mã đơn vị</th>
+                    <th class="border px-4 py-2">Tên đơn vị</th>
+                    <th class="border px-4 py-2">Cấp hành chính</th>
+                    <th class="border px-4 py-2">Đơn vị cha</th>
+                    <th class="border px-4 py-2">Thao tác</th>
+                  </tr>
+                </thead>
+                <tbody id="donViTableBody" class="divide-y divide-zinc-200">
+                  <!-- Table rows will be populated dynamically -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Pagination component -->
+          <div class="flex items-center justify-between mt-4">
+            <!-- ...existing pagination code... -->
+          </div>
+        </div>
+
+        <!-- Right side - Map section -->
+        <div class="w-1/3 pl-4">
+          <div id="map" class="h-[600px] rounded-lg shadow-md"></div>
+        </div>
+      </div>
+
+      <!-- Popup Modal -->
+      <div
+        id="modal"
+        class="fixed inset-0 flex items-center justify-center bg-gray-800 bg-opacity-50 hidden"
+      >
+        <div class="bg-white p-6 rounded shadow-lg w-1/3">
+          <h2 class="text-xl font-bold mb-4" id="modalTitle">
+            Thêm Đơn Vị Hành Chính
+          </h2>
+          <input type="hidden" id="donViId" />
+          <div class="mb-4">
+            <label for="ten" class="block">Tên:</label>
+            <input
+              type="text"
+              id="ten"
+              class="border p-2 rounded w-full"
+              required
+            />
+          </div>
+          <div class="mb-4">
+            <label for="capHanhChinh" class="block">Cấp hành chính:</label>
+            <input
+              type="text"
+              id="capHanhChinh"
+              class="border p-2 rounded w-full"
+              required
+            />
+          </div>
+          <button id="btnSave" class="bg-blue-500 text-white px-4 py-2 rounded">
+            Lưu
+          </button>
+          <button
+            id="btnClose"
+            class="bg-gray-400 text-white px-4 py-2 rounded ml-2"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+
+      <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+      <script src="https://unpkg.com/dropzone@6.0.0-beta.1/dist/dropzone-min.js"></script>
+      <script th:src="@{/js/map/config.js}"></script>
+
+      <script type="module" th:src="@{/js/map/init.js}"></script>
+      <script type="module" th:src="@{/js/map/layers.js}"></script>
+      <script type="module" th:src="@{/js/map/controls.js}"></script>
+      <script th:src="@{/js/admin-boundary/admin-boundary-table.js}"></script>
+    </section>
   </body>
 </html>

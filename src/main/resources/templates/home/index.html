@@ -13,17 +13,23 @@
     <!-- Load Leaflet from CDN -->
     <link
       rel="stylesheet"
-      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+      href="https://unpkg.com/leaflet@1.7.1/dist/leaflet.css"
+      integrity="sha512-xodZBNTC5n17Xt2bV2h2cXmagLQiV1aKYr7E9r4usTcj1QXjAt1OVqbKld5eAuq7lKp4DdlIMjopS0QZMcfttQ=="
       crossorigin=""
     />
     <script
-      src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+      src="https://unpkg.com/leaflet@1.7.1/dist/leaflet.js"
+      integrity="sha512-nMM54FxTSf7uLcX9eWwGiTRVYVNFUIqP4EhqUEawXDmufxR0cxkDXgbF0r+0a3IDGedeTBQikibQxC27pq3VXQ=="
       crossorigin=""
     ></script>
 
     <!-- Load Esri Leaflet from CDN -->
     <script src="https://unpkg.com/esri-leaflet@3.0.12/dist/esri-leaflet.js"></script>
-    <script src="https://unpkg.com/esri-leaflet-vector@4.2.5/dist/esri-leaflet-vector.js"></script>
+    <script src="https://unpkg.com/esri-leaflet-vector@3.0.1/dist/esri-leaflet-vector.js"></script>
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/esri-leaflet-vector@3.0.1/dist/esri-leaflet-vector.css"
+    />
 
     <!-- Add Leaflet heatmap plugin -->
     <script src="https://unpkg.com/leaflet.heat/dist/leaflet-heat.js"></script>
@@ -42,6 +48,12 @@
     <link rel="stylesheet" th:href="@{/css/map.css}" />
     <!-- Add styles for new controls and panels -->
     <link rel="stylesheet" href="/static/css/map-controls.css" />
+
+    <!-- Liên kết CSS của leaflet-control-layers-toggle -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet-control-layers-toggle/L.Control.Layers.Toggle.css"
+    />
   </head>
   <body>
     <section layout:fragment="content">
@@ -55,147 +67,243 @@
       </div> -->
 
       <div class="relative">
-        <div id="map" class="rounded-lg shadow-md"></div>
+        <div
+          id="map"
+          class="rounded-lg shadow-md h-64 sm:h-80 md:h-96 lg:h-[500px]"
+        ></div>
         <div
           id="map-loading"
-          class="absolute inset-0 flex items-center justify-center bg-white bg-opacity-80 z-50"
+          class="absolute inset-0 flex items-center justify-center glass-bg z-1100"
         >
           <div class="text-center">
             <div class="spinner-border text-primary" role="status"></div>
-            <p class="mt-2">Đang tải bản đồ...</p>
+            <img th:src="@{/gif/loading.gif}" alt="Loading" />
           </div>
         </div>
 
         <div class="map-controls leaflet-control glass">
-          <!-- Add search bar -->
-          <input type="text" id="searchInput" placeholder="Tìm kiếm..." />
+          <div class="map-controls-header">
+            <h3 class="map-controls-title">Điều khiển bản đồ</h3>
+            <button class="collapse-btn">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="20"
+                height="20"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+              >
+                <path
+                  fill-rule="evenodd"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  clip-rule="evenodd"
+                />
+              </svg>
+            </button>
+          </div>
 
-          <button class="collapse-btn">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+          <div class="map-controls-content">
+            <button
+              id="heatmapBtn"
+              class="control-btn"
+              title="Hiển thị bản đồ nhiệt"
             >
-              <path
-                fill-rule="evenodd"
-                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
-                clip-rule="evenodd"
-              />
-            </svg>
-          </button>
-          <button id="heatmapBtn" class="control-btn heatmap-btn">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M12 1.586l-4 4v12.828l4-4V1.586zM3.707 3.293A1 1 0 002 4v10a1 1 0 00.293.707L6 18.414V5.586L3.707 3.293zM17.707 5.293L14 1.586v12.828l2.293 2.293A1 1 0 0018 16V6a1 1 0 00-.293-.707z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Bản đồ nhiệt
-          </button>
-          <button id="markerBtn" class="control-btn marker-btn">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                fill-rule="evenodd"
-                d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Điểm đánh dấu
-          </button>
-          <button id="clusterBtn" class="control-btn cluster-btn">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-            >
-              <path
-                d="M5 3a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H7a2 2 0 01-2-2V3z"
-              />
-              <path
-                d="M3 7a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V7z"
-              />
-            </svg>
-            Nhóm điểm
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M12 3v18M3 12h18" />
+              </svg>
+              <span>Bản đồ nhiệt</span>
+            </button>
 
-          <button id="regionBtn" class="control-btn region-btn">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+            <button
+              id="markerBtn"
+              class="control-btn"
+              title="Hiển thị điểm đánh dấu"
             >
-              <path
-                d="M4 3a1 1 0 000 2h12a1 1 0 100-2H4zM3 7a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zM5 11a1 1 0 000 2h10a1 1 0 100-2H5zM4 15a1 1 0 000 2h12a1 1 0 100-2H4z"
-              />
-            </svg>
-            Xem theo vùng
-          </button>
-          <button id="boundaryBtn" class="control-btn boundary-btn">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z" />
+                <circle cx="12" cy="10" r="3" />
+              </svg>
+              <span>Điểm đánh dấu</span>
+            </button>
+
+            <button
+              id="clusterBtn"
+              class="control-btn"
+              title="Hiển thị nhóm điểm"
             >
-              <path
-                fill-rule="evenodd"
-                d="M4 4a2 2 0 012-2h8a2 2 0 012 2v12a2 2 0 01-2 2H6a2 2 0 01-2-2V4zm3 1h6v4H7V5zm6 6H7v4h6v-4z"
-                clip-rule="evenodd"
-              />
-            </svg>
-            Ranh giới
-          </button>
-          <button id="farmBtn" class="control-btn farm-btn">
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              class="h-5 w-5"
-              viewBox="0 0 20 20"
-              fill="currentColor"
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <circle cx="12" cy="12" r="3" />
+                <circle cx="19" cy="12" r="2" />
+                <circle cx="5" cy="12" r="2" />
+              </svg>
+              <span>Nhóm điểm</span>
+            </button>
+
+            <button
+              id="boundaryBtn"
+              class="control-btn"
+              title="Hiển thị ranh giới"
             >
-              <path
-                d="M10 2a2 2 0 00-2 2v12a2 2 0 002 2h8a2 2 0 002-2V4a2 2 0 00-2-2h-8zM4 4a2 2 0 00-2 2v8a2 2 0 002 2h2V4H4z"
-              />
-            </svg>
-            Trang trại
-          </button>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M4 4h16v16H4z" />
+                <path d="M4 12h16M12 4v16" />
+              </svg>
+              <span>Ranh giới</span>
+            </button>
+
+            <div class="control-container">
+              <button id="regionBtn" class="control-btn" title="Xem theo vùng">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path d="M3 3h18v18H3z" />
+                  <path d="M8 8h8v8H8z" />
+                </svg>
+                <span>Xem theo vùng</span>
+              </button>
+
+              <div
+                id="regionDropdown"
+                class="absolute z-1001 mt-2 w-64 bg-white rounded-lg shadow-xl p-4 transform translate-y-0 top-full right-0"
+                style="display: none"
+              >
+                <div class="mb-4">
+                  <label class="block text-gray-700">Cấp hành chính</label>
+                  <select
+                    id="regionLevel"
+                    class="mt-1 block w-full border-gray-300 rounded"
+                  >
+                    <option value="8">Xã/Phường</option>
+                    <option value="6">Quận/Huyện</option>
+                    <option value="4">Tỉnh/Thành</option>
+                  </select>
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-gray-700">Loại bệnh</label>
+                  <select
+                    id="tenBenh"
+                    class="mt-1 block w-full border-gray-300 rounded"
+                  >
+                    <option value="">Tất cả bệnh</option>
+                  </select>
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-gray-700">Mức độ</label>
+                  <select
+                    id="mucDoBenh"
+                    class="mt-1 block w-full border-gray-300 rounded"
+                  >
+                    <option value="">Tất cả mức độ</option>
+                    <option value="THONG_THUONG">Thông thường</option>
+                    <option value="NGUY_HIEM">Nguy hiểm</option>
+                    <option value="BANG_A">Danh mục A</option>
+                  </select>
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-gray-700">Loại vật nuôi</label>
+                  <select
+                    id="loaiVatNuoi"
+                    class="mt-1 block w-full border-gray-300 rounded"
+                  >
+                    <!-- Options sẽ được thêm động -->
+                  </select>
+                </div>
+
+                <div class="mb-4">
+                  <label class="block text-gray-700">Thời gian</label>
+                  <div class="flex space-x-2">
+                    <input
+                      type="date"
+                      id="fromDate"
+                      class="mt-1 block w-full border-gray-300 rounded"
+                      placeholder="Từ ngày"
+                    />
+                    <input
+                      type="date"
+                      id="toDate"
+                      class="mt-1 block w-full border-gray-300 rounded"
+                      placeholder="Đến ngày"
+                    />
+                  </div>
+                </div>
+
+                <div class="flex justify-end space-x-2">
+                  <button
+                    id="applyFilters"
+                    class="bg-blue-500 text-white px-4 py-2 rounded"
+                  >
+                    Áp dụng
+                  </button>
+                  <button
+                    id="resetFilters"
+                    class="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                  >
+                    Đặt lại
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <button
+              id="farmBtn"
+              class="control-btn"
+              title="Hiển thị trang trại"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path d="M3 21h18M3 18h18M5 18V9l7-5 7 5v9" />
+              </svg>
+              <span>Trang trại</span>
+            </button>
+          </div>
         </div>
       </div>
 
-      <!-- Add container for statistics and charts -->
-      <div id="statsPanel">
-        <div id="statsPanelContent">
-          <!-- Content will be populated dynamically -->
-          <canvas id="casesChart"></canvas>
-          <canvas id="spreadRateChart"></canvas>
-        </div>
-        <button id="collapseStatsBtn">Thu gọn</button>
-      </div>
       <!-- 
       <div id="statsPanel" class="stats-panel fixed">
         <div class="stats-title">Thống kê chi tiết</div>
         <div id="statsPanelContent"></div>
       </div> -->
       <!-- Include JS files -->
-      <script th:src="@{/js/map/config.js}"></script>
-      <script th:src="@{/js/map/layers.js}"></script>
-      <script th:src="@{/js/map/controls.js}"></script>
-      <script th:src="@{/js/map/init.js}"></script>
-      <!-- Include new JavaScript files -->
-      <script src="/static/js/map/controls.js"></script>
-      <script src="/static/js/map/layers.js"></script>
+      <script th:src="@{/js/map/config.js}" type="module"></script>
+      <script type="module" th:src="@{/js/map/layers.js}"></script>
+      <script type="module" th:src="@{/js/map/controls.js}"></script>
+      <script type="module" th:src="@{/js/map/init.js}"></script>
     </section>
   </body>
 </html>

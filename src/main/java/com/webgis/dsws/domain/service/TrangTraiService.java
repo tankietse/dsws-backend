@@ -2,6 +2,7 @@ package com.webgis.dsws.domain.service;
 
 import java.util.List;
 import java.util.Set;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.Map;
@@ -9,6 +10,8 @@ import java.util.HashMap;
 import java.util.stream.Collectors;
 
 import com.webgis.dsws.util.ImportEntityProcessor;
+import com.webgis.dsws.domain.dto.TrangTraiCreateDto;
+import com.webgis.dsws.domain.dto.TrangTraiUpdateDto;
 import com.webgis.dsws.domain.model.DonViHanhChinh;
 import com.webgis.dsws.domain.model.TrangTrai;
 import com.webgis.dsws.domain.model.TrangTraiVatNuoi;
@@ -41,6 +44,9 @@ public class TrangTraiService {
     private final VungDichTrangTraiRepository vungDichTrangTraiRepository;
 
     @Autowired
+    private LoaiVatNuoiService loaiVatNuoiService;
+
+    @Autowired
     private DonViHanhChinhService donViHanhChinhService;
 
     public TrangTraiService(TrangTraiRepository trangTraiRepository, GeometryService geometryService,
@@ -65,7 +71,7 @@ public class TrangTraiService {
     }
 
     public TrangTrai findById(Long id) {
-        return trangTraiRepository.findById(id)
+        return trangTraiRepository.findByIdWithFullDetails(id)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy trang trại với ID: " + id));
     }
 
@@ -374,7 +380,7 @@ public class TrangTraiService {
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy trang trại với ID: " + id));
         Map<String, Object> details = new HashMap<>();
 
-        // Thông tin cơ bản
+        // Thông tin cơ bảnVungDichService vungDichService
         details.put("thongTinCoBan", getTrangTraiBasicInfo(trangTrai));
 
         // Thông tin vật nuôi
@@ -789,5 +795,138 @@ public class TrangTraiService {
             score += 0.3;
 
         return Math.min(1.0, score);
+    }
+
+    @Transactional
+    public TrangTrai createTrangTrai(TrangTraiCreateDto dto) {
+        TrangTrai trangTrai = new TrangTrai();
+
+        // Set basic info
+        trangTrai.setMaTrangTrai(dto.getMaTrangTrai());
+        trangTrai.setTenTrangTrai(dto.getTenTrangTrai());
+        trangTrai.setTenChu(dto.getTenChu());
+        trangTrai.setSoDienThoai(dto.getSoDienThoai());
+        trangTrai.setEmail(dto.getEmail());
+
+        // Set address
+        trangTrai.setSoNha(dto.getSoNha());
+        trangTrai.setTenDuong(dto.getTenDuong());
+        trangTrai.setKhuPho(dto.getKhuPho());
+
+        // Set administrative unit
+        DonViHanhChinh dvhc = donViHanhChinhService.findById(dto.getDonViHanhChinhId());
+        trangTrai.setDonViHanhChinh(dvhc);
+
+        // Build full address
+        String diaChiDayDu = buildFullAddress(dto.getSoNha(), dto.getTenDuong(), dto.getKhuPho(), dvhc);
+        trangTrai.setDiaChiDayDu(diaChiDayDu);
+
+        // Set operating info
+        trangTrai.setDienTich(dto.getDienTich());
+        trangTrai.setTongDan(dto.getTongDan());
+        trangTrai.setPhuongThucChanNuoi(dto.getPhuongThucChanNuoi());
+
+        // Set location
+        trangTrai.setPoint(geometryService.createPoint(dto.getLongitude(), dto.getLatitude()));
+
+        // Set metadata
+        trangTrai.setNgayTao(LocalDateTime.now());
+        trangTrai.setTrangThaiHoatDong(true);
+
+        return save(trangTrai);
+    }
+
+    private String buildFullAddress(String soNha, String tenDuong, String khuPho, DonViHanhChinh dvhc) {
+        StringBuilder sb = new StringBuilder();
+        if (soNha != null)
+            sb.append(soNha).append(" ");
+        if (tenDuong != null)
+            sb.append(tenDuong).append(", ");
+        if (khuPho != null)
+            sb.append(khuPho).append(", ");
+        sb.append(dvhc.getTen());
+        return sb.toString();
+    }
+
+    @Transactional
+    public TrangTrai updateTrangTrai(Long id, TrangTraiUpdateDto dto) {
+        try {
+            TrangTrai trangTrai = findById(id);
+
+            // Basic validation
+            if (dto.getTongDan() != null && dto.getTongDan() < 0) {
+                throw new IllegalArgumentException("Tổng đàn không thể âm");
+            }
+            if (dto.getDienTich() != null && dto.getDienTich() <= 0) {
+                throw new IllegalArgumentException("Diện tích phải lớn hơn 0");
+            }
+
+            // Update fields
+            updateBasicInfo(trangTrai, dto);
+            updateLocation(trangTrai, dto);
+            updateOperatingInfo(trangTrai, dto);
+            
+            if (dto.getVatNuoi() != null && !dto.getVatNuoi().isEmpty()) {
+                updateTrangTraiVatNuoi(trangTrai, dto.getVatNuoi());
+            }
+
+            trangTrai.setNgayCapNhat(LocalDateTime.now());
+            return trangTraiRepository.save(trangTrai);
+            
+        } catch (EntityNotFoundException e) {
+            throw e;
+        } catch (Exception e) {
+            throw new RuntimeException("Lỗi khi cập nhật trang trại: " + e.getMessage(), e);
+        }
+    }
+
+    private void updateBasicInfo(TrangTrai trangTrai, TrangTraiUpdateDto dto) {
+        if (dto.getTenTrangTrai() != null) trangTrai.setTenTrangTrai(dto.getTenTrangTrai());
+        if (dto.getTenChu() != null) trangTrai.setTenChu(dto.getTenChu());
+        if (dto.getSoDienThoai() != null) trangTrai.setSoDienThoai(dto.getSoDienThoai());
+        if (dto.getEmail() != null) trangTrai.setEmail(dto.getEmail());
+        if (dto.getSoNha() != null) trangTrai.setSoNha(dto.getSoNha());
+        if (dto.getTenDuong() != null) trangTrai.setTenDuong(dto.getTenDuong());
+        if (dto.getKhuPho() != null) trangTrai.setKhuPho(dto.getKhuPho());
+    }
+
+    private void updateLocation(TrangTrai trangTrai, TrangTraiUpdateDto dto) {
+        if (dto.getDonViHanhChinhId() != null) {
+            DonViHanhChinh dvhc = donViHanhChinhService.findById(dto.getDonViHanhChinhId());
+            trangTrai.setDonViHanhChinh(dvhc);
+            updateDiaChiDayDu(trangTrai);
+        }
+        
+        if (dto.getLongitude() != null && dto.getLatitude() != null) {
+            trangTrai.setPoint(geometryService.createPoint(dto.getLongitude(), dto.getLatitude()));
+        }
+    }
+
+    private void updateOperatingInfo(TrangTrai trangTrai, TrangTraiUpdateDto dto) {
+        if (dto.getDienTich() != null) trangTrai.setDienTich(dto.getDienTich());
+        if (dto.getTongDan() != null) trangTrai.setTongDan(dto.getTongDan());
+        if (dto.getPhuongThucChanNuoi() != null) trangTrai.setPhuongThucChanNuoi(dto.getPhuongThucChanNuoi());
+        if (dto.getTrangThaiHoatDong() != null) trangTrai.setTrangThaiHoatDong(dto.getTrangThaiHoatDong());
+    }
+
+    private void updateDiaChiDayDu(TrangTrai trangTrai) {
+        trangTrai.setDiaChiDayDu(buildFullAddress(
+            trangTrai.getSoNha(),
+            trangTrai.getTenDuong(),
+            trangTrai.getKhuPho(),
+            trangTrai.getDonViHanhChinh()
+        ));
+    }
+
+    private void updateTrangTraiVatNuoi(TrangTrai trangTrai, List<TrangTraiCreateDto.VatNuoiDto> vatNuoiDtos) {
+        trangTrai.getTrangTraiVatNuois().clear();
+
+        for (TrangTraiCreateDto.VatNuoiDto vatNuoiDto : vatNuoiDtos) {
+            TrangTraiVatNuoi ttvn = new TrangTraiVatNuoi();
+            ttvn.setTrangTrai(trangTrai);
+            ttvn.setLoaiVatNuoi(loaiVatNuoiService.findById(vatNuoiDto.getLoaiVatNuoiId()));
+            ttvn.setSoLuong(vatNuoiDto.getSoLuong());
+            trangTrai.getTrangTraiVatNuois().add(ttvn);
+        }
     }
 }

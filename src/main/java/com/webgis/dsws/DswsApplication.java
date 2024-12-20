@@ -56,11 +56,14 @@ public class DswsApplication {
     @Profile("!prod")
     public ApplicationRunner dataImporter() {
         return args -> {
-//            if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
-//                importBoundaryData();
-//                importFarmData();
-//                importVirusZones();
-//            }
+            if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
+                // importBoundaryData();
+                // importFarmData();
+                // importVirusZones();
+
+                System.out.println(
+                        "Tất cả các dữ liệu cho việc import đã được cung cấp. Bạn có thể import dữ liệu bằng cách bỏ comment ở các hàm importBoundaryData(), importFarmData(), importVirusZones() trong hàm dataImporter() trong file DswsApplication.java");
+            }
         };
     }
 

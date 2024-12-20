@@ -29,14 +29,32 @@ public class CaBenhApi {
             @RequestParam(required = false) String maTinhThanh,
             @RequestParam(required = false) String loaiBenh,
             @RequestParam(required = false, defaultValue = "false") boolean chiHienThiChuaKetThuc) {
-        return ResponseEntity.ok(caBenhService.getCaBenhGeoJSON(fromDate, toDate, maTinhThanh, loaiBenh, chiHienThiChuaKetThuc));
+        return ResponseEntity
+                .ok(caBenhService.getCaBenhGeoJSON(fromDate, toDate, maTinhThanh, loaiBenh, chiHienThiChuaKetThuc));
     }
 
     @GetMapping("/geojson-vung")
-    @Operation(summary = "Lấy dữ liệu ca bệnh dạng GeoJSON theo vùng để hiển thị trên bản đồ")
+    @Operation(summary = "Lấy dữ liệu ca bệnh dạng GeoJSON theo vùng và các bộ lọc khác để hiển thị trên bản đồ")
     public ResponseEntity<Map<String, Object>> getCaBenhByRegionGeoJSON(
-            @RequestParam(required = false) String capHanhChinh) {
-        return ResponseEntity.ok(caBenhService.getCaBenhByRegionGeoJSON(capHanhChinh));
+            @RequestParam(required = false) String capHanhChinh,
+            @RequestParam(required = false) Long benhId,
+            @RequestParam(required = false) String mucDoBenh,
+            @RequestParam(required = false) Long loaiVatNuoiId,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
+            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate) {
+        try {
+            return ResponseEntity.ok(caBenhService.getCaBenhByRegionGeoJSON(
+                    capHanhChinh,
+                    benhId,
+                    mucDoBenh,
+                    loaiVatNuoiId,
+                    fromDate,
+                    toDate));
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body(Map.of(
+                    "error", e.getMessage(),
+                    "details", "Date format should be yyyy-MM-dd"));
+        }
     }
 
     @GetMapping("/geojson-theo-benh")
@@ -51,7 +69,7 @@ public class CaBenhApi {
             @RequestParam(required = false) String maTinhThanh,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
             @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate) {
-        return ResponseEntity.ok(caBenhService.getThongKeCaBenh(maTinhThanh, fromDate, toDate,null,true));
+        return ResponseEntity.ok(caBenhService.getThongKeCaBenh(maTinhThanh, fromDate, toDate, null, true));
     }
 
     @PostMapping

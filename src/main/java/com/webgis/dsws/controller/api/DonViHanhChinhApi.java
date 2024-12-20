@@ -58,6 +58,15 @@ public class DonViHanhChinhApi {
         return ResponseEntity.ok(donViHanhChinhService.getGeoJSONByCapHanhChinh(capHanhChinh));
     }
     
+    @GetMapping("/geojson")
+    public ResponseEntity<Map<String, Object>> getGeoJSON(
+        @RequestParam(required = false) String capHanhChinh,
+        @RequestParam(required = false) String name
+    ) {
+        Map<String, Object> geoJSON = donViHanhChinhService.getGeoJSON(capHanhChinh, name);
+        return ResponseEntity.ok(geoJSON);
+    }
+
     @PostMapping
     @Operation(summary = "Thêm mới đơn vị hành chính")
     public ResponseEntity<DonViHanhChinh> createDonViHanhChinh(@RequestBody DonViHanhChinh donViHanhChinh) {

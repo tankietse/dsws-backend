@@ -6,6 +6,7 @@ import com.webgis.dsws.domain.model.ids.VungDichTrangTraiId;
 import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Getter
@@ -16,12 +17,13 @@ import java.io.Serializable;
 @Table(name = "vung_dich_trang_trai")
 public class VungDichTrangTrai implements Serializable {
     @Id
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "vung_dich_id")
+    @JsonBackReference("vungDich-trangTrais")
     private VungDich vungDich;
 
     @Id
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trang_trai_id")
     private TrangTrai trangTrai;
 

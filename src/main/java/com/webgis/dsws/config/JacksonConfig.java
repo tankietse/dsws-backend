@@ -30,6 +30,9 @@ public class JacksonConfig {
         Hibernate6Module hibernateModule = new Hibernate6Module();
         hibernateModule.configure(Hibernate6Module.Feature.FORCE_LAZY_LOADING, false);
         hibernateModule.configure(Hibernate6Module.Feature.USE_TRANSIENT_ANNOTATION, true);
+        // Disable features that may cause infinite recursion
+        hibernateModule.disable(Hibernate6Module.Feature.FORCE_LAZY_LOADING);
+        hibernateModule.disable(Hibernate6Module.Feature.USE_TRANSIENT_ANNOTATION);
         mapper.registerModule(hibernateModule);
 
         // Custom module for geometry serialization
@@ -42,6 +45,8 @@ public class JacksonConfig {
         mapper.registerModule(geometryModule);
 
         // Configure other settings
+        mapper.enable(SerializationFeature.WRITE_SELF_REFERENCES_AS_NULL);
+        mapper.configure(SerializationFeature.FAIL_ON_SELF_REFERENCES, false);
         mapper.configure(SerializationFeature.FAIL_ON_EMPTY_BEANS, false);
         return mapper;
     }

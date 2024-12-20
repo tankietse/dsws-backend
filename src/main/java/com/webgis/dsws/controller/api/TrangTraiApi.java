@@ -5,7 +5,13 @@ import com.webgis.dsws.domain.model.VungDichTrangTrai;
 import com.webgis.dsws.domain.service.TrangTraiService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.persistence.EntityNotFoundException;
+import jakarta.validation.Valid;
+
 import org.locationtech.jts.geom.Point;
+
+import com.webgis.dsws.domain.dto.TrangTraiCreateDto;
+import com.webgis.dsws.domain.dto.TrangTraiUpdateDto;
 import com.webgis.dsws.domain.model.ApiResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -103,8 +109,9 @@ public class TrangTraiApi {
      */
     @PostMapping
     @Operation(summary = "Thêm mới trang trại")
-    public ResponseEntity<TrangTrai> createTrangTrai(@RequestBody TrangTrai trangTrai) {
-        return ResponseEntity.ok(trangTraiService.save(trangTrai));
+    public ResponseEntity<TrangTrai> createTrangTrai(@Valid @RequestBody TrangTraiCreateDto dto) {
+        TrangTrai trangTrai = trangTraiService.createTrangTrai(dto);
+        return ResponseEntity.ok(trangTrai);
     }
 
     /**
@@ -116,10 +123,21 @@ public class TrangTraiApi {
      */
     @PutMapping("/{id}")
     @Operation(summary = "Cập nhật thông tin trang trại")
-    public ResponseEntity<TrangTrai> updateTrangTrai(
+    public ResponseEntity<?> updateTrangTrai(
             @PathVariable Long id,
-            @RequestBody TrangTrai trangTraiDetails) {
-        return ResponseEntity.ok(trangTraiService.updateTrangTrai(id, trangTraiDetails));
+            @Valid @RequestBody TrangTraiUpdateDto dto) {
+        try {
+            TrangTrai trangTrai = trangTraiService.updateTrangTrai(id, dto);
+            return ResponseEntity.ok(trangTrai);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity
+                    .status(HttpStatus.NOT_FOUND)
+                    .body(new ApiResponse(false, e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity
+                    .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(new ApiResponse(false, "Lỗi khi cập nhật trang trại: " + e.getMessage()));
+        }
     }
 
     /**
@@ -167,7 +185,7 @@ public class TrangTraiApi {
     }
 
     /**
-     * Lấy dữ liệu trang trại dạng GeoJSON để hiển thị trên b��n đồ
+     * Lấy dữ liệu trang trại dạng GeoJSON để hiển thị trên bản đồ
      *
      * @param loaiVatNuoi Loại vật nuôi để lọc (không bắt buộc)
      * @return ResponseEntity chứa dữ liệu GeoJSON
@@ -240,7 +258,7 @@ public class TrangTraiApi {
 
     /**
      * Thống kê theo loại bệnh và thời gian
-     */             
+     */
     @GetMapping("/thong-ke-benh")
     @Operation(summary = "Thống kê theo loại bệnh và thời gian")
     public ResponseEntity<Map<String, Object>> getThongKeTheoBenh(

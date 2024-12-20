@@ -4,6 +4,7 @@ import java.util.Date;
 import java.util.Set;
 
 import com.webgis.dsws.domain.model.enums.TrangThaiEnum;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -22,6 +23,7 @@ public class CaBenh {
 
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trang_trai_id")
+    @JsonBackReference
     private TrangTrai trangTrai;
 
     @ManyToOne

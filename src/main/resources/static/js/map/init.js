@@ -1,3 +1,8 @@
+import { MAP_CONFIG, BASEMAP_LAYERS } from "./config.js";
+import { MapLayers } from "./layers.js";
+import { MapControls } from "./controls.js";
+import { initializeRegionFilters } from './layers/regionCases.js';
+
 class MapInitializer {
   constructor() {
     this.map = null;
@@ -56,33 +61,46 @@ class MapInitializer {
       this.map.setView(MAP_CONFIG.center, MAP_CONFIG.zoom);
       console.log("Initial view set.");
 
-      // Only use ArcGIS basemap
-      try {
-        console.log("Adding ArcGIS basemap...");
-        const baseLayer = L.esri.Vector.vectorBasemapLayer(
-          MAP_CONFIG.basemapEnum,
-          {
-            apiKey: MAP_CONFIG.accessToken,
-            pane: "basemap", // Assign to basemap pane
-          }
-        );
+      // Tạo các basemap layers
+      const basemapLayers = {};
+      for (const [name, style] of Object.entries(BASEMAP_LAYERS)) {
+        basemapLayers[name] = L.esri.Vector.vectorBasemapLayer(style, {
+          apiKey: MAP_CONFIG.accessToken,
+          pane: "basemap",
+        });
+      }
 
-        baseLayer.addTo(this.map);
-        console.log("Basemap layer added to the map.");
+      // Thêm basemap mặc định vào bản đồ
+      const defaultBasemap =
+        basemapLayers[MAP_CONFIG.defaultBasemapName || "Light Gray"];
+      defaultBasemap.addTo(this.map);
 
-        // Proceed without waiting for the 'load' event
-        console.log("Initializing MapLayers and MapControls...");
-        this.mapLayers = new MapLayers(this.map);
-        this.mapControls = new MapControls(this.mapLayers);
+      // Thêm Control.Layers để chuyển đổi giữa các basemap layers
+      L.control
+        .layers(basemapLayers, null, {
+          position: "topleft", // Đặt cạnh các nút zoom
+          collapsed: true, // Hiển thị dưới dạng biểu tượng
+        })
+        .addTo(this.map);
 
-        console.log("Loading initial layers...");
-        await Promise.all([
-          this.mapLayers.loadAdminBoundaries(),
-          this.mapLayers.loadMarkers(),
-        ]);
-      } catch (error) {
-        console.error("Critical error loading ArcGIS basemap:", error);
-        throw new Error("Unable to initialize map without basemap");
+      console.log("Initializing MapLayers and MapControls...");
+      this.mapLayers = new MapLayers(this.map);
+      this.mapControls = new MapControls(this.mapLayers);
+
+      // Initialize region filters first
+      await initializeRegionFilters();
+
+      console.log("Loading initial layers...");
+      // Load boundaries first, then region cases
+      await this.mapLayers.loadAdminBoundaries();
+      
+      // Initialize default region view
+      const regionSelect = document.getElementById("regionLevel");
+      const regionFilters = document.getElementById("regionFilters");
+      if (regionSelect && regionFilters) {
+        regionSelect.style.display = "block";
+        regionFilters.style.display = "block";
+        await this.mapLayers.loadRegionCases(regionSelect.value);
       }
 
       this.initialized = true;

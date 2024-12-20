@@ -3,6 +3,8 @@ package com.webgis.dsws.domain.service;
 import org.locationtech.jts.geom.Point;
 
 import java.util.List;
+import java.util.ArrayList;
+import java.util.Arrays;
 
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.Geometry;
@@ -24,6 +26,12 @@ public class GeometryService {
     private final GeometryFactory geometryFactory = new GeometryFactory();
     private final WKBReader wkbReader = new WKBReader();
     private final WKTReader wktReader = new WKTReader();
+
+    public Point createPoint(Double longitude, Double latitude) {
+
+        return geometryFactory.createPoint(new Coordinate(longitude, latitude));
+
+    }
 
     public Polygon convertToPolygon(String geoJson) throws ParseException {
         Geometry geom = reader.read(geoJson);
@@ -126,5 +134,84 @@ public class GeometryService {
                     + Character.digit(s.charAt(i + 1), 16));
         }
         return data;
+    }
+
+    public Object extractCoordinates(Geometry geometry) {
+        if (geometry == null) {
+            return null;
+        }
+
+        try {
+            // Handle different geometry types
+            String geoType = geometry.getGeometryType();
+            switch (geoType) {
+                case "Polygon":
+                    return extractPolygonCoordinates((Polygon) geometry);
+                case "MultiPolygon":
+                    return extractMultiPolygonCoordinates((MultiPolygon) geometry);
+                case "Point":
+                    Coordinate coord = geometry.getCoordinate();
+                    return Arrays.asList(coord.x, coord.y);
+                default:
+                    System.err.println("Unsupported geometry type: " + geoType);
+                    return null;
+            }
+        } catch (Exception e) {
+            System.err.println("Error extracting coordinates: " + e.getMessage());
+            return null;
+        }
+    }
+
+    private List<List<List<Double>>> extractPolygonCoordinates(Polygon polygon) {
+        List<List<List<Double>>> polygonCoords = new ArrayList<>();
+
+        try {
+            // Extract exterior ring
+            Coordinate[] exteriorCoords = polygon.getExteriorRing().getCoordinates();
+            List<List<Double>> exteriorRing = new ArrayList<>();
+            for (Coordinate coord : exteriorCoords) {
+                if (!Double.isNaN(coord.x) && !Double.isNaN(coord.y)) {
+                    exteriorRing.add(Arrays.asList(coord.x, coord.y));
+                }
+            }
+            polygonCoords.add(exteriorRing);
+
+            // Extract interior rings
+            for (int i = 0; i < polygon.getNumInteriorRing(); i++) {
+                List<List<Double>> interiorRing = new ArrayList<>();
+                Coordinate[] interiorCoords = polygon.getInteriorRingN(i).getCoordinates();
+                for (Coordinate coord : interiorCoords) {
+                    if (!Double.isNaN(coord.x) && !Double.isNaN(coord.y)) {
+                        interiorRing.add(Arrays.asList(coord.x, coord.y));
+                    }
+                }
+                polygonCoords.add(interiorRing);
+            }
+        } catch (Exception e) {
+            System.err.println("Error extracting polygon coordinates: " + e.getMessage());
+            return null;
+        }
+
+        return polygonCoords;
+    }
+
+    private List<List<List<List<Double>>>> extractMultiPolygonCoordinates(MultiPolygon multiPolygon) {
+        List<List<List<List<Double>>>> multiPolygonCoords = new ArrayList<>();
+
+        try {
+            int numGeometries = multiPolygon.getNumGeometries();
+            for (int i = 0; i < numGeometries; i++) {
+                Polygon polygon = (Polygon) multiPolygon.getGeometryN(i);
+                List<List<List<Double>>> polygonCoords = extractPolygonCoordinates(polygon);
+                if (polygonCoords != null) {
+                    multiPolygonCoords.add(polygonCoords);
+                }
+            }
+        } catch (Exception e) {
+            System.err.println("Error extracting multipolygon coordinates: " + e.getMessage());
+            return null;
+        }
+
+        return multiPolygonCoords;
     }
 }

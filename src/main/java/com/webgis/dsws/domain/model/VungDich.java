@@ -11,13 +11,14 @@ import com.webgis.dsws.domain.model.enums.TrangThaiVungDichEnum;
 import jakarta.persistence.*;
 import lombok.*;
 import java.util.Set;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-@Table(name = "vung_dich")
+@Table(name = "vung_dich", schema = "public")
 public class VungDich {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -51,7 +52,8 @@ public class VungDich {
     @JoinColumn(name = "nguoi_tao_id")
     private NguoiDung nguoiTao;
 
-    @OneToMany(mappedBy = "vungDich", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
+    @OneToMany(mappedBy = "vungDich", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<VungDichTrangTrai> trangTrais = new HashSet<>();
 
     @OneToMany(mappedBy = "vungDich")

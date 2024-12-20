@@ -176,7 +176,7 @@ public class VungDichAutoImportService {
         vungDich.setMoTa(moTa);
 
         // 3. Save VungDich using VungDichService to associate VungDichTrangTrai
-        vungDich = vungDichService.save(vungDich);
+        vungDich = vungDichService.save(vungDich, caBenhs);
 
         return vungDich;
     }

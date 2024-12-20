@@ -3,7 +3,8 @@
     position: sticky;
     top: 0;
     background: #f3f4f6;
-    z-index: 5; /* Giảm z-index xuống thấp hơn modal */
+    z-index: 5;
+    /* Giảm z-index xuống thấp hơn modal */
     /* Match bg-zinc-100 */
 }
 
@@ -70,3 +71,27 @@
 }
 
 /* Trạng thái */
+
+#addFarmModal,
+#editFarmModal {
+    z-index: 1100;
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(0, 0, 0, 0.5);
+}
+
+#addFarmModal.hidden,
+#editFarmModal.hidden {
+    display: none;
+}
+
+.modal-content {
+    max-height: 90vh;
+    overflow-y: auto;
+    background: white;
+    border-radius: 0.5rem;
+    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}

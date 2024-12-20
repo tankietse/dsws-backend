@@ -5,7 +5,7 @@
     <div th:fragment="edit-farm">
       <div
         id="editFarmModal"
-        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden transition-opacity duration-300 z-1000"
+        class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 hidden z-[1100]"
       >
         <div class="bg-white rounded-lg shadow-lg w-full max-w-4xl mx-auto p-6">
           <div class="flex justify-between items-center mb-6">
@@ -127,6 +127,34 @@
                     id="editDonViHanhChinhId"
                     name="donViHanhChinh"
                   />
+                  <input
+                    type="text"
+                    id="editSoNha"
+                    name="soNha"
+                    placeholder="Số nhà"
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="text"
+                    id="editTenDuong"
+                    name="tenDuong"
+                    placeholder="Tên đường"
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="text"
+                    id="editKhuPho"
+                    name="khuPho"
+                    placeholder="Khu phố"
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                  <input
+                    type="text"
+                    id="editDiaChiDayDu"
+                    name="diaChiDayDu"
+                    placeholder="Địa chỉ đầy đủ"
+                    class="w-full border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
                 </div>
               </div>
 
@@ -163,6 +191,23 @@
                     <option value="CHAN_THA">Chăn thả</option>
                   </select>
                 </div>
+              </div>
+
+              <!-- Thêm section mới cho vật nuôi -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700"
+                  >Thông tin vật nuôi</label
+                >
+                <div id="editVatNuoiContainer" class="mt-2 space-y-3">
+                  <!-- Dynamic content will be inserted here -->
+                </div>
+                <button
+                  type="button"
+                  id="editAddVatNuoiBtn"
+                  class="mt-2 text-sm text-blue-600 hover:text-blue-700"
+                >
+                  + Thêm loại vật nuôi
+                </button>
               </div>
             </div>
 

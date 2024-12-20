@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.*;
 import org.locationtech.jts.geom.Coordinate;
 
 import com.webgis.dsws.domain.service.VungDichService;
+import com.webgis.dsws.domain.dto.VungDichMapDTO;
 import com.webgis.dsws.domain.model.VungDich;
 import com.webgis.dsws.domain.model.VungDichTrangTrai;
 
@@ -13,6 +14,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import com.webgis.dsws.domain.model.enums.MucDoVungDichEnum;
 
 import io.swagger.v3.oas.annotations.Operation;
@@ -22,6 +25,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.access.prepost.PreAuthorize;
 
 import jakarta.persistence.EntityNotFoundException;
+
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -29,7 +34,7 @@ import java.util.Set;
 @RestController
 @RequestMapping("/api/v1/vung-dich")
 @Tag(name = "Vùng dịch", description = "API quản lý vùng dịch")
-@PreAuthorize("isAuthenticated()")  // Require authentication for all endpoints
+@PreAuthorize("isAuthenticated()") // Require authentication for all endpoints
 public class VungDichApi {
 
     @Autowired
@@ -98,6 +103,7 @@ public class VungDichApi {
             return ResponseEntity.notFound().build();
         }
     }
+    
 
     /**
      * Thêm mới vùng dịch.
@@ -196,5 +202,46 @@ public class VungDichApi {
             return ResponseEntity.notFound().build();
         }
         return ResponseEntity.ok(vungDich.getTrangTrais());
+    }
+
+    @GetMapping("/map-data")
+    @Operation(summary = "Lấy dữ liệu vùng dịch cho bản đồ")
+    public ResponseEntity<List<VungDichMapDTO>> getVungDichMapData() {
+        List<VungDichMapDTO> mapData = vungDichService.getVungDichMapData();
+        return ResponseEntity.ok(mapData);
+    }
+
+    @GetMapping("/by-severity")
+    @Operation(summary = "Lấy dữ liệu vùng dịch theo mức độ nghiêm trọng")
+    public ResponseEntity<List<VungDich>> getVungDichBySeverity(
+            @RequestParam MucDoVungDichEnum mucDo) {
+        List<VungDich> vungDichList = vungDichService.findBySeverity(mucDo);
+        return ResponseEntity.ok(vungDichList);
+    }
+
+    @GetMapping("/by-time")
+    @Operation(summary = "Lấy dữ liệu vùng dịch theo thời gian")
+    public ResponseEntity<List<VungDich>> getVungDichByTime(
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date startDate,
+            @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) Date endDate) {
+        List<VungDich> vungDichList = vungDichService.findByTimeRange(startDate, endDate);
+        return ResponseEntity.ok(vungDichList);
+    }
+
+    /**
+     * Lấy thông tin vùng dịch theo loại vật nuôi chỉ định và có thể chọn thêm bệnh chỉ định hoặc không.
+     * Dữ liệu trả về có thông tin vùng dịch kèm ranh giới hành chính và các thông tin khác để hiển thị lên bản đồ chi tiết nhất có thể.
+     *
+     * @param loaiVatNuoiId  ID của loại vật nuôi cần lọc.
+     * @param benhId         ID của bệnh cần lọc (tùy chọn).
+     * @return Danh sách vùng dịch chi tiết.
+     */
+    @GetMapping("/by-animal-type")
+    @Operation(summary = "Lấy thông tin vùng dịch theo loại vật nuôi và bệnh chỉ định")
+    public ResponseEntity<List<VungDichMapDTO>> getVungDichByAnimalTypeAndDisease(
+            @RequestParam Long loaiVatNuoiId,
+            @RequestParam(required = false) Long benhId) {
+        List<VungDichMapDTO> vungDichDetails = vungDichService.getVungDichByAnimalTypeAndDisease(loaiVatNuoiId, benhId);
+        return ResponseEntity.ok(vungDichDetails);
     }
 }

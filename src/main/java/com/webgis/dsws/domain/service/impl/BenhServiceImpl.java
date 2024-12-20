@@ -5,6 +5,7 @@ import com.webgis.dsws.domain.model.CaBenh;
 import com.webgis.dsws.domain.model.TrangTrai;
 import com.webgis.dsws.domain.model.TrangTraiVatNuoi;
 import com.webgis.dsws.domain.model.constant.BenhRegistry;
+import com.webgis.dsws.domain.model.enums.MucDoBenhEnum;
 import com.webgis.dsws.domain.model.enums.TrangThaiEnum;
 import com.webgis.dsws.domain.repository.BenhRepository;
 import com.webgis.dsws.domain.service.BenhService;
@@ -47,8 +48,9 @@ public class BenhServiceImpl implements BenhService {
      * @return Danh sách các thực thể Benh
      */
     @Override
+    @Transactional(readOnly = true)
     public List<Benh> findAll() {
-        return benhRepository.findAll();
+        return benhRepository.findAllWithCollections();
     }
 
     /**
@@ -81,13 +83,7 @@ public class BenhServiceImpl implements BenhService {
     @Override
     @Transactional(readOnly = true)
     public Optional<Benh> findById(Long id) {
-        return benhRepository.findById(id)
-                .map(benh -> {
-                    // Force initialize collections
-                    benh.getMucDoBenhs().size();
-                    benh.getLoaiVatNuoi().size();
-                    return benh;
-                });
+        return benhRepository.findByIdWithCollections(id);
     }
 
     /**
@@ -231,5 +227,28 @@ public class BenhServiceImpl implements BenhService {
     @Transactional
     public void deleteById(Long id) {
         benhRepository.deleteById(id);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Benh> findByLoaiVatNuoiId(Long loaiVatNuoiId) {
+        return benhRepository.findByLoaiVatNuoiId(loaiVatNuoiId);
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Benh> findByMucDoBenh(String mucDoBenh) {
+        try {
+            MucDoBenhEnum mucDo = MucDoBenhEnum.valueOf(mucDoBenh.toUpperCase());
+            return benhRepository.findByMucDoBenhsIn(Set.of(mucDo));
+        } catch (IllegalArgumentException e) {
+            throw new IllegalArgumentException("Mức độ bệnh không hợp lệ: " + mucDoBenh);
+        }
+    }
+
+    @Transactional(readOnly = true)
+    @Override
+    public List<Benh> searchByKeyword(String keyword) {
+        return benhRepository.searchByKeyword(keyword);
     }
 }

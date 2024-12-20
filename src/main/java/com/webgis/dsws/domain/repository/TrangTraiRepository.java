@@ -79,7 +79,7 @@ public interface TrangTraiRepository extends JpaRepository<TrangTrai, Long>, Jpa
                         "FROM ca_benh cb " +
                         "JOIN benh b ON cb.benh_id = b.id " +
                         "JOIN trang_trai_vat_nuoi ttvn ON cb.trang_trai_vat_nuoi_id = ttvn.id " +
-                        "JOIN loai_vat_nuoi lvn ON ttvn.loai_vat_nuoi_id = lvn.id " +
+                        "JOIN loai_vat_nuoi lvn ON ttvn.id_loai_vat_nuoi = lvn.id " +
                         "WHERE (:loaiVatNuoi IS NULL OR lvn.ten_loai = :loaiVatNuoi) " +
                         "AND cb.ngay_phat_hien BETWEEN :fromDate AND :toDate " +
                         "GROUP BY b.ten_benh", nativeQuery = true)
@@ -91,9 +91,9 @@ public interface TrangTraiRepository extends JpaRepository<TrangTrai, Long>, Jpa
         @Query(value = "SELECT dvhc.ten, COUNT(DISTINCT tt.id) as so_trang_trai, COUNT(cb.id) as so_ca_benh " +
                         "FROM don_vi_hanh_chinh dvhc " +
                         "JOIN trang_trai tt ON ST_Contains(dvhc.ranh_gioi, tt.point) " +
-                        "LEFT JOIN trang_trai_vat_nuoi ttvn ON tt.id = ttvn.trang_trai_id " +
+                        "LEFT JOIN trang_trai_vat_nuoi ttvn ON tt.id = ttvn.id_trang_trai " +
                         "LEFT JOIN ca_benh cb ON ttvn.id = cb.trang_trai_vat_nuoi_id " +
-                        "LEFT JOIN loai_vat_nuoi lvn ON ttvn.loai_vat_nuoi_id = lvn.id " +
+                        "LEFT JOIN loai_vat_nuoi lvn ON ttvn.id_loai_vat_nuoi = lvn.id " +
                         "WHERE dvhc.cap_hanh_chinh = 'TINH' " +
                         "AND (:loaiVatNuoi IS NULL OR lvn.ten_loai = :loaiVatNuoi) " +
                         "AND (cb.ngay_phat_hien IS NULL OR cb.ngay_phat_hien BETWEEN :fromDate AND :toDate) " +
@@ -108,7 +108,7 @@ public interface TrangTraiRepository extends JpaRepository<TrangTrai, Long>, Jpa
                         "COUNT(CASE WHEN cb.da_ket_thuc = true THEN 1 END) as ca_ket_thuc " +
                         "FROM ca_benh cb " +
                         "JOIN trang_trai_vat_nuoi ttvn ON cb.trang_trai_vat_nuoi_id = ttvn.id " +
-                        "JOIN loai_vat_nuoi lvn ON ttvn.loai_vat_nuoi_id = lvn.id " +
+                        "JOIN loai_vat_nuoi lvn ON ttvn.id_loai_vat_nuoi = lvn.id " +
                         "WHERE (:loaiVatNuoi IS NULL OR lvn.ten_loai = :loaiVatNuoi) " +
                         "AND cb.ngay_phat_hien BETWEEN :fromDate AND :toDate " +
                         "GROUP BY DATE_TRUNC('day', cb.ngay_phat_hien) " +
@@ -120,8 +120,8 @@ public interface TrangTraiRepository extends JpaRepository<TrangTrai, Long>, Jpa
 
         @Query(value = "SELECT tt.point as location, COUNT(*) as density " +
                         "FROM trang_trai tt " +
-                        "JOIN trang_trai_vat_nuoi ttvn ON tt.id = ttvn.trang_trai_id " +
-                        "JOIN loai_vat_nuoi lvn ON ttvn.loai_vat_nuoi_id = lvn.id " +
+                        "JOIN trang_trai_vat_nuoi ttvn ON tt.id = ttvn.id_trang_trai " +
+                        "JOIN loai_vat_nuoi lvn ON ttvn.id_loai_vat_nuoi = lvn.id " +
                         "JOIN don_vi_hanh_chinh dvhc ON ST_Contains(dvhc.ranh_gioi, tt.point) " +
                         "WHERE (:loaiVatNuoi IS NULL OR lvn.ten_loai = :loaiVatNuoi) " +
                         "AND (:capHanhChinh IS NULL OR dvhc.cap_hanh_chinh = :capHanhChinh) " +
@@ -136,7 +136,7 @@ public interface TrangTraiRepository extends JpaRepository<TrangTrai, Long>, Jpa
                         "FROM ca_benh cb " +
                         "JOIN benh b ON cb.benh_id = b.id " +
                         "JOIN trang_trai_vat_nuoi ttvn ON cb.trang_trai_vat_nuoi_id = ttvn.id " +
-                        "JOIN trang_trai tt ON ttvn.trang_trai_id = tt.id " +
+                        "JOIN trang_trai tt ON ttvn.id_trang_trai = tt.id " +
                         "WHERE cb.da_ket_thuc = false " +
                         "AND cb.ngay_phat_hien > :date " +
                         "AND ST_DWithin(tt.point::geography, :point::geography, :radius) " +

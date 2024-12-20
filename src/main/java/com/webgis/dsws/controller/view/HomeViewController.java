@@ -48,6 +48,11 @@ public class HomeViewController {
         return "trangtrai/ql-trangtrai";
     }
 
+    @GetMapping("/ql-trang-trai/map")
+    public String mapTrangTrai(Model model) {
+        return "trangtrai/farm-map";
+    }
+
     @GetMapping("/under-development")
     public String underDevelopment(Model model) {
         return "under-development";

@@ -12,6 +12,7 @@ function validatePageSize() {
   }
 }
 
+//  Hàm cập nhật thanh điều hướng phân trang
 function updatePaginationControls(data) {
   //  Kiểm tra xem tất cả các phần tử cần thiết có tồn tại không
   const startItemEl = document.getElementById("startItem");
@@ -26,7 +27,6 @@ function updatePaginationControls(data) {
     return;
   }
 
-  // Sử dụng var thay vì const cho biến currentPage
   var pageNum = data.number + 1;
   const totalPages = data.totalPages;
   const totalItems = data.totalElements;
@@ -132,8 +132,7 @@ function updatePaginationControls(data) {
     });
   });
 }
-
-// Add row click handler when loading data
+// THêm hàm xử lý khi click vào từng dòng
 function loadTrangTraiData(page = 1, size = pageSize) {
   validatePageSize();
   const nameFilter = document.getElementById("nameFilter")?.value || "";
@@ -154,9 +153,18 @@ function loadTrangTraiData(page = 1, size = pageSize) {
   fetch(url)
     .then((response) => {
       if (!response.ok) {
-        throw new Error(`Server error: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status}`);
       }
-      return response.json();
+      return response.text(); // Get as text first
+    })
+    .then((text) => {
+      try {
+        return JSON.parse(text);
+      } catch (error) {
+        console.error("JSON Parse Error:", error);
+        console.log("Response text:", text);
+        throw new Error("Invalid JSON response from server");
+      }
     })
     .then((data) => {
       const tableBody = document.getElementById("trangTraiTableBody");
@@ -193,7 +201,10 @@ function loadTrangTraiData(page = 1, size = pageSize) {
                   <td class="border px-4 py-2">
                     ${
                       trangTrai.trangTraiVatNuois
-                        ?.map((vn) => vn.loaiVatNuoi?.tenLoai)
+                        ?.map(
+                          (vn) =>
+                            `${vn.loaiVatNuoi?.tenLoai} (${vn.soLuong || 0})`
+                        )
                         .join(", ") || ""
                     }
                   </td>
@@ -218,17 +229,35 @@ function loadTrangTraiData(page = 1, size = pageSize) {
 
       updatePaginationControls(data);
     })
-    .catch((error) => console.error("Error:", error));
+    .catch((error) => {
+      console.error("Error:", error);
+      showToast("Lỗi khi tải dữ liệu", "error");
+    });
 }
 
 // Function to load and show edit form
+// Load và hiển thị lên form sửa
 async function loadEditForm(farmId) {
   try {
     const response = await fetch(`/api/v1/trang-trai/${farmId}`);
-    if (!response.ok) throw new Error("Farm not found");
-    const farm = await response.json();
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
 
-    // Populate form fields
+    let farm;
+    try {
+      const text = await response.text(); // Get response as text first
+      farm = JSON.parse(text); // Then try to parse it
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError);
+      console.log("Response text:", text); // Log the problematic response
+      throw new Error("Invalid JSON response from server");
+    }
+
+    if (!farm || !farm.id) {
+      throw new Error("Invalid farm data received");
+    }
+
     document.getElementById("editFarmId").value = farm.id;
     document.getElementById("editMaTrangTrai").value = farm.maTrangTrai;
     document.getElementById("editTenTrangTrai").value = farm.tenTrangTrai;
@@ -240,18 +269,27 @@ async function loadEditForm(farmId) {
     document.getElementById("editPhuongThucChanNuoi").value =
       farm.phuongThucChanNuoi;
 
-    // Load and set administrative units
     await loadAdminUnitsForEdit(farm.donViHanhChinh);
 
-    // Show modal
     document.getElementById("editFarmModal").classList.remove("hidden");
   } catch (error) {
     console.error("Error loading farm data:", error);
     showToast("Lỗi khi tải thông tin trang trại", "error");
+
+    // Add more detailed error logging
+    if (error.message.includes("JSON")) {
+      console.error("JSON parsing error. Please check server response format.");
+    } else if (error.message.includes("HTTP")) {
+      console.error("Network error. Please check server connectivity.");
+    }
+
+    // Prevent modal from showing on error
+    const modal = document.getElementById("editFarmModal");
+    if (modal) modal.classList.add("hidden");
   }
 }
 
-// Enhanced update function with validation
+// Update / sửa trang trại
 document
   .getElementById("editFarmForm")
   .addEventListener("submit", async function (e) {
@@ -260,21 +298,53 @@ document
     const formData = new FormData(this);
     const farmId = formData.get("id");
 
-    try {
-      // Basic validation
-      if (!formData.get("tenTrangTrai").trim()) {
-        throw new Error("Tên trang trại không được để trống");
-      }
+    // Build update DTO
+    const updateData = {
+      tenTrangTrai: formData.get("tenTrangTrai"),
+      tenChu: formData.get("tenChu"),
+      soDienThoai: formData.get("soDienThoai"),
+      email: formData.get("email"),
+      soNha: formData.get("soNha"),
+      tenDuong: formData.get("tenDuong"),
+      khuPho: formData.get("khuPho"),
+      donViHanhChinhId: parseInt(formData.get("donViHanhChinhId")),
+      dienTich: parseFloat(formData.get("dienTich")),
+      tongDan: parseInt(formData.get("tongDan")),
+      phuongThucChanNuoi: formData.get("phuongThucChanNuoi"),
 
+      // Get coordinates if they exist
+      longitude: formData.get("longitude")
+        ? parseFloat(formData.get("longitude"))
+        : null,
+      latitude: formData.get("latitude")
+        ? parseFloat(formData.get("latitude"))
+        : null,
+
+      // Chuyển đổi dữ liệu vật nuôi từ form
+      vatNuoi: Array.from(
+        document.querySelectorAll("#editVatNuoiContainer .flex")
+      )
+        .map((row) => ({
+          loaiVatNuoiId: parseInt(row.querySelector("select").value),
+          soLuong: parseInt(row.querySelector('input[type="number"]').value),
+        }))
+        .filter((item) => item.loaiVatNuoiId && item.soLuong > 0),
+    };
+
+    try {
       const response = await fetch(`/api/v1/trang-trai/${farmId}`, {
         method: "PUT",
         headers: {
           "Content-Type": "application/json",
+          Accept: "application/json",
         },
-        body: JSON.stringify(Object.fromEntries(formData)),
+        body: JSON.stringify(updateData),
       });
 
-      if (!response.ok) throw new Error("Update failed");
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || "Update failed");
+      }
 
       const updatedFarm = await response.json();
 
@@ -306,7 +376,7 @@ function updateTableRow(farm) {
     cells[5].textContent = farm.dienTich;
     cells[6].textContent = farm.tongDan;
     cells[7].textContent = farm.trangTraiVatNuois
-      ?.map((vn) => vn.loaiVatNuoi?.tenLoai)
+      ?.map((vn) => `${vn.loaiVatNuoi?.tenLoai} (${vn.soLuong || 0})`)
       .join(", ");
 
     // Update status button
@@ -316,6 +386,12 @@ function updateTableRow(farm) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  // Ensure edit modal is hidden on page load
+  const editModal = document.getElementById("editFarmModal");
+  if (editModal) {
+    editModal.classList.add("hidden");
+  }
+
   loadDonViHanhChinh();
   loadTrangTraiData(currentPage, pageSize);
 
@@ -400,6 +476,8 @@ document.addEventListener("DOMContentLoaded", function () {
       }
     });
   }
+
+  initializeVatNuoiControls();
 });
 
 // Add new function to load administrative units
@@ -482,6 +560,7 @@ document
   });
 
 // Load administrative units for cascading selects
+// Load đơn vị hành chính cho các select phụ thuộc
 async function loadTinhThanh() {
   try {
     const response = await fetch("/api/v1/don-vi-hanh-chinh/cap/4");
@@ -574,7 +653,8 @@ document.getElementById("addFarmBtn").addEventListener("click", function () {
   loadTinhThanh();
 });
 
-// Add new functions for inline editing
+// Add new functions for inline editing 
+// 
 function makeEditable(element) {
   const currentValue = element.textContent;
   const field = element.getAttribute("data-field");
@@ -670,7 +750,15 @@ function editFarm(button) {
       document.getElementById("editFarmId").value = farm.id;
       document.getElementById("editMaTrangTrai").value = farm.maTrangTrai;
       document.getElementById("editTenTrangTrai").value = farm.tenTrangTrai;
-      // Populate other fields...
+      document.getElementById("editTenChu").value = farm.tenChu;
+      document.getElementById("editSoDienThoai").value = farm.soDienThoai;
+      document.getElementById("editEmail").value = farm.email;
+      document.getElementById("editDienTich").value = farm.dienTich;
+      document.getElementById("editTongDan").value = farm.tongDan;
+      document.getElementById("editPhuongThucChanNuoi").value =
+        farm.phuongThucChanNuoi;
+
+      //todo: lOAD LOẠI VẬT NUÔI KÈM SỐ LƯỢNG
 
       // Load administrative units
       if (farm.donViHanhChinh) {
@@ -914,84 +1002,412 @@ document.getElementById("phuongXa")?.addEventListener("change", function () {
 });
 
 async function loadAdminUnitsForEdit(donViHanhChinh) {
-  if (!donViHanhChinh) return;
+  if (!donViHanhChinh) {
+    console.warn("No administrative unit provided");
+    return;
+  }
 
   try {
-    // First load all provinces
-    await loadTinhThanh("edit");
-
-    // Get the compvare hierarchy
-    const hierarchy = await fetchAdminHierarchy(donViHanhChinh);
-
-    // Set values and enable/disable selects appropriately
     const tinhSelect = document.getElementById("editTinhThanh");
     const huyenSelect = document.getElementById("editQuanHuyen");
     const xaSelect = document.getElementById("editPhuongXa");
 
-    if (hierarchy.province) {
-      tinhSelect.value = hierarchy.province.id;
-      await loadQuanHuyen(hierarchy.province.id, "edit");
+    // Get the ward level unit (cấp xã) and its parent chain
+    let donViXa, donViHuyen, donViTinh;
+
+    const wardResponse = await fetch(
+      `/api/v1/don-vi-hanh-chinh/${donViHanhChinh}`
+    );
+    donViXa = await wardResponse.json();
+    // Get district (parent of ward)
+    const districtResponse = await fetch(
+      `/api/v1/don-vi-hanh-chinh/${donViXa.donViCha.id}`
+    );
+    donViHuyen = await districtResponse.json();
+    // Get province (parent of district)
+    const provinceResponse = await fetch(
+      `/api/v1/don-vi-hanh-chinh/${donViHuyen.donViCha.id}`
+    );
+    donViTinh = await provinceResponse.json();
+
+    // Load and populate province select
+    const provinces = await fetch("/api/v1/don-vi-hanh-chinh/cap/4");
+    const provinceData = await provinces.json();
+
+    tinhSelect.innerHTML = '<option value="">Chọn Tỉnh/Thành phố</option>';
+    provinceData.forEach((tinh) => {
+      tinhSelect.innerHTML += `<option value="${tinh.id}" ${
+        donViTinh && tinh.id === donViTinh.id ? "selected" : ""
+      }>${tinh.ten}</option>`;
+    });
+
+    // If we have province info, load districts
+    if (donViTinh) {
       huyenSelect.disabled = false;
+      const districts = await fetch(
+        `/api/v1/don-vi-hanh-chinh/parent/${donViTinh.id}`
+      );
+      const districtData = await districts.json();
 
-      if (hierarchy.district) {
-        huyenSelect.value = hierarchy.district.id;
-        await loadPhuongXa(hierarchy.district.id, "edit");
+      huyenSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+      districtData.forEach((huyen) => {
+        huyenSelect.innerHTML += `<option value="${huyen.id}" ${
+          donViHuyen && huyen.id === donViHuyen.id ? "selected" : ""
+        }>${huyen.ten}</option>`;
+      });
+
+      // If we have district info, load wards
+      if (donViHuyen) {
         xaSelect.disabled = false;
+        const wards = await fetch(
+          `/api/v1/don-vi-hanh-chinh/parent/${donViHuyen.id}`
+        );
+        const wardData = await wards.json();
 
-        if (hierarchy.ward) {
-          xaSelect.value = hierarchy.ward.id;
-          document.getElementById("editDonViHanhChinhId").value =
-            hierarchy.ward.id;
-        } else {
-          document.getElementById("editDonViHanhChinhId").value =
-            hierarchy.district.id;
-        }
-      } else {
-        document.getElementById("editDonViHanhChinhId").value =
-          hierarchy.province.id;
+        xaSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+        wardData.forEach((xa) => {
+          xaSelect.innerHTML += `<option value="${xa.id}" ${
+            donViXa && xa.id === donViXa.id ? "selected" : ""
+          }>${xa.ten}</option>`;
+        });
       }
     }
+
+    // Set the final selected value for donViHanhChinhId
+    if (donViXa) {
+      document.getElementById("editDonViHanhChinhId").value = donViXa.id;
+    } else if (donViHuyen) {
+      document.getElementById("editDonViHanhChinhId").value = donViHuyen.id;
+    } else if (donViTinh) {
+      document.getElementById("editDonViHanhChinhId").value = donViTinh.id;
+    }
   } catch (error) {
-    console.error("Error in loadAdminUnitsForEdit:", error);
-    showToast("Lỗi khi tải thông tin địa chỉ", "error");
+    console.error("Error loading administrative units:", error);
+    showToast("Lỗi khi tải thông tin đơn vị hành chính", "error");
   }
 }
 
-async function fetchAdminHierarchy(currentUnit) {
-  const hierarchy = {
-    ward: null,
-    district: null,
-    province: null,
-  };
-
+// Enhanced function to load farm data into edit form
+async function loadEditForm(farmId) {
   try {
-    var current = currentUnit;
-
-    // Determine the current level and set appropriate hierarchy
-    switch (current.capHanhChinh) {
-      case "8": // Ward level
-        hierarchy.ward = current;
-        current = await fetchParentUnit(current.donViCha.id);
-      // falls through
-      case "6": // District level
-        hierarchy.district = hierarchy.district || current;
-        current = await fetchParentUnit(current.donViCha.id);
-      // falls through
-      case "4": // Province level
-        hierarchy.province = hierarchy.province || current;
-        break;
+    const response = await fetch(`/api/v1/trang-trai/${farmId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return hierarchy;
+    let farm;
+    try {
+      const text = await response.text(); // Get response as text first
+      farm = JSON.parse(text); // Then try to parse it
+    } catch (parseError) {
+      console.error("JSON Parse Error:", parseError);
+      console.log("Response text:", text); // Log the problematic response
+      throw new Error("Invalid JSON response from server");
+    }
+
+    if (!farm || !farm.id) {
+      throw new Error("Invalid farm data received");
+    }
+
+    // Basic information
+    document.getElementById("editFarmId").value = farm.id;
+    document.getElementById("editMaTrangTrai").value = farm.maTrangTrai;
+    document.getElementById("editTenTrangTrai").value = farm.tenTrangTrai;
+    document.getElementById("editTenChu").value = farm.tenChu;
+    document.getElementById("editSoDienThoai").value = farm.soDienThoai;
+    document.getElementById("editEmail").value = farm.email;
+
+    // Address information
+    document.getElementById("editSoNha").value = farm.soNha || "";
+    document.getElementById("editTenDuong").value = farm.tenDuong || "";
+    document.getElementById("editKhuPho").value = farm.khuPho || "";
+    document.getElementById("editDiaChiDayDu").value = farm.diaChiDayDu || "";
+
+    // Operation information
+    document.getElementById("editDienTich").value = farm.dienTich;
+    document.getElementById("editTongDan").value = farm.tongDan;
+    document.getElementById("editPhuongThucChanNuoi").value =
+      farm.phuongThucChanNuoi;
+
+    // Load and set administrative units
+    if (farm.donViHanhChinh) {
+      await loadAdminUnitsForEdit(farm.donViHanhChinh);
+    }
+
+    // Populate animal data
+    const container = document.getElementById("editVatNuoiContainer");
+    container.innerHTML = ""; // Clear existing rows
+
+    const animals = await loadLoaiVatNuoi();
+    const options = animals
+      .map(
+        (animal) => `<option value="${animal.id}">${animal.tenLoai}</option>`
+      )
+      .join("");
+
+    farm.trangTraiVatNuois?.forEach((vatNuoi, index) => {
+      addVatNuoiRow(container, "editVatNuoi", options);
+      const select = container.querySelector(
+        `[name="editVatNuoi[${index}].loaiVatNuoi"]`
+      );
+      const input = container.querySelector(
+        `[name="editVatNuoi[${index}].soLuong"]`
+      );
+      if (select) select.value = vatNuoi.loaiVatNuoi.id;
+      if (input) input.value = vatNuoi.soLuong;
+    });
+
+    // Show modal after data is loaded
+    document.getElementById("editFarmModal").classList.remove("hidden");
   } catch (error) {
-    console.error("Error fetching hierarchy:", error);
-    throw error;
+    console.error("Error loading farm data:", error);
+    showToast("Lỗi khi tải thông tin trang trại", "error");
+
+    // Add more detailed error logging
+    if (error.message.includes("JSON")) {
+      console.error("JSON parsing error. Please check server response format.");
+    } else if (error.message.includes("HTTP")) {
+      console.error("Network error. Please check server connectivity.");
+    }
+
+    // Prevent modal from showing on error
+    const modal = document.getElementById("editFarmModal");
+    if (modal) modal.classList.add("hidden");
   }
 }
 
-async function fetchParentUnit(parentId) {
-  if (!parentId) return null;
-  const response = await fetch(`/api/v1/don-vi-hanh-chinh/${parentId}`);
-  if (!response.ok) throw new Error(`Failed to fetch unit ${parentId}`);
-  return await response.json();
+async function loadAdminUnitsForEdit(donViHanhChinh) {
+  if (!donViHanhChinh) {
+    console.warn("No administrative unit provided");
+    return;
+  }
+
+  try {
+    const tinhSelect = document.getElementById("editTinhThanh");
+    const huyenSelect = document.getElementById("editQuanHuyen");
+    const xaSelect = document.getElementById("editPhuongXa");
+
+    // Get the ward level unit (cấp xã) and its parent chain
+    let donViXa, donViHuyen, donViTinh;
+
+    const wardResponse = await fetch(
+      `/api/v1/don-vi-hanh-chinh/${donViHanhChinh}`
+    );
+    donViXa = await wardResponse.json();
+    // Get district (parent of ward)
+    const districtResponse = await fetch(
+      `/api/v1/don-vi-hanh-chinh/${donViXa.donViCha.id}`
+    );
+    donViHuyen = await districtResponse.json();
+    // Get province (parent of district)
+    const provinceResponse = await fetch(
+      `/api/v1/don-vi-hanh-chinh/${donViHuyen.donViCha.id}`
+    );
+    donViTinh = await provinceResponse.json();
+
+    // Load and populate province select
+    const provinces = await fetch("/api/v1/don-vi-hanh-chinh/cap/4");
+    const provinceData = await provinces.json();
+
+    tinhSelect.innerHTML = '<option value="">Chọn Tỉnh/Thành phố</option>';
+    provinceData.forEach((tinh) => {
+      tinhSelect.innerHTML += `<option value="${tinh.id}" ${
+        donViTinh && tinh.id === donViTinh.id ? "selected" : ""
+      }>${tinh.ten}</option>`;
+    });
+
+    // If we have province info, load districts
+    if (donViTinh) {
+      huyenSelect.disabled = false;
+      const districts = await fetch(
+        `/api/v1/don-vi-hanh-chinh/parent/${donViTinh.id}`
+      );
+      const districtData = await districts.json();
+
+      huyenSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+      districtData.forEach((huyen) => {
+        huyenSelect.innerHTML += `<option value="${huyen.id}" ${
+          donViHuyen && huyen.id === donViHuyen.id ? "selected" : ""
+        }>${huyen.ten}</option>`;
+      });
+
+      // If we have district info, load wards
+      if (donViHuyen) {
+        xaSelect.disabled = false;
+        const wards = await fetch(
+          `/api/v1/don-vi-hanh-chinh/parent/${donViHuyen.id}`
+        );
+        const wardData = await wards.json();
+
+        xaSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+        wardData.forEach((xa) => {
+          xaSelect.innerHTML += `<option value="${xa.id}" ${
+            donViXa && xa.id === donViXa.id ? "selected" : ""
+          }>${xa.ten}</option>`;
+        });
+      }
+    }
+
+    // Set the final selected value for donViHanhChinhId
+    if (donViXa) {
+      document.getElementById("editDonViHanhChinhId").value = donViXa.id;
+    } else if (donViHuyen) {
+      document.getElementById("editDonViHanhChinhId").value = donViHuyen.id;
+    } else if (donViTinh) {
+      document.getElementById("editDonViHanhChinhId").value = donViTinh.id;
+    }
+  } catch (error) {
+    console.error("Error loading administrative units:", error);
+    showToast("Lỗi khi tải thông tin đơn vị hành chính", "error");
+  }
+}
+
+// Update event listeners for edit form address selects
+document
+  .getElementById("editTinhThanh")
+  ?.addEventListener("change", async function () {
+    const huyenSelect = document.getElementById("editQuanHuyen");
+    const xaSelect = document.getElementById("editPhuongXa");
+
+    try {
+      // Reset dependent selects
+      huyenSelect.innerHTML = '<option value="">Chọn Quận/Huyện</option>';
+      xaSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+
+      if (this.value) {
+        // Load districts for selected province
+        const response = await fetch(
+          `/api/v1/don-vi-hanh-chinh/parent/${this.value}`
+        );
+        const districts = await response.json();
+
+        huyenSelect.disabled = false;
+        districts.forEach((huyen) => {
+          huyenSelect.innerHTML += `<option value="${huyen.id}">${huyen.ten}</option>`;
+        });
+
+        xaSelect.disabled = true;
+        document.getElementById("editDonViHanhChinhId").value = this.value;
+      } else {
+        huyenSelect.disabled = true;
+        xaSelect.disabled = true;
+        document.getElementById("editDonViHanhChinhId").value = "";
+      }
+    } catch (error) {
+      console.error("Error loading districts:", error);
+      showToast("Lỗi khi tải danh sách quận/huyện", "error");
+    }
+  });
+
+document
+  .getElementById("editQuanHuyen")
+  ?.addEventListener("change", async function () {
+    const xaSelect = document.getElementById("editPhuongXa");
+
+    try {
+      xaSelect.innerHTML = '<option value="">Chọn Phường/Xã</option>';
+
+      if (this.value) {
+        // Load wards for selected district
+        const response = await fetch(
+          `/api/v1/don-vi-hanh-chinh/parent/${this.value}`
+        );
+        const wards = await response.json();
+
+        xaSelect.disabled = false;
+        wards.forEach((xa) => {
+          xaSelect.innerHTML += `<option value="${xa.id}">${xa.ten}</option>`;
+        });
+
+        document.getElementById("editDonViHanhChinhId").value = this.value;
+      } else {
+        xaSelect.disabled = true;
+        document.getElementById("editDonViHanhChinhId").value =
+          document.getElementById("editTinhThanh").value;
+      }
+    } catch (error) {
+      console.error("Error loading wards:", error);
+      showToast("Lỗi khi tải danh sách phường/xã", "error");
+    }
+  });
+
+// Load animal types from API
+async function loadLoaiVatNuoi() {
+  try {
+    const response = await fetch("/api/v1/loai-vat-nuoi");
+    const data = await response.json();
+    return data;
+  } catch (error) {
+    console.error("Error loading animal types:", error);
+    return [];
+  }
+}
+
+// Add new animal row to form
+function addVatNuoiRow(container, prefix, loaiVatNuoiOptions) {
+  const index = container.children.length;
+  const div = document.createElement("div");
+  div.className = "flex gap-2 items-center";
+  div.innerHTML = `
+    <select
+      name="${prefix}[${index}].loaiVatNuoi"
+      class="flex-1 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      required
+    >
+      <option value="">Chọn loại vật nuôi</option>
+      ${loaiVatNuoiOptions}
+    </select>
+    <input
+      type="number"
+      name="${prefix}[${index}].soLuong"
+      placeholder="Số lượng"
+      class="w-32 border rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+      required
+    />
+    <button type="button" class="text-red-500 hover:text-red-700" onclick="removeVatNuoiRow(this)">
+      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+      </svg>
+    </button>
+  `;
+  container.appendChild(div);
+}
+
+function removeVatNuoiRow(button) {
+  button.closest(".flex").remove();
+}
+
+// Initialize animal type controls
+async function initializeVatNuoiControls() {
+  const animals = await loadLoaiVatNuoi();
+  const options = animals
+    .map((animal) => `<option value="${animal.id}">${animal.tenLoai}</option>`)
+    .join("");
+
+  // Add animal row handlers
+  document.getElementById("addVatNuoiBtn")?.addEventListener("click", () => {
+    addVatNuoiRow(
+      document.getElementById("vatNuoiContainer"),
+      "vatNuoi",
+      options
+    );
+  });
+
+  document
+    .getElementById("editAddVatNuoiBtn")
+    ?.addEventListener("click", () => {
+      addVatNuoiRow(
+        document.getElementById("editVatNuoiContainer"),
+        "editVatNuoi",
+        options
+      );
+    });
+
+  // Populate initial row for add form
+  const firstSelect = document.querySelector('[name="vatNuoi[0].loaiVatNuoi"]');
+  if (firstSelect) {
+    animals.forEach((animal) => {
+      firstSelect.add(new Option(animal.tenLoai, animal.id));
+    });
+  }
 }

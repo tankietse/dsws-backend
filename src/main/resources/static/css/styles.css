@@ -148,11 +148,11 @@ section[layout\:fragment="content"] {
   margin: 16px;
 }
 
-/* Ensure UI components appear above the map */
-header,
+
 .dropdown-menu,
 .account-button {
-  position: relative;
+  position: absolute;
+  /* Hoặc relative, fixed, sticky */
   /* Position should be relative or absolute for z-index to take effect */
   z-index: 900;
   /* Higher z-index to appear above the map */

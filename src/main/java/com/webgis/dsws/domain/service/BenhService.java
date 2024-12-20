@@ -6,9 +6,10 @@ import java.util.Optional;
 import org.springframework.transaction.annotation.Transactional;
 
 public interface BenhService {
+    @Transactional(readOnly = true)
     List<Benh> findAll();
 
-    @Transactional(readOnly = true) 
+    @Transactional(readOnly = true)
     Optional<Benh> findById(Long id);
 
     Optional<Benh> findByTenBenh(String tenBenh);
@@ -20,4 +21,10 @@ public interface BenhService {
     void deleteById(Long id);
 
     Benh update(Long id, Benh benh);
+
+    List<Benh> findByLoaiVatNuoiId(Long loaiVatNuoiId);
+
+    List<Benh> findByMucDoBenh(String mucDoBenh);
+
+    List<Benh> searchByKeyword(String keyword);
 }

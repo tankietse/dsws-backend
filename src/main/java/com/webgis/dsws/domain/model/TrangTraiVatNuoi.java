@@ -5,6 +5,7 @@ import java.sql.Date;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import lombok.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 @Entity
 @Getter
@@ -19,6 +20,7 @@ public class TrangTraiVatNuoi {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_trang_trai", nullable = false)
+    @JsonBackReference
     private TrangTrai trangTrai;
 
     @ManyToOne(fetch = FetchType.LAZY)

@@ -35,13 +35,13 @@ public class Benh {
     @OneToMany(mappedBy = "benh", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<VungDich> vungDichs = new HashSet<>();
 
-    @ElementCollection(fetch = FetchType.EAGER)
+    @ElementCollection(targetClass = MucDoBenhEnum.class, fetch = FetchType.EAGER)
     @CollectionTable(name = "benh_muc_do", joinColumns = @JoinColumn(name = "benh_id"))
     @Column(name = "muc_do")
     @Enumerated(EnumType.STRING)
     private Set<MucDoBenhEnum> mucDoBenhs = new HashSet<>();
 
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(name = "benh_loai_vat_nuoi", joinColumns = @JoinColumn(name = "benh_id"), inverseJoinColumns = @JoinColumn(name = "loai_vat_nuoi_id"))
     private Set<LoaiVatNuoi> loaiVatNuoi = new HashSet<>();
 

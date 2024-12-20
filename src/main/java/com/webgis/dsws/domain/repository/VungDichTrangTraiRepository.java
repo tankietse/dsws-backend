@@ -16,4 +16,6 @@ public interface VungDichTrangTraiRepository extends JpaRepository<VungDichTrang
     List<VungDichTrangTrai> findByTrangTrai(TrangTrai trangTrai);
 
     List<VungDichTrangTrai> findByTrangTraiAndKhoangCachLessThan(TrangTrai trangTrai, Double radius);
+
+    List<VungDichTrangTrai> findByVungDichId(Long id);
 }
