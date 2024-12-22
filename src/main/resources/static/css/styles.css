@@ -154,6 +154,6 @@ section[layout\:fragment="content"] {
   position: absolute;
   /* Hoặc relative, fixed, sticky */
   /* Position should be relative or absolute for z-index to take effect */
-  z-index: 900;
+  z-index: 1000;
   /* Higher z-index to appear above the map */
 }

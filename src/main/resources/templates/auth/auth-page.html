@@ -391,17 +391,32 @@
               </div>
 
               <form id="registerFormElement" class="space-y-6">
-                <!-- Register form fields -->
                 <div class="input-group">
                   <label class="block text-sm font-medium text-foreground mb-2">
-                    <i class="fas fa-user mr-2"></i>Họ và tên
+                    <i class="fas fa-user mr-2"></i>Tên đăng nhập
                   </label>
                   <input
                     type="text"
-                    name="fullName"
-                    class="form-input mt-1 block w-full"
+                    name="username"
+                    class="form-input mt-1 block w-full border border-border rounded-lg p-3 pl-10 focus:ring focus:ring-ring transition-all duration-200"
+                    placeholder="Nhập tên đăng nhập"
                     required
                   />
+                </div>
+
+                <div class="input-group">
+                  <label class="block text-sm font-medium text-foreground mb-2">
+                    <i class="fas fa-lock mr-2"></i>Mật khẩu
+                  </label>
+                  <div class="relative">
+                    <input
+                      type="password"
+                      name="password"
+                      class="form-input mt-1 block w-full border border-border rounded-lg p-3 pl-10 focus:ring focus:ring-ring transition-all duration-200"
+                      placeholder="Nhập mật khẩu"
+                      required
+                    />
+                  </div>
                 </div>
 
                 <div class="input-group">
@@ -411,16 +426,41 @@
                   <input
                     type="email"
                     name="email"
-                    class="form-input mt-1 block w-full"
+                    class="form-input mt-1 block w-full border border-border rounded-lg p-3 pl-10 focus:ring focus:ring-ring transition-all duration-200"
+                    placeholder="Nhập địa chỉ email"
                     required
                   />
                 </div>
 
-                <!-- TODO: thêm các trường dữ liệu cần  -->
+                <div class="input-group">
+                  <label class="block text-sm font-medium text-foreground mb-2">
+                    <i class="fas fa-user mr-2"></i>Họ và tên
+                  </label>
+                  <input
+                    type="text"
+                    name="hoTen"
+                    class="form-input mt-1 block w-full border border-border rounded-lg p-3 pl-10 focus:ring focus:ring-ring transition-all duration-200"
+                    placeholder="Nhập họ và tên"
+                    required
+                  />
+                </div>
+
+                <div class="input-group">
+                  <label class="block text-sm font-medium text-foreground mb-2">
+                    <i class="fas fa-phone mr-2"></i>Số điện thoại
+                  </label>
+                  <input
+                    type="tel"
+                    name="soDienThoai"
+                    class="form-input mt-1 block w-full border border-border rounded-lg p-3 pl-10 focus:ring focus:ring-ring transition-all duration-200"
+                    placeholder="Nhập số điện thoại"
+                    required
+                  />
+                </div>
 
                 <button
                   type="submit"
-                  class="w-full bg-primary text-primary-foreground hover:bg-primary/90 p-3 rounded-lg"
+                  class="w-full bg-primary text-primary-foreground hover:bg-primary/90 p-3 rounded-lg transition-all duration-200 flex items-center justify-center hover-lift"
                 >
                   <i class="fas fa-user-plus mr-2"></i>
                   ĐĂNG KÝ
@@ -561,13 +601,13 @@
 
         // Handle register form submission
         document
-          .getElementById("registerForm")
+          .getElementById("registerFormElement")
           .addEventListener("submit", function (e) {
             e.preventDefault();
             const formData = new FormData(this);
             const data = Object.fromEntries(formData.entries());
             fetch("/api/v1/auth/register", {
-              method: "POST",
+              method: "POST", 
               credentials: "include",
               headers: {
                 "Content-Type": "application/json",

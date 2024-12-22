@@ -11,6 +11,10 @@ import com.webgis.dsws.domain.repository.BenhRepository;
 import com.webgis.dsws.domain.service.BenhService;
 import com.webgis.dsws.domain.service.processor.BenhProcessor;
 import jakarta.persistence.EntityNotFoundException;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -42,6 +46,7 @@ public class BenhServiceImpl implements BenhService {
         return tenBenh;
     }
 
+    
     /**
      * Lấy danh sách tất cả các bệnh trong hệ thống.
      *
@@ -51,6 +56,12 @@ public class BenhServiceImpl implements BenhService {
     @Transactional(readOnly = true)
     public List<Benh> findAll() {
         return benhRepository.findAllWithCollections();
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Benh> findAll(Pageable pageable) {
+        return benhRepository.findAll(pageable);
     }
 
     /**
@@ -232,7 +243,8 @@ public class BenhServiceImpl implements BenhService {
     @Transactional(readOnly = true)
     @Override
     public List<Benh> findByLoaiVatNuoiId(Long loaiVatNuoiId) {
-        return benhRepository.findByLoaiVatNuoiId(loaiVatNuoiId);
+        // Tìm bệnh qua bảng BenhVatNuoi để có đầy đủ thông tin về mối quan hệ
+        return benhRepository.findBenhsByLoaiVatNuoiIdViaBenhVatNuoi(loaiVatNuoiId);
     }
 
     @Transactional(readOnly = true)
@@ -250,5 +262,11 @@ public class BenhServiceImpl implements BenhService {
     @Override
     public List<Benh> searchByKeyword(String keyword) {
         return benhRepository.searchByKeyword(keyword);
+    }
+    
+    @Override
+    @Transactional(readOnly = true)
+    public Page<Benh> searchBenh(String keyword, Pageable pageable) {
+        return benhRepository.findByKeyword(keyword, pageable);
     }
 }

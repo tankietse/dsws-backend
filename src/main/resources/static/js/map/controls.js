@@ -19,11 +19,11 @@ export class MapControls {
       region: {
         id: "regionBtn",
         handler: () => {
-          const regionDropdown = document.getElementById("regionDropdown");
-          if (regionDropdown.style.display === "none") {
-            regionDropdown.style.display = "block";
+          const regionPanel = document.getElementById("regionPanel");
+          if (regionPanel.style.display === "none") {
+            regionPanel.style.display = "block";
           } else {
-            regionDropdown.style.display = "none";
+            regionPanel.style.display = "none";
             this.mapLayers.clearCurrentLayer();
           }
         },
@@ -123,38 +123,63 @@ export class MapControls {
   }
 
   initializeRegionDropdown() {
+    const regionPanel = document.getElementById("regionPanel");
     const tenBenhSelect = document.getElementById("tenBenh");
     const loaiVatNuoiSelect = document.getElementById("loaiVatNuoi");
-    const mucDoBenhSelect = document.getElementById("mucDoBenh");
-    const regionLevelSelect = document.getElementById("regionLevel");
-    const fromDateInput = document.getElementById("fromDate");
-    const toDateInput = document.getElementById("toDate");
+    const showFarmsCheckbox = document.getElementById("showFarms");
     const applyFiltersBtn = document.getElementById("applyFilters");
     const resetFiltersBtn = document.getElementById("resetFilters");
 
-    // Tải dữ liệu cho Loại bệnh và Loại vật nuôi
-    this.loadLoaiBenhOptions(tenBenhSelect);
-    this.loadLoaiVatNuoiOptions(loaiVatNuoiSelect);
+    // Set initial panel state
+    regionPanel.style.display = "none";
 
-    applyFiltersBtn.addEventListener("click", () => {
-      const filters = {
-        regionLevel: regionLevelSelect.value,
-        tenBenh: tenBenhSelect.value,
-        mucDoBenh: mucDoBenhSelect.value,
-        loaiVatNuoi: loaiVatNuoiSelect.value,
-        fromDate: fromDateInput.value,
-        toDate: toDateInput.value,
-      };
-      this.mapLayers.loadRegionCases(filters);
+    // Modify region button handler
+    this.controls.region.handler = () => {
+      if (regionPanel.style.display === "none") {
+        // Close other controls first
+        this.mapLayers.clearCurrentLayer();
+        regionPanel.style.display = "block";
+        // Load initial data
+        this.loadLoaiVatNuoiOptions(loaiVatNuoiSelect);
+      } else {
+        regionPanel.style.display = "none";
+      }
+    };
+
+    // Handle animal type change
+    loaiVatNuoiSelect.addEventListener("change", (e) => {
+      const loaiVatNuoiId = e.target.value;
+      if (loaiVatNuoiId) {
+        this.loadBenhByLoaiVatNuoi(tenBenhSelect, loaiVatNuoiId);
+      } else {
+        tenBenhSelect.innerHTML = '<option value="">Chọn loại bệnh</option>';
+      }
     });
 
+    // Handle apply filters
+    applyFiltersBtn.addEventListener("click", () => {
+      const filters = {
+        loaiVatNuoiId: loaiVatNuoiSelect.value,
+        benhId: tenBenhSelect.value,
+        showFarms: showFarmsCheckbox.checked,
+      };
+
+      if (!filters.loaiVatNuoiId) {
+        alert("Vui lòng chọn loại vật nuôi");
+        return;
+      }
+
+      this.mapLayers.loadRegionCases(filters).catch((error) => {
+        console.error("Error loading regions:", error);
+        alert(error.message || "Có lỗi xảy ra khi tải dữ liệu");
+      });
+    });
+
+    // Handle reset
     resetFiltersBtn.addEventListener("click", () => {
-      regionLevelSelect.value = "8";
-      tenBenhSelect.value = "";
-      mucDoBenhSelect.value = "";
+      tenBenhSelect.innerHTML = '<option value="">Chọn loại bệnh</option>';
       loaiVatNuoiSelect.value = "";
-      fromDateInput.value = "";
-      toDateInput.value = "";
+      showFarmsCheckbox.checked = false;
       this.mapLayers.clearCurrentLayer();
     });
   }
@@ -184,6 +209,22 @@ export class MapControls {
           const option = document.createElement("option");
           option.value = animalType.id;
           option.textContent = animalType.tenLoai;
+          selectElement.appendChild(option);
+        });
+      });
+  }
+
+  loadBenhByLoaiVatNuoi(selectElement, loaiVatNuoiId) {
+    fetch(`/api/v1/benh/by-loai-vat-nuoi/${loaiVatNuoiId}`, {
+      credentials: "include",
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        selectElement.innerHTML = '<option value="">Chọn loại bệnh</option>';
+        data.forEach((disease) => {
+          const option = document.createElement("option");
+          option.value = disease.id;
+          option.textContent = disease.tenBenh;
           selectElement.appendChild(option);
         });
       });

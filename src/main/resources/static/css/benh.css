@@ -1,0 +1,203 @@
+.selected-options {
+    cursor: pointer;
+    min-height: 80px;
+    /* Increased from default */
+    max-height: 120px;
+    /* Add max height */
+    overflow-y: auto;
+    /* Allow scrolling if content exceeds max height */
+    padding: 0.75rem;
+    /* Increased padding */
+    display: flex;
+    flex-wrap: wrap;
+    align-content: flex-start;
+    /* Align items from top */
+    gap: 8px;
+    /* Consistent spacing between items */
+}
+
+/* Add scrollbar styling for better appearance */
+.custom-multiselect .selected-options::-webkit-scrollbar {
+    width: 6px;
+}
+
+.custom-multiselect .selected-options::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 8px;
+}
+
+.custom-multiselect .selected-options::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 8px;
+}
+
+.custom-multiselect .selected-options::-webkit-scrollbar-thumb:hover {
+    background: #666;
+}
+
+/* Ensure selected items have proper spacing */
+.custom-multiselect .selected-item {
+    margin: 2px;
+    white-space: nowrap;
+}
+
+.custom-multiselect .selected-item {
+    display: inline-flex;
+    align-items: center;
+    background-color: #e5edff;
+    border: 1px solid #3b82f6;
+    padding: 2px 8px;
+    border-radius: 16px;
+    font-size: 0.875rem;
+    color: #1e40af;
+    gap: 4px;
+}
+
+.custom-multiselect .selected-item:hover {
+    background-color: #dbeafe;
+}
+
+.custom-multiselect .remove-item {
+    color: #3b82f6;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px;
+}
+
+.custom-multiselect .remove-item:hover {
+    color: #1e40af;
+}
+
+.custom-multiselect .option-item {
+    padding: 8px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+}
+
+.custom-multiselect .option-item:hover {
+    background-color: #f3f4f6;
+}
+
+.custom-multiselect .option-item.selected {
+    background-color: #e5edff;
+    color: #1e40af;
+}
+
+.severity-options {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1rem;
+}
+
+.severity-option {
+    cursor: pointer;
+}
+
+.severity-content {
+    border: 2px solid transparent;
+    border-radius: 0.5rem;
+    overflow: hidden;
+    transition: all 0.3s ease;
+}
+
+.severity-header {
+    color: white;
+    padding: 0.5rem 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.severity-level {
+    font-weight: 600;
+}
+
+.severity-name {
+    font-weight: 500;
+}
+
+.severity-description {
+    padding: 1rem;
+    font-size: 0.875rem;
+    color: #374151;
+    min-height: 60px;
+}
+
+.severity-stats {
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.02);
+    border-top: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.stat {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.875rem;
+    color: #4b5563;
+    margin-bottom: 0.25rem;
+}
+
+.stat:last-child {
+    margin-bottom: 0;
+}
+
+input[type="radio"]:checked+.severity-content {
+    box-shadow: 0 0 0 2px currentColor;
+    background-color: rgba(var(--tw-bg-opacity), 0.1);
+}
+
+/* Update hover effects for each severity level */
+.severity-content[class*="border-indigo"] {
+    border-color: #4b0082;
+}
+
+.severity-content[class*="border-indigo"]:hover {
+    background-color: rgba(75, 0, 130, 0.05);
+}
+
+.severity-content[class*="border-blue"] {
+    border-color: #ae00ff;
+}
+
+.severity-content[class*="border-blue"]:hover {
+    background-color: rgba(0, 0, 255, 0.05);
+}
+
+.severity-content[class*="border-red"] {
+    border-color: #ff0000;
+}
+
+.severity-content[class*="border-red"]:hover {
+    background-color: rgba(255, 0, 0, 0.05);
+}
+
+.severity-content[class*="border-orange"] {
+    border-color: #ffa500;
+}
+
+.severity-content[class*="border-orange"]:hover {
+    background-color: rgba(255, 165, 0, 0.05);
+}
+
+.severity-content[class*="border-green"] {
+    border-color: #008000;
+}
+
+.severity-content[class*="border-green"]:hover {
+    background-color: rgba(0, 128, 0, 0.05);
+}
+
+/* Add a subtle gradient effect to the headers */
+.severity-header {
+    background-image: linear-gradient(to right,
+            rgba(255, 255, 255, 0.1),
+            transparent);
+}
+
+/* Update selected state styling */
+input[type="radio"]:checked+.severity-content {
+    box-shadow: 0 0 0 2px currentColor;
+    background-color: rgba(var(--tw-bg-opacity), 0.1);
+    transform: translateY(-2px);
+}

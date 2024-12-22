@@ -73,7 +73,7 @@
         ></div>
         <div
           id="map-loading"
-          class="absolute inset-0 flex items-center justify-center glass-bg z-1100"
+          class="absolute inset-0 flex items-center justify-center glass-bg z-1000"
         >
           <div class="text-center">
             <div class="spinner-border text-primary" role="status"></div>
@@ -94,7 +94,7 @@
               >
                 <path
                   fill-rule="evenodd"
-                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                  d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
                   clip-rule="evenodd"
                 />
               </svg>
@@ -190,83 +190,56 @@
               </button>
 
               <div
-                id="regionDropdown"
-                class="absolute z-1001 mt-2 w-64 bg-white rounded-lg shadow-xl p-4 transform translate-y-0 top-full right-0"
-                style="display: none"
+                id="regionPanel"
+                class="hidden p-4 space-y-4 bg-white rounded-lg shadow"
               >
-                <div class="mb-4">
-                  <label class="block text-gray-700">Cấp hành chính</label>
-                  <select
-                    id="regionLevel"
-                    class="mt-1 block w-full border-gray-300 rounded"
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-gray-700"
+                    >Loại vật nuôi</label
                   >
-                    <option value="8">Xã/Phường</option>
-                    <option value="6">Quận/Huyện</option>
-                    <option value="4">Tỉnh/Thành</option>
-                  </select>
-                </div>
-
-                <div class="mb-4">
-                  <label class="block text-gray-700">Loại bệnh</label>
-                  <select
-                    id="tenBenh"
-                    class="mt-1 block w-full border-gray-300 rounded"
-                  >
-                    <option value="">Tất cả bệnh</option>
-                  </select>
-                </div>
-
-                <div class="mb-4">
-                  <label class="block text-gray-700">Mức độ</label>
-                  <select
-                    id="mucDoBenh"
-                    class="mt-1 block w-full border-gray-300 rounded"
-                  >
-                    <option value="">Tất cả mức độ</option>
-                    <option value="THONG_THUONG">Thông thường</option>
-                    <option value="NGUY_HIEM">Nguy hiểm</option>
-                    <option value="BANG_A">Danh mục A</option>
-                  </select>
-                </div>
-
-                <div class="mb-4">
-                  <label class="block text-gray-700">Loại vật nuôi</label>
                   <select
                     id="loaiVatNuoi"
-                    class="mt-1 block w-full border-gray-300 rounded"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <!-- Options sẽ được thêm động -->
+                    <option value="">Chọn loại vật nuôi</option>
                   </select>
                 </div>
 
-                <div class="mb-4">
-                  <label class="block text-gray-700">Thời gian</label>
-                  <div class="flex space-x-2">
-                    <input
-                      type="date"
-                      id="fromDate"
-                      class="mt-1 block w-full border-gray-300 rounded"
-                      placeholder="Từ ngày"
-                    />
-                    <input
-                      type="date"
-                      id="toDate"
-                      class="mt-1 block w-full border-gray-300 rounded"
-                      placeholder="Đến ngày"
-                    />
-                  </div>
+                <div class="space-y-2">
+                  <label class="text-sm font-medium text-gray-700"
+                    >Loại bệnh</label
+                  >
+                  <select
+                    id="tenBenh"
+                    class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                  >
+                    <option value="">Chọn loại bệnh</option>
+                  </select>
                 </div>
 
-                <div class="flex justify-end space-x-2">
+                <div class="space-y-2">
+                  <label class="flex items-center space-x-2">
+                    <input
+                      type="checkbox"
+                      id="showFarms"
+                      class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <span class="text-sm font-medium text-gray-700"
+                      >Hiển thị trang trại</span
+                    >
+                  </label>
+                </div>
+
+                <div class="flex space-x-2">
                   <button
                     id="applyFilters"
-                    class="bg-blue-500 text-white px-4 py-2 rounded"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                   >
                     Áp dụng
                   </button>
                   <button
                     id="resetFilters"
-                    class="bg-gray-300 text-gray-700 px-4 py-2 rounded"
+                    class="flex-1 px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2"
                   >
                     Đặt lại
                   </button>

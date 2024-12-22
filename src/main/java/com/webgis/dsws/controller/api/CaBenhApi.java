@@ -12,6 +12,13 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.Map;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.webgis.dsws.domain.model.NguoiDung;
+import com.webgis.dsws.domain.model.enums.TrangThaiEnum;
 
 @RestController
 @RequestMapping("/api/v1/ca-benh")
@@ -74,13 +81,13 @@ public class CaBenhApi {
 
     @PostMapping
     @Operation(summary = "Tạo mới ca bệnh")
-    public ResponseEntity<?> createCaBenh(@RequestBody CaBenh caBenh) {
+    public ResponseEntity<?> createCaBenh(
+            @RequestBody CaBenh caBenh,
+            @AuthenticationPrincipal NguoiDung nguoiDung) {
         try {
-            CaBenh newCaBenh = caBenhService.createCaBenh(caBenh);
+            CaBenh newCaBenh = caBenhService.createCaBenh(caBenh, nguoiDung);
             return ResponseEntity.ok(newCaBenh);
-        } catch (IllegalArgumentException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
-        } catch (IllegalStateException e) {
+        } catch (IllegalArgumentException | IllegalStateException e) {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
@@ -108,6 +115,70 @@ public class CaBenhApi {
             return ResponseEntity.ok(caBenhService.findCaBenhsInRadius(longitude, latitude, radiusInMeters));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @GetMapping
+    @Operation(summary = "Lấy danh sách ca bệnh có phân trang và sắp xếp")
+    public ResponseEntity<Page<CaBenh>> getAllCaBenh(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "benh.tenBenh") String sortBy,
+            @RequestParam(defaultValue = "asc") String sortDir,
+            @RequestParam(required = false) TrangThaiEnum trangThai) {
+
+        Sort.Direction direction = Sort.Direction.fromString(sortDir);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(direction, sortBy));
+
+        Page<CaBenh> caBenh;
+        if (trangThai != null) {
+            caBenh = caBenhService.findByTrangThai(trangThai, pageable);
+        } else {
+            caBenh = caBenhService.findAll(pageable);
+        }
+
+        return ResponseEntity.ok(caBenh);
+    }
+
+    @GetMapping("/{id}")
+    @Operation(summary = "Lấy thông tin chi tiết của một ca bệnh")
+    public ResponseEntity<CaBenh> getCaBenhById(@PathVariable Long id) {
+        try {
+            return ResponseEntity.ok(caBenhService.findById(id));
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping("/{id}")
+    @Operation(summary = "Cập nhật thông tin ca bệnh")
+    public ResponseEntity<?> updateCaBenh(
+            @PathVariable Long id,
+            @RequestBody CaBenh caBenh,
+            @AuthenticationPrincipal NguoiDung nguoiDung) {
+        try {
+            CaBenh existingCaBenh = caBenhService.findById(id);
+            caBenh.setId(id);
+            CaBenh updatedCaBenh = caBenhService.thayDoiCaBenh(caBenh, nguoiDung);
+            return ResponseEntity.ok(updatedCaBenh);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
+        } catch (IllegalArgumentException | IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PutMapping("/{id}/duyet")
+    @Operation(summary = "Duyệt/từ chối ca bệnh")
+    public ResponseEntity<?> duyetCaBenh(
+            @PathVariable Long id,
+            @RequestParam boolean approved,
+            @AuthenticationPrincipal NguoiDung nguoiQuanLy) {
+        try {
+            CaBenh caBenh = caBenhService.duyetCaBenh(id, nguoiQuanLy, approved);
+            return ResponseEntity.ok(caBenh);
+        } catch (EntityNotFoundException e) {
+            return ResponseEntity.notFound().build();
         }
     }
 }

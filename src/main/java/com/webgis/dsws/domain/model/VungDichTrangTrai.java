@@ -23,6 +23,7 @@ public class VungDichTrangTrai implements Serializable {
     private VungDich vungDich;
 
     @Id
+    @JsonBackReference("trangTrai-vungDich")
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trang_trai_id")
     private TrangTrai trangTrai;

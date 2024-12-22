@@ -10,6 +10,9 @@ import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -31,6 +34,12 @@ public class BenhApi {
                 .map(benhMapper::toDto)
                 .collect(Collectors.toList());
         return ResponseEntity.ok(benhs);
+    }
+
+    @GetMapping("/page")
+    public Page<Benh> listBenh(@RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return benhService.findAll(PageRequest.of(page, size));
     }
 
     @GetMapping("/{id}")

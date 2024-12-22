@@ -6,45 +6,684 @@
     <title>Chỉnh sửa Bệnh</title>
   </head>
   <body>
+    <div layout:fragment="breadcrumb">
+      <span class="text-gray-500">/</span>
+      <a href="/benh" class="hover:text-blue-600">Quản lý bệnh</a>
+      <span class="text-gray-500">/</span>
+      <span class="text-gray-800">Chỉnh sửa</span>
+    </div>
+
+    <h1 layout:fragment="page-title">Chỉnh Sửa Thông Tin Bệnh</h1>
+    <p layout:fragment="page-subtitle">Cập nhật thông tin chi tiết về bệnh</p>
+
     <section layout:fragment="content">
-      <div class="container mx-auto my-4">
-        <h1 class="text-center text-2xl font-bold mb-4">Chỉnh sửa Bệnh</h1>
-        <form
-          action="#"
-          th:action="@{/benh/edit/{id}(id=${benh.id})}"
-          th:object="${benh}"
-          method="post"
-          class="grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          <div>
-            <label for="tenBenh" class="block text-sm font-medium text-gray-700"
-              >Tên Bệnh</label
-            >
-            <input
-              type="text"
-              id="tenBenh"
-              th:field="*{tenBenh}"
-              class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm"
-              required
-            />
+      <div class="container mx-auto">
+        <!-- Progress bar wrapper -->
+        <div class="relative mb-8">
+          <div class="absolute top-6 left-0 right-0 h-1 bg-gray-200 rounded">
+            <div class="w-full h-full bg-blue-500 rounded"></div>
           </div>
-          <!-- Các trường khác giống như trong create.html -->
-          <div class="col-span-full text-center">
-            <button
-              type="submit"
-              class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Cập Nhật
-            </button>
-            <a
-              href="/benh"
-              class="bg-gray-500 hover:bg-gray-700 text-white font-bold py-2 px-4 rounded"
-            >
-              Hủy
-            </a>
+
+          <div class="relative z-10 flex items-center justify-between">
+            <div class="w-1/3 text-center">
+              <div
+                class="bg-blue-500 rounded-full h-12 w-12 flex items-center justify-center mx-auto text-white font-bold border-4 border-blue-100"
+              >
+                <i class="fas fa-check"></i>
+              </div>
+              <p class="mt-2 text-sm font-medium text-blue-500">
+                Thông tin cơ bản
+              </p>
+            </div>
+            <div class="w-1/3 text-center">
+              <div
+                class="bg-blue-500 rounded-full h-12 w-12 flex items-center justify-center mx-auto text-white font-bold border-4 border-blue-100"
+              >
+                <i class="fas fa-check"></i>
+              </div>
+              <p class="mt-2 text-sm font-medium text-blue-500">
+                Chi tiết bệnh
+              </p>
+            </div>
+            <div class="w-1/3 text-center">
+              <div
+                class="bg-blue-500 rounded-full h-12 w-12 flex items-center justify-center mx-auto text-white font-bold border-4 border-blue-100"
+              >
+                <i class="fas fa-check"></i>
+              </div>
+              <p class="mt-2 text-sm font-medium text-blue-500">Phân loại</p>
+            </div>
           </div>
-        </form>
+        </div>
+
+        <!-- Form container -->
+        <div class="bg-white rounded-lg shadow-lg p-6 max-w-5xl mx-auto">
+          <form id="editBenhForm" method="post" class="space-y-6">
+            <!-- Section 1: Thông tin cơ bản -->
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-100">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-info-circle mr-2 text-blue-500"></i>
+                Thông tin cơ bản
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="relative">
+                  <label
+                    for="tenBenh"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Tên Bệnh <span class="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="tenBenh"
+                    class="peer w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    required
+                  />
+                  <p
+                    class="mt-1 invisible peer-invalid:visible text-red-600 text-sm"
+                  >
+                    Vui lòng nhập tên bệnh
+                  </p>
+                </div>
+
+                <div class="relative">
+                  <label
+                    for="loaiVatNuoi"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Loại Vật Nuôi <span class="text-red-500">*</span>
+                  </label>
+                  <div class="custom-multiselect">
+                    <div
+                      class="selected-options flex flex-wrap gap-2 p-2 border border-gray-300 rounded-lg min-h-[42px] bg-white"
+                    >
+                      <!-- Selected items will be inserted here -->
+                    </div>
+                    <div
+                      class="options-container hidden absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto"
+                    >
+                      <div
+                        class="sticky top-0 bg-white border-b border-gray-200"
+                      >
+                        <input
+                          type="text"
+                          class="w-full px-4 py-2 text-sm border-none focus:ring-0"
+                          placeholder="Tìm kiếm loại vật nuôi..."
+                          id="loaiVatNuoiSearch"
+                        />
+                      </div>
+                      <div class="options-list p-2 space-y-1">
+                        <!-- Options will be populated here -->
+                      </div>
+                    </div>
+                    <select
+                      id="loaiVatNuoi"
+                      multiple
+                      class="hidden"
+                      required
+                    ></select>
+                  </div>
+                </div>
+
+                <div class="col-span-2">
+                  <label
+                    for="moTa"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Mô Tả
+                  </label>
+                  <textarea
+                    id="moTa"
+                    rows="3"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  ></textarea>
+                </div>
+              </div>
+            </div>
+
+            <div class="bg-gray-50 p-6 rounded-lg border border-gray-100">
+              <h3 class="text-lg font-semibold text-gray-800 mb-4">
+                <i class="fas fa-virus mr-2 text-blue-500"></i>
+                Chi tiết bệnh
+              </h3>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <label
+                    for="tacNhanGayBenh"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Tác Nhân Gây Bệnh
+                  </label>
+                  <input
+                    type="text"
+                    id="tacNhanGayBenh"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="trieuChung"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Triệu Chứng
+                  </label>
+                  <input
+                    type="text"
+                    id="trieuChung"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="thoiGianUBenh"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Thời Gian Ủ Bệnh (ngày)
+                  </label>
+                  <input
+                    type="number"
+                    id="thoiGianUBenh"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div>
+                  <label
+                    for="phuongPhapChanDoan"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Phương Pháp Chẩn Đoán
+                  </label>
+                  <input
+                    type="text"
+                    id="phuongPhapChanDoan"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  />
+                </div>
+
+                <div class="col-span-2">
+                  <label
+                    for="bienPhapPhongNgua"
+                    class="block text-sm font-medium text-gray-700 mb-1"
+                  >
+                    Biện Pháp Phòng Ngừa
+                  </label>
+                  <textarea
+                    id="bienPhapPhongNgua"
+                    rows="3"
+                    class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  ></textarea>
+                </div>
+
+                <div class="col-span-2">
+                  <label class="block text-sm font-medium text-gray-700 mb-3">
+                    Mức độ bệnh <span class="text-red-500">*</span>
+                  </label>
+                  <div class="grid grid-cols-1 gap-3">
+                    <div class="severity-options">
+                      <label class="severity-option">
+                        <input
+                          type="radio"
+                          name="mucDoBenhs"
+                          value="BANG_A"
+                          class="hidden"
+                          required
+                        />
+                        <div
+                          class="severity-content border-indigo-900 hover:bg-indigo-50"
+                        >
+                          <div
+                            class="severity-header"
+                            style="background-color: #4b0082"
+                          >
+                            <span class="severity-level">Mức 5</span>
+                            <span class="severity-name">Bảng A</span>
+                          </div>
+                          <div class="severity-description">
+                            Bệnh thuộc danh mục bảng A của Luật Thú y thế giới
+                          </div>
+                          <div class="severity-stats">
+                            <div class="stat">
+                              <span class="label">Nguy hiểm:</span>
+                              <span class="value">90%</span>
+                            </div>
+                            <div class="stat">
+                              <span class="label">Lây nhiễm:</span>
+                              <span class="value">80%</span>
+                            </div>
+                            <div class="stat">
+                              <span class="label">Phục hồi:</span>
+                              <span class="value">10%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </label>
+
+                      <label class="severity-option">
+                        <input
+                          type="radio"
+                          name="mucDoBenhs"
+                          value="BANG_B"
+                          class="hidden"
+                        />
+                        <div
+                          class="severity-content border-blue-700 hover:bg-blue-50"
+                        >
+                          <div
+                            class="severity-header"
+                            style="background-color: #0000ff"
+                          >
+                            <span class="severity-level">Mức 4</span>
+                            <span class="severity-name">Bảng B</span>
+                          </div>
+                          <div class="severity-description">
+                            Bệnh thuộc danh mục bảng B của Luật Thú y thế giới
+                          </div>
+                          <div class="severity-stats">
+                            <div class="stat">
+                              <span class="label">Nguy hiểm:</span>
+                              <span class="value">70%</span>
+                            </div>
+                            <div class="stat">
+                              <span class="label">Lây nhiễm:</span>
+                              <span class="value">60%</span>
+                            </div>
+                            <div class="stat">
+                              <span class="label">Phục hồi:</span>
+                              <span class="value">30%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </label>
+
+                      <label class="severity-option">
+                        <input
+                          type="radio"
+                          name="mucDoBenhs"
+                          value="NGUY_HIEM"
+                          class="hidden"
+                        />
+                        <div
+                          class="severity-content border-red-600 hover:bg-red-50"
+                        >
+                          <div
+                            class="severity-header"
+                            style="background-color: #ff0000"
+                          >
+                            <span class="severity-level">Mức 3</span>
+                            <span class="severity-name">Nguy hiểm</span>
+                          </div>
+                          <div class="severity-description">
+                            Bệnh nguy hiểm của động vật
+                          </div>
+                          <div class="severity-stats">
+                            <div class="stat">
+                              <span class="label">Nguy hiểm:</span>
+                              <span class="value">50%</span>
+                            </div>
+                            <div class="stat">
+                              <span class="label">Lây nhiễm:</span>
+                              <span class="value">40%</span>
+                            </div>
+                            <div class="stat">
+                              <span class="label">Phục hồi:</span>
+                              <span class="value">50%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </label>
+
+                      <label class="severity-option">
+                        <input
+                          type="radio"
+                          name="mucDoBenhs"
+                          value="PHONG_BENH_BAT_BUOC"
+                          class="hidden"
+                        />
+                        <div
+                          class="severity-content border-orange-500 hover:bg-orange-50"
+                        >
+                          <div
+                            class="severity-header"
+                            style="background-color: #ffa500"
+                          >
+                            <span class="severity-level">Mức 2</span>
+                            <span class="severity-name"
+                              >Phòng bệnh bắt buộc</span
+                            >
+                          </div>
+                          <div class="severity-description">
+                            Bệnh phải áp dụng các biện pháp phòng bệnh bắt buộc
+                          </div>
+                          <div class="severity-stats">
+                            <div class="stat">
+                              <span class="label">Nguy hiểm:</span>
+                              <span class="value">30%</span>
+                            </div>
+                            <div class="stat">
+                              <span class="label">Lây nhiễm:</span>
+                              <span class="value">20%</span>
+                            </div>
+                            <div class="stat">
+                              <span class="label">Phục hồi:</span>
+                              <span class="value">70%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </label>
+
+                      <label class="severity-option">
+                        <input
+                          type="radio"
+                          name="mucDoBenhs"
+                          value="THONG_THUONG"
+                          class="hidden"
+                        />
+                        <div
+                          class="severity-content border-green-700 hover:bg-green-50"
+                        >
+                          <div
+                            class="severity-header"
+                            style="background-color: #008000"
+                          >
+                            <span class="severity-level">Mức 1</span>
+                            <span class="severity-name">Thông thường</span>
+                          </div>
+                          <div class="severity-description">
+                            Bệnh thông thường
+                          </div>
+                          <div class="severity-stats">
+                            <div class="stat">
+                              <span class="label">Nguy hiểm:</span>
+                              <span class="value">10%</span>
+                            </div>
+                            <div class="stat">
+                              <span class="label">Lây nhiễm:</span>
+                              <span class="value">10%</span>
+                            </div>
+                            <div class="stat">
+                              <span class="label">Phục hồi:</span>
+                              <span class="value">80%</span>
+                            </div>
+                          </div>
+                        </div>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="col-span-2">
+                  <div class="flex space-x-6">
+                    <label class="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="canCongBoDich"
+                        class="form-checkbox h-4 w-4 text-blue-500"
+                      />
+                      <span class="text-sm text-gray-700"
+                        >Cần công bố dịch</span
+                      >
+                    </label>
+
+                    <label class="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="canPhongBenhBatBuoc"
+                        class="form-checkbox h-4 w-4 text-blue-500"
+                      />
+                      <span class="text-sm text-gray-700"
+                        >Cần phòng bệnh bắt buộc</span
+                      >
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="flex justify-end space-x-4 pt-6 border-t">
+              <a
+                href="/benh"
+                class="px-6 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition-colors duration-200"
+              >
+                <i class="fas fa-times mr-2"></i>Hủy
+              </a>
+              <button
+                type="submit"
+                class="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 focus:ring-4 focus:ring-blue-200 transition-all duration-200"
+              >
+                <i class="fas fa-save mr-2"></i>Lưu thay đổi
+              </button>
+            </div>
+          </form>
+        </div>
       </div>
+
+      <style>
+        .selected-options {
+          cursor: pointer;
+          min-height: 80px;
+          /* Increased from default */
+          max-height: 120px;
+          /* Add max height */
+          overflow-y: auto;
+          /* Allow scrolling if content exceeds max height */
+          padding: 0.75rem;
+          /* Increased padding */
+          display: flex;
+          flex-wrap: wrap;
+          align-content: flex-start;
+          /* Align items from top */
+          gap: 8px;
+          /* Consistent spacing between items */
+        }
+
+        /* Add scrollbar styling for better appearance */
+        .custom-multiselect .selected-options::-webkit-scrollbar {
+          width: 6px;
+        }
+
+        .custom-multiselect .selected-options::-webkit-scrollbar-track {
+          background: #f1f1f1;
+          border-radius: 8px;
+        }
+
+        .custom-multiselect .selected-options::-webkit-scrollbar-thumb {
+          background: #888;
+          border-radius: 8px;
+        }
+
+        .custom-multiselect .selected-options::-webkit-scrollbar-thumb:hover {
+          background: #666;
+        }
+
+        /* Ensure selected items have proper spacing */
+        .custom-multiselect .selected-item {
+          margin: 2px;
+          white-space: nowrap;
+        }
+
+        .custom-multiselect .selected-item {
+          display: inline-flex;
+          align-items: center;
+          background-color: #e5edff;
+          border: 1px solid #3b82f6;
+          padding: 2px 8px;
+          border-radius: 16px;
+          font-size: 0.875rem;
+          color: #1e40af;
+          gap: 4px;
+        }
+
+        .custom-multiselect .selected-item:hover {
+          background-color: #dbeafe;
+        }
+
+        .custom-multiselect .remove-item {
+          color: #3b82f6;
+          cursor: pointer;
+          font-size: 14px;
+          padding: 2px;
+        }
+
+        .custom-multiselect .remove-item:hover {
+          color: #1e40af;
+        }
+
+        .custom-multiselect .option-item {
+          padding: 8px 12px;
+          cursor: pointer;
+          border-radius: 4px;
+          transition: all 0.2s;
+        }
+
+        .custom-multiselect .option-item:hover {
+          background-color: #f3f4f6;
+        }
+
+        .custom-multiselect .option-item.selected {
+          background-color: #e5edff;
+          color: #1e40af;
+        }
+
+        .severity-options {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+          gap: 1rem;
+        }
+
+        .severity-option {
+          cursor: pointer;
+        }
+
+        .severity-content {
+          border: 2px solid transparent;
+          border-radius: 0.5rem;
+          overflow: hidden;
+          transition: all 0.3s ease;
+        }
+
+        .severity-header {
+          color: white;
+          padding: 0.5rem 1rem;
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+        }
+
+        .severity-level {
+          font-weight: 600;
+        }
+
+        .severity-name {
+          font-weight: 500;
+        }
+
+        .severity-description {
+          padding: 1rem;
+          font-size: 0.875rem;
+          color: #374151;
+          min-height: 60px;
+        }
+
+        .severity-stats {
+          padding: 1rem;
+          background-color: rgba(0, 0, 0, 0.02);
+          border-top: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .stat {
+          display: flex;
+          justify-content: space-between;
+          font-size: 0.875rem;
+          color: #4b5563;
+          margin-bottom: 0.25rem;
+        }
+
+        .stat:last-child {
+          margin-bottom: 0;
+        }
+
+        input[type="radio"]:checked + .severity-content {
+          box-shadow: 0 0 0 2px currentColor;
+          background-color: rgba(var(--tw-bg-opacity), 0.1);
+        }
+
+        /* Update hover effects for each severity level */
+        .severity-content[class*="border-indigo"] {
+          border-color: #4b0082;
+        }
+
+        .severity-content[class*="border-indigo"]:hover {
+          background-color: rgba(75, 0, 130, 0.05);
+        }
+
+        .severity-content[class*="border-blue"] {
+          border-color: #ae00ff;
+        }
+
+        .severity-content[class*="border-blue"]:hover {
+          background-color: rgba(0, 0, 255, 0.05);
+        }
+
+        .severity-content[class*="border-red"] {
+          border-color: #ff0000;
+        }
+
+        .severity-content[class*="border-red"]:hover {
+          background-color: rgba(255, 0, 0, 0.05);
+        }
+
+        .severity-content[class*="border-orange"] {
+          border-color: #ffa500;
+        }
+
+        .severity-content[class*="border-orange"]:hover {
+          background-color: rgba(255, 165, 0, 0.05);
+        }
+
+        .severity-content[class*="border-green"] {
+          border-color: #008000;
+        }
+
+        .severity-content[class*="border-green"]:hover {
+          background-color: rgba(0, 128, 0, 0.05);
+        }
+
+        /* Add a subtle gradient effect to the headers */
+        .severity-header {
+          background-image: linear-gradient(
+            to right,
+            rgba(255, 255, 255, 0.1),
+            transparent
+          );
+        }
+
+        /* Update selected state styling */
+        input[type="radio"]:checked + .severity-content {
+          box-shadow: 0 0 0 2px currentColor;
+          background-color: rgba(var(--tw-bg-opacity), 0.1);
+          transform: translateY(-2px);
+        }
+      </style>
+
+      <!-- CSS cho Select2 -->
+      <style>
+        .select2-container--default .select2-selection--multiple {
+          border-color: #d1d5db;
+          border-radius: 0.5rem;
+          min-height: 42px;
+        }
+        .select2-container--default.select2-container--focus
+          .select2-selection--multiple {
+          border-color: #3b82f6;
+          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+        }
+      </style>
+
+      <script src="/js/benh/edit.js"></script>
     </section>
   </body>
 </html>

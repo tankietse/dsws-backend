@@ -66,7 +66,7 @@ export default function loadFarms() {
 
           marker.bindPopup(
             `
-              <div class="farm-form-popup">
+              <div class="farm-form-popup z-1000">
                 <div class="farm-form-header">
                   <h3 class="text-lg font-semibold">${
                     feature.properties.tenTrangTrai || "Trang trại không tên"

@@ -18,9 +18,9 @@ public class TrangTraiVatNuoi {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonBackReference("trangTrai-vatNuoi")
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_trang_trai", nullable = false)
-    @JsonBackReference
     private TrangTrai trangTrai;
 
     @ManyToOne(fetch = FetchType.LAZY)

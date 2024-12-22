@@ -16,4 +16,11 @@ public class BenhDto {
     private String moTa;
     private Set<MucDoBenhEnum> mucDoBenhs;
     private Set<Long> loaiVatNuoiIds;
+    private String tacNhanGayBenh;
+    private String trieuChung;
+    private Integer thoiGianUBenh;
+    private String phuongPhapChanDoan;
+    private String bienPhapPhongNgua;
+    private Boolean canCongBoDich;
+    private Boolean canPhongBenhBatBuoc;
 }

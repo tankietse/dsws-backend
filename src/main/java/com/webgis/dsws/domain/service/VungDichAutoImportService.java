@@ -30,61 +30,64 @@ public class VungDichAutoImportService {
     private final VungDichService vungDichService;
 
     @Transactional
-    public List<VungDich> autoCreateFromData(
-            Integer capHanhChinh) {
-
+    public List<VungDich> autoCreateFromData(Integer capHanhChinh) {
         // 1. Lấy danh sách ca bệnh theo điều kiện
         List<CaBenh> caBenhs = getCaBenhsByCapHanhChinh(capHanhChinh);
 
-        // 2. Nhóm các ca bệnh theo loại bệnh
-        Map<Benh, List<CaBenh>> diseasesGroups = caBenhs.stream()
-                .filter(caBenh -> !caBenh.getDaKetThuc()) // Lọc các ca bệnh chưa kết thúc
-                .collect(Collectors.groupingBy(CaBenh::getBenh));
+        // 2. Nhóm các ca bệnh theo đơn vị hành chính trước
+        Map<DonViHanhChinh, List<CaBenh>> adminGroups = caBenhs.stream()
+                .filter(caBenh -> !caBenh.getDaKetThuc())
+                .collect(Collectors.groupingBy(cb -> cb.getTrangTrai().getDonViHanhChinh()));
 
-        // 3. Với mỗi loại bệnh, tạo các cluster và vùng dịch tương ứng
         List<VungDich> newZones = new ArrayList<>();
-        for (Map.Entry<Benh, List<CaBenh>> diseaseGroup : diseasesGroups.entrySet()) {
-            Benh benh = diseaseGroup.getKey();
-            List<CaBenh> caBenhsByDisease = diseaseGroup.getValue();
 
-            // Tạo clusters cho từng loại bệnh
-            Map<Geometry, List<CaBenh>> diseaseClusters = clusterAnalysisService
-                    .clusterDiseasesByLocation(caBenhsByDisease);
+        // 3. Xử lý từng đơn vị hành chính
+        for (Map.Entry<DonViHanhChinh, List<CaBenh>> adminGroup : adminGroups.entrySet()) {
+            DonViHanhChinh dvhc = adminGroup.getKey();
+            List<CaBenh> adminCases = adminGroup.getValue();
 
-            // Tạo vùng dịch cho từng cluster của loại bệnh này
-            for (Map.Entry<Geometry, List<CaBenh>> cluster : diseaseClusters.entrySet()) {
-                boolean shouldCreateZone = false;
-                // For diseases of category BANG_A, always create an epidemic zone
-                // Trong trường hợp
-                if (benh.getMucDoBenhs().contains(MucDoBenhEnum.BANG_A)) {
-                    shouldCreateZone = true;
-                } else {
-                    // Xác định tổng số động vật của loại bị ảnh hưởng trong cluster
-                    int totalAnimals = cluster.getValue().stream()
-                            .flatMap(caBenh -> caBenh.getTrangTrai().getTrangTraiVatNuois().stream())
-                            .filter(ttvn -> benh.getLoaiVatNuoi().contains(ttvn.getLoaiVatNuoi()))
-                            .mapToInt(TrangTraiVatNuoi::getSoLuong)
-                            .sum();
-                    // Tính ra tổng số động vật bị nhiễm trong cluster
-                    int totalInfections = cluster.getValue().stream()
-                            .mapToInt(CaBenh::getSoCaNhiemBanDau)
-                            .sum();
-                    // TÍnh tỷ lệ nhiễm trên tổng số động vật
-                    double infectionRatio = (double) totalInfections / totalAnimals;
-                    // Nếu tỷ lệ nhiễm vượt quá ngưỡng cho phép, tạo vùng dịch
-                    if (infectionRatio >= 0.2) {
+            // 4. Trong mỗi đơn vị hành chính, nhóm theo bệnh
+            Map<Benh, List<CaBenh>> diseasesGroups = adminCases.stream()
+                    .collect(Collectors.groupingBy(CaBenh::getBenh));
+
+            // 5. Xử lý từng loại bệnh trong đơn vị hành chính
+            for (Map.Entry<Benh, List<CaBenh>> diseaseGroup : diseasesGroups.entrySet()) {
+                Benh benh = diseaseGroup.getKey();
+                List<CaBenh> caBenhsByDisease = diseaseGroup.getValue();
+
+                // 6. Chỉ tạo cluster cho các ca bệnh trong cùng đơn vị hành chính
+                Map<Geometry, List<CaBenh>> diseaseClusters = clusterAnalysisService
+                        .clusterDiseasesByLocation(caBenhsByDisease);
+
+                for (Map.Entry<Geometry, List<CaBenh>> cluster : diseaseClusters.entrySet()) {
+                    boolean shouldCreateZone = false;
+                    if (benh.getMucDoBenhs().contains(MucDoBenhEnum.BANG_A)) {
                         shouldCreateZone = true;
+                    } else {
+                        int totalAnimals = cluster.getValue().stream()
+                                .flatMap(caBenh -> caBenh.getTrangTrai().getTrangTraiVatNuois().stream())
+                                .filter(ttvn -> benh.getLoaiVatNuoi().contains(ttvn.getLoaiVatNuoi()))
+                                .mapToInt(TrangTraiVatNuoi::getSoLuong)
+                                .sum();
+
+                        int totalInfections = cluster.getValue().stream()
+                                .mapToInt(CaBenh::getSoCaNhiemBanDau)
+                                .sum();
+
+                        double infectionRatio = (double) totalInfections / totalAnimals;
+                        if (infectionRatio >= 0.2) {
+                            shouldCreateZone = true;
+                        }
                     }
-                }
-                if (shouldCreateZone) {
-                    VungDich vungDich = createZoneFromCluster(cluster.getKey(), cluster.getValue(), benh);
-                    vungDich = vungDichRepository.save(vungDich); // Ensure vungDich is saved before associating with
-                                                                  // BienPhapPhongChong
-                    newZones.add(vungDich);
+
+                    if (shouldCreateZone) {
+                        VungDich vungDich = createZoneFromCluster(cluster.getKey(), cluster.getValue(), benh, dvhc);
+                        vungDich = vungDichRepository.save(vungDich);
+                        newZones.add(vungDich);
+                    }
                 }
             }
         }
-
         return newZones;
     }
 
@@ -103,50 +106,12 @@ public class VungDichAutoImportService {
         return caBenhRepository.findAll(spec);
     }
 
-    // private Map<Geometry, List<CaBenh>> clusterDiseasesByLocation(List<CaBenh>
-    // caBenhs) {
-    // Map<Geometry, List<CaBenh>> clusters = new HashMap<>();
-    // List<CaBenh> unprocessed = new ArrayList<>(caBenhs);
-    // double clusterDistance = 1000.0; // 1km
-
-    // while (!unprocessed.isEmpty()) {
-    // CaBenh current = unprocessed.removeFirst();
-    // List<CaBenh> cluster = new ArrayList<>();
-    // cluster.add(current);
-
-    // Iterator<CaBenh> iterator = unprocessed.iterator();
-    // while (iterator.hasNext()) {
-    // CaBenh other = iterator.next();
-    // double distance = geometryService.calculateDistance(
-    // current.getTrangTrai().getPoint(),
-    // other.getTrangTrai().getPoint());
-
-    // if (distance <= clusterDistance) {
-    // cluster.add(other);
-    // iterator.remove();
-    // }
-    // }
-
-    // // Tính centroid cho cluster
-    // Geometry centroid = geometryService.calculateCentroid(
-    // cluster.stream()
-    // .map(cb -> cb.getTrangTrai().getPoint())
-    // .collect(Collectors.toList()));
-
-    // clusters.put(centroid, cluster);
-    // }
-
-    // return clusters;
-    // }
-
     @Transactional
-    protected VungDich createZoneFromCluster(Geometry center, List<CaBenh> caBenhs, Benh benh) {
-        // 1. Validate
-        if (caBenhs.isEmpty() || caBenhs.stream().allMatch(CaBenh::getDaKetThuc)) {
-            throw new IllegalArgumentException("Không thể tạo vùng dịch từ danh sách ca bệnh đã kết thúc");
+    protected VungDich createZoneFromCluster(Geometry center, List<CaBenh> caBenhs, Benh benh, DonViHanhChinh dvhc) {
+        if (caBenhs.isEmpty()) {
+            throw new IllegalArgumentException("Không thể tạo vùng dịch từ danh sách ca bệnh rỗng");
         }
 
-        // 2. Create VungDich
         VungDich vungDich = new VungDich();
         vungDich.setMaVung(generateZoneCode(benh.getId()));
         vungDich.setTenVung(
@@ -175,9 +140,12 @@ public class VungDichAutoImportService {
                                 .orElseThrow()));
         vungDich.setMoTa(moTa);
 
-        // 3. Save VungDich using VungDichService to associate VungDichTrangTrai
-        vungDich = vungDichService.save(vungDich, caBenhs);
+        // Chỉ liên kết với các ca bệnh trong cùng đơn vị hành chính
+        List<CaBenh> filteredCaBenhs = caBenhs.stream()
+                .filter(cb -> cb.getTrangTrai().getDonViHanhChinh().equals(dvhc))
+                .collect(Collectors.toList());
 
+        vungDich = vungDichService.save(vungDich, filteredCaBenhs);
         return vungDich;
     }
 
@@ -231,19 +199,4 @@ public class VungDichAutoImportService {
 
         return (float) (maxDistance * 1.2); // Thêm 20% buffer
     }
-
-    // // Todo: Chuyen doi cach tinh muc do vung dich
-    // private MucDoVungDichEnum calculateSeverity(List<CaBenh> caBenhs) {
-    // int totalCases = caBenhs.stream()
-    // .mapToInt(CaBenh::getSoCaNhiemBanDau)
-    // .sum();
-
-    // if (totalCases >= 100)
-    // return MucDoVungDichEnum.CAP_DO_4;
-    // if (totalCases >= 50)
-    // return MucDoVungDichEnum.CAP_DO_3;
-    // if (totalCases >= 10)
-    // return MucDoVungDichEnum.CAP_DO_2;
-    // return MucDoVungDichEnum.CAP_DO_1;
-    // }
 }

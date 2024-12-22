@@ -18,6 +18,8 @@ import java.util.stream.Collectors;
 import java.time.LocalDateTime;
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 
 @Service
 @RequiredArgsConstructor
@@ -73,6 +75,13 @@ public class CaBenhService {
 
         featureCollection.put("features", features);
         return featureCollection;
+    }
+
+    @Transactional(readOnly = true)
+    public Page<CaBenh> findAll(Pageable pageable) {
+
+        return caBenhRepository.findAll(pageable);
+
     }
 
     @Transactional(readOnly = true)
@@ -401,8 +410,8 @@ public class CaBenhService {
     }
 
     @Transactional(readOnly = true)
-    public List<CaBenh> findByTrangThai(TrangThaiEnum trangThaiEnum) {
-        return caBenhRepository.findByTrangThai(trangThaiEnum);
+    public Page<CaBenh> findByTrangThai(TrangThaiEnum trangThaiEnum, Pageable pageable) {
+        return caBenhRepository.findByTrangThai(trangThaiEnum, pageable);
     }
 
     @Transactional(readOnly = true)

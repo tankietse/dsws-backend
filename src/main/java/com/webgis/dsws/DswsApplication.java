@@ -59,7 +59,7 @@ public class DswsApplication {
             if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
                 // importBoundaryData();
                 // importFarmData();
-                // importVirusZones();
+//                 importVirusZones();
 
                 System.out.println(
                         "Tất cả các dữ liệu cho việc import đã được cung cấp. Bạn có thể import dữ liệu bằng cách bỏ comment ở các hàm importBoundaryData(), importFarmData(), importVirusZones() trong hàm dataImporter() trong file DswsApplication.java");

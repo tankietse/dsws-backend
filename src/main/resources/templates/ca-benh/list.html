@@ -1,92 +1,169 @@
 <!DOCTYPE html>
 <html lang="vi" xmlns:th="http://www.thymeleaf.org" layout:decorate="~{layout}">
-<head>
+  <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Quản lý Ca Bệnh</title>
-</head>
-<body>
-    <div layout:fragment="breadcrumb">
-        <span class="text-gray-500">/</span>
-        <a href="/benh" class="hover:text-blue-600">Quản lý bệnh</a>
-        <span class="text-gray-500">/</span>
-        <span class="text-gray-800">Quản lý ca bệnh</span>
-    </div>
-
-    <h1 layout:fragment="page-title">Quản lý Ca Bệnh</h1>
-    <p layout:fragment="page-subtitle">Theo dõi và quản lý các ca bệnh trong hệ thống</p>
-
-    <section layout:fragment="content">
-        <div class="container mx-auto mt-6">
-            <div class="flex justify-between items-center mb-6">
-                <div class="flex space-x-2">
-                    <button class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center space-x-2">
-                        <i class="fas fa-filter"></i>
-                        <span>Lọc</span>
-                    </button>
-                    <button class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded flex items-center space-x-2">
-                        <i class="fas fa-download"></i>
-                        <span>Xuất Excel</span>
-                    </button>
-                </div>
-                <a href="/ca-benh/create" 
-                   class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded flex items-center space-x-2">
-                    <i class="fas fa-plus"></i>
-                    <span>Thêm Ca Bệnh</span>
-                </a>
-            </div>
-
-            <div class="bg-white rounded-lg shadow overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                        <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ngày Phát Hiện</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Ca Nhiễm</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Số Ca Tử Vong</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trạng Thái</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Hành Động</th>
-                        </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                        <tr th:each="caBenh : ${danhSachCaBenh}" class="hover:bg-gray-50">
-                            <td class="px-6 py-4 whitespace-nowrap" th:text="${caBenh.id}"></td>
-                            <td class="px-6 py-4 whitespace-nowrap" th:text="${#temporals.format(caBenh.ngayPhatHien, 'dd/MM/yyyy')}"></td>
-                            <td class="px-6 py-4 whitespace-nowrap" th:text="${caBenh.soCaNhiemBanDau}"></td>
-                            <td class="px-6 py-4 whitespace-nowrap" th:text="${caBenh.soCaTuVongBanDau}"></td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <span th:class="${'px-2 inline-flex text-xs leading-5 font-semibold rounded-full ' + 
-                                    (caBenh.trangThai == 'PENDING' ? 'bg-yellow-100 text-yellow-800' : 
-                                    caBenh.trangThai == 'APPROVED' ? 'bg-green-100 text-green-800' : 
-                                    'bg-red-100 text-red-800')}"
-                                    th:text="${caBenh.trangThai}">
-                                </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
-                                <a th:href="@{/ca-benh/chi-tiet/{id}(id=${caBenh.id})}"
-                                   class="text-blue-600 hover:text-blue-900">
-                                    <i class="fas fa-eye"></i>
-                                </a>
-                                <a th:href="@{/ca-benh/hienThiFormThayDoi/{id}(id=${caBenh.id})}"
-                                   class="text-yellow-600 hover:text-yellow-900">
-                                    <i class="fas fa-edit"></i>
-                                </a>
-                                <a th:if="${caBenh.trangThai == 'PENDING'}" 
-                                   th:href="@{/ca-benh/quan-ly/duyet(caBenhId=${caBenh.id},approved=true)}"
-                                   class="text-green-600 hover:text-green-900">
-                                    <i class="fas fa-check"></i>
-                                </a>
-                                <a th:if="${caBenh.trangThai == 'PENDING'}"
-                                   th:href="@{/ca-benh/quan-ly/duyet(caBenhId=${caBenh.id},approved=false)}"
-                                   class="text-red-600 hover:text-red-900">
-                                    <i class="fas fa-times"></i>
-                                </a>
-                            </td>
-                        </tr>
-                    </tbody>
-                </table>
-            </div>
+    <link href="https://cdn.jsdelivr.net/npm/chart.js" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  </head>
+  <body>
+    <div layout:fragment="content" class="p-6 space-y-6 bg-gray-50">
+      <!-- Stats Overview -->
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div class="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
+          <h3 class="text-gray-500 text-sm font-medium">Tổng Ca Bệnh</h3>
+          <p class="text-2xl font-bold text-gray-800" id="totalCases">0</p>
+          <p class="text-xs text-gray-500">
+            So với tháng trước <span class="text-green-500">+5%</span>
+          </p>
         </div>
-    </section>
-</body>
+        <div
+          class="bg-white rounded-lg shadow p-4 border-l-4 border-yellow-500"
+        >
+          <h3 class="text-gray-500 text-sm font-medium">Ca Đang Điều Trị</h3>
+          <p class="text-2xl font-bold text-gray-800" id="activeCases">0</p>
+          <div class="text-xs text-gray-500">Cập nhật mới nhất</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 border-l-4 border-green-500">
+          <h3 class="text-gray-500 text-sm font-medium">Ca Khỏi Bệnh</h3>
+          <p class="text-2xl font-bold text-gray-800" id="recoveredCases">0</p>
+          <div class="text-xs text-gray-500">Trong tháng này</div>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4 border-l-4 border-red-500">
+          <h3 class="text-gray-500 text-sm font-medium">Ca Nghiêm Trọng</h3>
+          <p class="text-2xl font-bold text-gray-800" id="severeCases">0</p>
+          <div class="text-xs text-gray-500">Cần theo dõi</div>
+        </div>
+      </div>
+
+      <!-- Filters and Actions -->
+      <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex flex-wrap gap-4 items-center">
+          <div class="flex-1 min-w-[200px]">
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Tìm kiếm ca bệnh..."
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div class="flex-1 min-w-[200px]">
+            <select
+              id="loaiVatNuoiFilter"
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Tất cả loại vật nuôi</option>
+            </select>
+          </div>
+          <div class="flex-1 min-w-[200px]">
+            <select
+              id="trangThaiFilter"
+              class="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Tất cả trạng thái</option>
+              <option value="DANG_DIEU_TRI">Đang điều trị</option>
+              <option value="DA_KHOI">Đã khỏi</option>
+              <option value="NGHI_NGO">Nghi ngờ</option>
+            </select>
+          </div>
+          <button
+            id="btnAddCase"
+            class="bg-blue-500 text-white px-4 py-2 rounded-lg hover:bg-blue-600"
+          >
+            <i class="fas fa-plus mr-2"></i>Thêm ca bệnh
+          </button>
+        </div>
+      </div>
+
+      <!-- Charts Row -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div class="bg-white rounded-lg shadow p-4">
+          <h3 class="text-lg font-semibold mb-4">Phân bố theo loại bệnh</h3>
+          <canvas id="diseaseDistributionChart"></canvas>
+        </div>
+        <div class="bg-white rounded-lg shadow p-4">
+          <h3 class="text-lg font-semibold mb-4">Xu hướng ca bệnh</h3>
+          <canvas id="caseTrendChart"></canvas>
+        </div>
+      </div>
+
+      <!-- Cases Table -->
+      <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                  ID
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                  Bệnh
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                  Vật Nuôi
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                  Mức độ
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                  Trạng Thái
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                  Ngày Phát Hiện
+                </th>
+                <th
+                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                >
+                  Thao Tác
+                </th>
+              </tr>
+            </thead>
+            <tbody
+              id="caBenhTableBody"
+              class="bg-white divide-y divide-gray-200"
+            >
+              <!-- Data rows will be inserted here -->
+            </tbody>
+          </table>
+        </div>
+        <!-- Pagination -->
+        <div
+          class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6"
+        >
+          <div class="flex-1 flex justify-between sm:hidden">
+            <button id="prevPageMobile" class="btn-pagination">Trước</button>
+            <button id="nextPageMobile" class="btn-pagination">Sau</button>
+          </div>
+          <div
+            class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
+          >
+            <div>
+              <p class="text-sm text-gray-700">
+                Hiển thị <span id="fromRecord">0</span> đến
+                <span id="toRecord">0</span> trong số
+                <span id="totalRecords">0</span> kết quả
+              </p>
+            </div>
+            <div id="paginationDesktop" class="flex gap-2">
+              <!-- Pagination buttons will be inserted here -->
+            </div>
+          </div>
+        </div>
+      </div>
+      <script src="/js/ca-benh/ca-benh-list.js"></script>
+    </div>
+  </body>
 </html>

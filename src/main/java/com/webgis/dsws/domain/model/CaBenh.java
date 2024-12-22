@@ -21,9 +21,9 @@ public class CaBenh {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @JsonBackReference("trangTrai-caBenh")
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trang_trai_id")
-    @JsonBackReference
     private TrangTrai trangTrai;
 
     @ManyToOne

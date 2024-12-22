@@ -65,7 +65,7 @@ class AuthService {
   // Helper function to delete JWT_TOKEN cookie
   static deleteTokenCookie() {
     document.cookie =
-      "JWT_TOKEN=; path=/; expires=Thu, 01 Jan 1970 00:00:00 UTC;";
+      "JWT_TOKEN" + "=; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;";
   }
 
   static async validateToken() {

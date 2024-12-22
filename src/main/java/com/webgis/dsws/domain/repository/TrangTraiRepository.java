@@ -153,20 +153,13 @@ public interface TrangTraiRepository extends JpaRepository<TrangTrai, Long>, Jpa
                         "WHERE dvhc.id IN :donViHanhChinhIds")
         List<TrangTrai> findByDonViHanhChinhIds(@Param("donViHanhChinhIds") List<Integer> donViHanhChinhIds);
 
-        // @Query(value = "SELECT tt FROM TrangTrai tt " +
-        // "LEFT JOIN FETCH tt.trangTraiVatNuois ttvn " +
-        // "LEFT JOIN FETCH tt.vungDichs vdt " +
-        // "LEFT JOIN FETCH tt.caBenhs cb " +
-        // "WHERE tt.id = :id")
-        // Optional<TrangTrai> findByIdWithFullDetails(@Param("id") Long id);
-
         @Query("SELECT DISTINCT tt FROM TrangTrai tt " +
                         "LEFT JOIN FETCH tt.trangTraiVatNuois ttvn " +
                         "LEFT JOIN FETCH ttvn.loaiVatNuoi " +
                         "LEFT JOIN FETCH tt.caBenhs cb " +
                         "LEFT JOIN FETCH cb.benh " +
                         "LEFT JOIN FETCH tt.vungDichs vdt " +
-                        "LEFT JOIN FETCH vdt.vungDich " +
+                        "LEFT JOIN FETCH vdt.vungDich vd " +
                         "WHERE tt.id = :id")
         Optional<TrangTrai> findByIdWithFullDetails(@Param("id") Long id);
 }

@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonIdentityReference;
+import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import java.time.LocalDateTime;
 import java.util.Set;
@@ -65,25 +66,25 @@ public class TrangTrai {
     @OneToMany(mappedBy = "trangTrai")
     private Set<CaBenh> danhSachCaBenh;
 
-    @JsonManagedReference
+    @JsonManagedReference("trangTrai-vungDich")
     @OneToMany(mappedBy = "trangTrai")
     private Set<VungDichTrangTrai> danhSachVungDich;
 
     @OneToMany(mappedBy = "trangTrai")
     private Set<CanhBaoTrangTrai> danhSachCanhBao;
 
+    @JsonManagedReference("trangTrai-vungDich")
     @OneToMany(mappedBy = "trangTrai")
-    @JsonManagedReference
     private Set<VungDichTrangTrai> vungDichs;
 
     @OneToMany(mappedBy = "trangTrai")
     private Set<CanhBaoTrangTrai> canhBaos;
 
+    @JsonManagedReference("trangTrai-caBenh")
     @OneToMany(mappedBy = "trangTrai", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
     private Set<CaBenh> caBenhs = new HashSet<>();
 
+    @JsonManagedReference("trangTrai-vatNuoi")
     @OneToMany(mappedBy = "trangTrai", cascade = CascadeType.ALL, orphanRemoval = true)
-    @JsonManagedReference
     private Set<TrangTraiVatNuoi> trangTraiVatNuois = new HashSet<>();
 }
