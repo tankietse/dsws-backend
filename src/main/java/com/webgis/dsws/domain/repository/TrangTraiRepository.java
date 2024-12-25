@@ -16,6 +16,9 @@ import org.locationtech.jts.geom.Geometry;
 import org.locationtech.jts.geom.Point;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 @Repository
 public interface TrangTraiRepository extends JpaRepository<TrangTrai, Long>, JpaSpecificationExecutor<TrangTrai> {
         @EntityGraph(attributePaths = { "donViHanhChinh", "trangTraiVatNuois", "trangTraiVatNuois.loaiVatNuoi" })
@@ -162,4 +165,15 @@ public interface TrangTraiRepository extends JpaRepository<TrangTrai, Long>, Jpa
                         "LEFT JOIN FETCH vdt.vungDich vd " +
                         "WHERE tt.id = :id")
         Optional<TrangTrai> findByIdWithFullDetails(@Param("id") Long id);
+
+        @Query("SELECT DISTINCT tt FROM TrangTrai tt " +
+                        "LEFT JOIN FETCH tt.trangTraiVatNuois ttvn " +
+                        "LEFT JOIN FETCH ttvn.loaiVatNuoi " +
+                        "LEFT JOIN FETCH tt.donViHanhChinh " +
+                        "WHERE LOWER(tt.tenChu) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+                        "OR LOWER(tt.maTrangTrai) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+                        "OR LOWER(tt.tenTrangTrai) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
+                        "OR LOWER(tt.diaChiDayDu) LIKE LOWER(CONCAT('%', :keyword, '%'))")
+        @EntityGraph(attributePaths = { "donViHanhChinh", "trangTraiVatNuois", "trangTraiVatNuois.loaiVatNuoi" })
+        Page<TrangTrai> searchByKeywordWithDetails(@Param("keyword") String keyword, Pageable pageable);
 }

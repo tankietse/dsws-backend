@@ -17,8 +17,8 @@ public class CaBenhViewController {
         return "ca-benh/create";
     }
 
-    @GetMapping("/edit/{id}")
-    public String showEditForm() {
+    @GetMapping("/edit")
+    public String showEditForm(@RequestParam Long id) {
         return "ca-benh/edit";
     }
 

@@ -43,16 +43,25 @@ public interface CaBenhRepository extends JpaRepository<CaBenh, Long>, JpaSpecif
                         "WHERE dvh.ranhGioi IS NOT NULL")
         List<CaBenh> findAllWithRegions();
 
-        List<CaBenh> findByTrangThai(TrangThaiEnum trangThai);
+        List<CaBenh> findAllByTrangThai(TrangThaiEnum trangThai);
 
         Page<CaBenh> findByTrangThai(TrangThaiEnum trangThai, Pageable pageable);
 
         @Query("SELECT DISTINCT cb FROM CaBenh cb " +
                         "LEFT JOIN FETCH cb.benh b " +
+                        "LEFT JOIN FETCH b.mucDoBenhs " +
+                        "LEFT JOIN FETCH b.loaiVatNuoi lvn " +
+                        "LEFT JOIN FETCH b.benhVatNuois bvn " +
+                        "LEFT JOIN FETCH bvn.loaiVatNuoi " +
                         "LEFT JOIN FETCH cb.trangTrai tt " +
-                        "LEFT JOIN FETCH cb.nguoiTao " +
-                        "LEFT JOIN FETCH cb.nguoiDuyet " +
+                        "LEFT JOIN FETCH tt.trangTraiVatNuois ttvn " +
+                        "LEFT JOIN FETCH ttvn.loaiVatNuoi " +
                         "LEFT JOIN FETCH tt.donViHanhChinh dvh " +
+                        "LEFT JOIN FETCH dvh.donViCha " +
+                        "LEFT JOIN FETCH cb.nguoiTao nt " +
+                        "LEFT JOIN FETCH cb.nguoiDuyet nd " +
+                        "LEFT JOIN FETCH cb.dienBienCaBenhs dcb " +
+                        "LEFT JOIN FETCH dcb.nguoiCapNhat " +
                         "WHERE cb.id = :id")
         Optional<CaBenh> findByIdWithDetails(@Param("id") Long id);
 
@@ -88,8 +97,18 @@ public interface CaBenhRepository extends JpaRepository<CaBenh, Long>, JpaSpecif
                         "LEFT JOIN FETCH cb.benh b " +
                         "LEFT JOIN FETCH cb.trangTrai tt " +
                         "LEFT JOIN FETCH tt.donViHanhChinh dvh " +
+                        "LEFT JOIN FETCH tt.trangTraiVatNuois ttv " +
+                        "LEFT JOIN FETCH ttv.loaiVatNuoi " +
                         "WHERE cb.trangThai = :trangThai", countQuery = "SELECT COUNT(cb) FROM CaBenh cb WHERE cb.trangThai = :trangThai")
         Page<CaBenh> findByTrangThaiWithDetails(@Param("trangThai") TrangThaiEnum trangThai, Pageable pageable);
+
+        @Query("SELECT DISTINCT cb FROM CaBenh cb " +
+                        "LEFT JOIN FETCH cb.benh b " +
+                        "LEFT JOIN FETCH cb.trangTrai tt " +
+                        "LEFT JOIN FETCH tt.donViHanhChinh dvh " +
+                        "LEFT JOIN FETCH tt.trangTraiVatNuois ttv " +
+                        "LEFT JOIN FETCH ttv.loaiVatNuoi")
+        Page<CaBenh> findAllWithFullDetails(Pageable pageable);
 
         @Query("SELECT COUNT(cb) > 0 FROM CaBenh cb " +
                         "WHERE cb.trangTrai.id = :trangTraiId " +
@@ -121,4 +140,10 @@ public interface CaBenhRepository extends JpaRepository<CaBenh, Long>, JpaSpecif
                         "LEFT JOIN b.mucDoBenhs md " +
                         "WHERE md IN :mucDoBenhs")
         List<CaBenh> findByMucDoBenhs(@Param("mucDoBenhs") Set<MucDoBenhEnum> mucDoBenhs);
+
+        @Query("SELECT DISTINCT cb FROM CaBenh cb " +
+                        "JOIN cb.trangTrai tt " +
+                        "JOIN VungDichTrangTrai vdt ON vdt.trangTrai = tt " +
+                        "WHERE vdt.vungDich.id = :vungDichId")
+        List<CaBenh> findByVungDichId(@Param("vungDichId") Long vungDichId);
 }

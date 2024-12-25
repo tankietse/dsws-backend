@@ -3,6 +3,8 @@ package com.webgis.dsws.controller.api;
 import com.webgis.dsws.domain.model.TrangTrai;
 import com.webgis.dsws.domain.model.VungDichTrangTrai;
 import com.webgis.dsws.domain.service.TrangTraiService;
+import com.webgis.dsws.mapper.TrangTraiMapper;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
@@ -23,8 +25,11 @@ import org.springframework.security.access.prepost.PreAuthorize;
 
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.Map;
 import java.util.Date;
+import java.util.HashMap;
+
 import org.springframework.format.annotation.DateTimeFormat;
 
 @RestController
@@ -34,9 +39,11 @@ import org.springframework.format.annotation.DateTimeFormat;
 public class TrangTraiApi {
 
     private final TrangTraiService trangTraiService;
+    private final TrangTraiMapper trangTraiMapper;
 
-    public TrangTraiApi(TrangTraiService trangTraiService) {
+    public TrangTraiApi(TrangTraiService trangTraiService, TrangTraiMapper trangTraiMapper) {
         this.trangTraiService = trangTraiService;
+        this.trangTraiMapper = trangTraiMapper;
     }
 
     /**
@@ -288,5 +295,44 @@ public class TrangTraiApi {
             @PathVariable Long id,
             @RequestParam(required = false) Double radius) {
         return ResponseEntity.ok(trangTraiService.getCanhBaoDichBenh(id, radius));
+    }
+
+    @GetMapping("/search")
+    @Operation(summary = "Tìm kiếm trang trại")
+    public ResponseEntity<List<Map<String, Object>>> searchTrangTrai(
+            @RequestParam String q,
+            @RequestParam(defaultValue = "10") int limit) {
+
+        List<TrangTrai> results = trangTraiService.searchByKeyword(q, limit);
+
+        List<Map<String, Object>> response = results.stream()
+                .map(farm -> {
+                    Map<String, Object> dto = new HashMap<>();
+                    dto.put("id", farm.getId());
+                    dto.put("tenTrangTrai", farm.getTenTrangTrai());
+                    dto.put("tenChu", farm.getTenChu());
+                    dto.put("maTrangTrai", farm.getMaTrangTrai());
+                    dto.put("diaChiDayDu", farm.getDiaChiDayDu());
+                    dto.put("tongDan", farm.getTongDan());
+
+                    // Add vat nuoi info
+                    List<Map<String, Object>> danhSachVatNuoi = farm.getTrangTraiVatNuois().stream()
+                            .map(ttvn -> {
+                                Map<String, Object> vn = new HashMap<>();
+                                vn.put("loaiVatNuoi", Map.of(
+                                    "id", ttvn.getLoaiVatNuoi().getId(),
+                                    "tenLoai", ttvn.getLoaiVatNuoi().getTenLoai()
+                                ));
+                                vn.put("soLuong", ttvn.getSoLuong());
+                                return vn;
+                            })
+                            .collect(Collectors.toList());
+                    dto.put("danhSachVatNuoi", danhSachVatNuoi);
+
+                    return dto;
+                })
+                .collect(Collectors.toList());
+
+        return ResponseEntity.ok(response);
     }
 }

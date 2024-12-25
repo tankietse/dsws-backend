@@ -51,44 +51,76 @@ async function fetchBenhList(page = 0, filters = {}) {
   }
 }
 
+// Add these helper functions
+function formatMucDoBenh(mucDoBenhs) {
+  if (!mucDoBenhs || mucDoBenhs.length === 0) return '';
+  return mucDoBenhs.map(mucDo => {
+    const formatted = mucDo
+      .split('_')
+      .map(word => word.charAt(0) + word.slice(1).toLowerCase())
+      .join(' ');
+    return `<span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">${formatted}</span>`;
+  }).join('');
+}
+
+async function getLoaiVatNuoiNames(loaiVatNuoiIds) {
+  if (!loaiVatNuoiIds || loaiVatNuoiIds.length === 0) return '';
+  try {
+    const promises = loaiVatNuoiIds.map(async id => {
+      const response = await fetch(`/api/v1/loai-vat-nuoi/${id}`);
+      if (response.ok) {
+        const data = await response.json();
+        return `<span class="inline-block bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full mr-1 mb-1">${data.tenLoai}</span>`;
+      }
+      return '';
+    });
+    const names = await Promise.all(promises);
+    return names.join('');
+  } catch (error) {
+    console.error('Error fetching animal types:', error);
+    return '';
+  }
+}
+
 // Render table data
 function renderBenhTable(benhs) {
   const tbody = document.querySelector("#benh-table tbody");
-  tbody.innerHTML = benhs
-    .map(
-      (benh) => `
-        <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location.href='/benh/edit/${
-          benh.id
-        }'">
-            <td class="px-4 py-2 border">${benh.id}</td>
-            <td class="px-4 py-2 border">${benh.tenBenh}</td>
-            <td class="px-4 py-2 border">${benh.moTa || ""}</td>
-            <td class="px-4 py-2 border">${benh.tacNhanGayBenh || ""}</td>
-            <td class="px-4 py-2 border">${benh.trieuChung || ""}</td>
-            <td class="px-4 py-2 border">${benh.thoiGianUBenh || ""}</td>
-            <td class="px-4 py-2 border">${benh.phuongPhapChanDoan || ""}</td>
-            <td class="px-4 py-2 border">${benh.bienPhapPhongNgua || ""}</td>
-            <td class="px-4 py-2 border">
-                <div class="flex gap-2" onclick="event.stopPropagation()">
-                    <a href="/benh/edit/${benh.id}" 
-                       class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
-                        <i class="fas fa-edit"></i> Sửa
-                    </a>
-                    <button onclick="deleteBenh(${benh.id})" 
-                            class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
-                        <i class="fas fa-trash"></i> Xóa
-                    </button>
-                </div>
-            </td>
-        </tr>
-    `
-    )
-    .join("");
+  
+  Promise.all(benhs.map(async benh => {
+    const loaiVatNuoiNames = await getLoaiVatNuoiNames(benh.loaiVatNuoiIds);
+    
+    return `
+      <tr class="hover:bg-gray-50 cursor-pointer" onclick="window.location.href='/benh/edit/${benh.id}'">
+        <td class="px-4 py-2 border">${benh.id}</td>
+        <td class="px-4 py-2 border font-medium">${benh.tenBenh}</td>
+        <td class="px-4 py-2 border">${formatMucDoBenh(benh.mucDoBenhs)}</td>
+        <td class="px-4 py-2 border">${loaiVatNuoiNames}</td>
+        <td class="px-4 py-2 border">${benh.moTa || ''}</td>
+        <td class="px-4 py-2 border">${benh.tacNhanGayBenh || ''}</td>
+        <td class="px-4 py-2 border">${benh.trieuChung || ''}</td>
+        <td class="px-4 py-2 border">${benh.thoiGianUBenh || ''}</td>
+        <td class="px-4 py-2 border">${benh.phuongPhapChanDoan || ''}</td>
+        <td class="px-4 py-2 border">${benh.bienPhapPhongNgua || ''}</td>
+        <td class="px-4 py-2 border">
+          <div class="flex gap-2" onclick="event.stopPropagation()">
+            <a href="/benh/edit/${benh.id}" 
+               class="bg-yellow-500 hover:bg-yellow-700 text-white font-bold py-1 px-2 rounded">
+              <i class="fas fa-edit"></i> Sửa
+            </a>
+            <button onclick="deleteBenh(${benh.id})" 
+                    class="bg-red-500 hover:bg-red-700 text-white font-bold py-1 px-2 rounded">
+              <i class="fas fa-trash"></i> Xóa
+            </button>
+          </div>
+        </td>
+      </tr>
+    `;
+  })).then(rows => {
+    tbody.innerHTML = rows.join('');
+  });
 
   // Update counts
   document.getElementById("currentCount").textContent = benhs.length;
-
-  // Update total count if available
   if (benhs.totalElements) {
     document.getElementById("totalCount").textContent = benhs.totalElements;
   }

@@ -1,5 +1,6 @@
 package com.webgis.dsws.domain.service;
 
+import org.locationtech.jts.geom.Geometry;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.locationtech.jts.geom.Coordinate;
@@ -8,6 +9,9 @@ import org.locationtech.jts.geom.Point;
 import com.webgis.dsws.domain.model.VungDich;
 import com.webgis.dsws.domain.model.VungDichTrangTrai;
 import com.webgis.dsws.domain.model.enums.MucDoVungDichEnum;
+import com.webgis.dsws.domain.model.enums.TrangThaiVungDichEnum;
+import com.webgis.dsws.domain.model.enums.MucDoBenhEnum;
+import com.webgis.dsws.domain.repository.CaBenhRepository;
 import com.webgis.dsws.domain.repository.TrangTraiRepository;
 import com.webgis.dsws.domain.repository.VungDichRepository;
 import com.webgis.dsws.domain.repository.VungDichTrangTraiRepository;
@@ -15,7 +19,6 @@ import com.webgis.dsws.domain.dto.VungDichMapDTO;
 import com.webgis.dsws.domain.model.BienPhapPhongChong;
 import com.webgis.dsws.domain.model.CaBenh;
 import com.webgis.dsws.domain.model.DonViHanhChinh;
-import com.webgis.dsws.domain.model.TrangTrai;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,15 +40,16 @@ public class VungDichService {
     private final GeometryFactory geometryFactory;
     private final GeometryService geometryService;
     private final VungDichTrangTraiRepository vungDichTrangTraiRepository;
+    private final CaBenhRepository caBenhRepository;
 
     public VungDichService(VungDichRepository vungDichRepository, TrangTraiRepository trangTraiRepository,
-            VungDichTrangTraiRepository vungDichTrangTraiRepository) {
+            VungDichTrangTraiRepository vungDichTrangTraiRepository, CaBenhRepository caBenhRepository) {
         this.vungDichRepository = vungDichRepository;
         this.trangTraiRepository = trangTraiRepository;
         this.geometryService = new GeometryService();
         this.geometryFactory = new GeometryFactory();
         this.vungDichTrangTraiRepository = vungDichTrangTraiRepository;
-
+        this.caBenhRepository = caBenhRepository;
     }
 
     private static final Map<MucDoVungDichEnum, String> SYMBOL_COLORS = Map.of(
@@ -611,5 +615,86 @@ public class VungDichService {
                 })
                 .collect(Collectors.toList());
         return vungDichDetails;
+    }
+
+    @Transactional
+    public void addCaBenhToExistingZone(CaBenh caBenh) {
+        Point location = caBenh.getTrangTrai().getPoint();
+        // Tìm vùng dịch gần nhất còn hoạt động với cùng loại bệnh
+        List<VungDich> nearbyZones = vungDichRepository.findActiveZonesForDisease(
+                caBenh.getBenh().getId(),
+                location.getX(), // longitude
+                location.getY(), // latitude
+                5000.0 // Bán kính tìm kiếm 5km
+        );
+
+        if (!nearbyZones.isEmpty()) {
+            // Thêm ca bệnh vào vùng dịch gần nhất
+            VungDich closestZone = nearbyZones.get(0);
+            associateAffectedFarms(closestZone, Arrays.asList(caBenh));
+
+            // Cập nhật metrics của vùng dịch
+            recalculateZoneMetrics(closestZone);
+        }
+    }
+
+    @Transactional
+    public void recalculateZoneMetrics(VungDich vungDich) {
+        // Lấy tất cả ca bệnh liên quan
+        List<CaBenh> relatedCases = getCaBenhsInZone(vungDich);
+
+        // Tính toán lại mức độ nghiêm trọng
+        int maxSeverity = relatedCases.stream()
+                .flatMap(c -> c.getBenh().getMucDoBenhs().stream())
+                .mapToInt(MucDoBenhEnum::getSeverityLevel)
+                .max()
+                .orElse(1);
+
+        // Cập nhật thông tin vùng dịch
+        vungDich.setMucDoNghiemTrong(maxSeverity);
+        vungDich.setMucDo(MucDoVungDichEnum.fromSeverityLevel(maxSeverity));
+
+        // Tính toán lại bán kính nếu cần
+        double maxDistance = calculateMaxDistance(vungDich.getGeom(), relatedCases);
+        vungDich.setBanKinh((float) Math.max(vungDich.getBanKinh(), maxDistance * 1.2));
+
+        vungDichRepository.save(vungDich);
+    }
+
+    @Transactional
+    public void removeCaBenhFromZone(CaBenh caBenh, VungDich vungDich) {
+        // Xóa liên kết giữa ca bệnh và vùng dịch
+        vungDichTrangTraiRepository.deleteByVungDichAndTrangTrai(
+                vungDich,
+                caBenh.getTrangTrai());
+
+        // Kiểm tra nếu không còn ca bệnh nào, đóng vùng dịch
+        if (getCaBenhsInZone(vungDich).isEmpty()) {
+            vungDich.setNgayKetThuc(new Date());
+            vungDich.setTrangThai(TrangThaiVungDichEnum.DA_KET_THUC);
+        } else {
+            // Nếu còn ca bệnh, cập nhật lại metrics
+            recalculateZoneMetrics(vungDich);
+        }
+
+        vungDichRepository.save(vungDich);
+    }
+
+    public Set<VungDich> findZonesForCase(CaBenh caBenh) {
+        return vungDichRepository.findByTrangTraiAndBenh(
+                caBenh.getTrangTrai(),
+                caBenh.getBenh());
+    }
+
+    private List<CaBenh> getCaBenhsInZone(VungDich vungDich) {
+        return caBenhRepository.findByVungDichId(vungDich.getId());
+    }
+
+    private double calculateMaxDistance(Geometry center, List<CaBenh> cases) {
+        return cases.stream()
+                .map(c -> c.getTrangTrai().getPoint())
+                .mapToDouble(p -> geometryService.calculateDistance(center, p))
+                .max()
+                .orElse(1000.0); // Default 1km
     }
 }

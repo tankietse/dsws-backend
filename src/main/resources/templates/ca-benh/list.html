@@ -8,7 +8,18 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body>
-    <div layout:fragment="content" class="p-6 space-y-6 bg-gray-50">
+    <div layout:fragment="breadcrumb">
+      <span class="text-gray-500">/</span>
+      <a href="/benh" class="hover:text-blue-600">Quản lý ca bệnh</a>
+      <span class="text-gray-500">/</span>
+      <span class="text-gray-800">Thống kê và bảng biểu</span>
+    </div>
+
+    <h1 layout:fragment="page-title">Danh sách Ca bệnh</h1>
+    <p layout:fragment="page-subtitle">
+      Quản lý thông tin và xét duyệt ca bệnh
+    </p>
+    <section layout:fragment="content" class="p-6 space-y-6 bg-gray-50">
       <!-- Stats Overview -->
       <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
         <div class="bg-white rounded-lg shadow p-4 border-l-4 border-blue-500">
@@ -34,6 +45,36 @@
           <h3 class="text-gray-500 text-sm font-medium">Ca Nghiêm Trọng</h3>
           <p class="text-2xl font-bold text-gray-800" id="severeCases">0</p>
           <div class="text-xs text-gray-500">Cần theo dõi</div>
+        </div>
+      </div>
+
+      <!-- Additional Stats Cards -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div class="bg-white rounded-lg shadow p-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">
+            Phân bố trạng thái
+          </h3>
+          <div id="statusDistribution" class="space-y-2">
+            <!-- Status distribution will be inserted here -->
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">
+            So sánh tháng
+          </h3>
+          <div id="monthlyComparison" class="space-y-2">
+            <!-- Monthly comparison will be inserted here -->
+          </div>
+        </div>
+
+        <div class="bg-white rounded-lg shadow p-4">
+          <h3 class="text-lg font-semibold text-gray-800 mb-2">
+            Top 5 trang trại
+          </h3>
+          <div id="topFarms" class="space-y-2">
+            <!-- Top farms will be inserted here -->
+          </div>
         </div>
       </div>
 
@@ -79,55 +120,92 @@
       <!-- Charts Row -->
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div class="bg-white rounded-lg shadow p-4">
-          <h3 class="text-lg font-semibold mb-4">Phân bố theo loại bệnh</h3>
-          <canvas id="diseaseDistributionChart"></canvas>
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Phân bố theo loại bệnh</h3>
+            <button
+              class="text-gray-500 hover:text-gray-700 toggle-chart"
+              data-target="diseaseDistributionChart"
+            >
+              <i class="fas fa-chevron-up"></i>
+            </button>
+          </div>
+          <div
+            class="chart-container"
+            style="position: relative; height: 300px"
+          >
+            <canvas id="diseaseDistributionChart"></canvas>
+          </div>
         </div>
         <div class="bg-white rounded-lg shadow p-4">
-          <h3 class="text-lg font-semibold mb-4">Xu hướng ca bệnh</h3>
-          <canvas id="caseTrendChart"></canvas>
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-lg font-semibold">Xu hướng ca bệnh</h3>
+            <button
+              class="text-gray-500 hover:text-gray-700 toggle-chart"
+              data-target="caseTrendChart"
+            >
+              <i class="fas fa-chevron-up"></i>
+            </button>
+          </div>
+          <div
+            class="chart-container"
+            style="position: relative; height: 300px"
+          >
+            <canvas id="caseTrendChart"></canvas>
+          </div>
         </div>
       </div>
 
       <!-- Cases Table -->
-      <div class="bg-white rounded-lg shadow overflow-hidden">
+      <div class="bg-white rounded-lg shadow-lg overflow-hidden">
+        <!-- Table Toolbar -->
+        <div
+          class="p-4 border-b border-gray-200 flex items-center justify-between"
+        >
+          <h3 class="text-lg font-semibold text-gray-800">Danh sách ca bệnh</h3>
+          <div class="flex items-center space-x-2">
+            <button id="exportBtn" class="btn-secondary">
+              <i class="fas fa-download mr-2"></i>Xuất Excel
+            </button>
+            <button id="btnAddCase" class="btn-primary">
+              <i class="fas fa-plus mr-2"></i>Thêm ca bệnh
+            </button>
+          </div>
+        </div>
+
+        <!-- Table Content -->
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
               <tr>
                 <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
                 >
-                  ID
+                  Thông tin ca bệnh
                 </th>
                 <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/4"
                 >
-                  Bệnh
+                  Thông tin trại & vật nuôi
                 </th>
                 <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                 >
-                  Vật Nuôi
+                  Thống kê
                 </th>
                 <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                  scope="col"
+                  class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                 >
-                  Mức độ
+                  Trạng thái & Thời gian
                 </th>
                 <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
+                  scope="col"
+                  class="px-4 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider w-1/6"
                 >
-                  Trạng Thái
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-                >
-                  Ngày Phát Hiện
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase"
-                >
-                  Thao Tác
+                  Thao tác
                 </th>
               </tr>
             </thead>
@@ -139,31 +217,61 @@
             </tbody>
           </table>
         </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden p-8 text-center">
+          <div class="mx-auto w-24 h-24 text-gray-400">
+            <i class="fas fa-clipboard-list fa-3x"></i>
+          </div>
+          <h3 class="mt-2 text-sm font-medium text-gray-900">
+            Không có ca bệnh
+          </h3>
+          <p class="mt-1 text-sm text-gray-500">
+            Bắt đầu bằng cách thêm ca bệnh mới.
+          </p>
+          <div class="mt-6">
+            <button id="btnAddCaseEmpty" class="btn-primary">
+              <i class="fas fa-plus mr-2"></i>Thêm ca bệnh
+            </button>
+          </div>
+        </div>
+
         <!-- Pagination -->
         <div
           class="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6"
         >
-          <div class="flex-1 flex justify-between sm:hidden">
-            <button id="prevPageMobile" class="btn-pagination">Trước</button>
-            <button id="nextPageMobile" class="btn-pagination">Sau</button>
+          <div class="flex items-center gap-2">
+            <select
+              id="pageSizeSelect"
+              class="form-select rounded-md border-gray-300 shadow-sm text-sm"
+            >
+              <option value="10">10 / trang</option>
+              <option value="20">20 / trang</option>
+              <option value="50">50 / trang</option>
+            </select>
+            <span class="text-sm text-gray-700">
+              Hiển thị <span id="fromRecord" class="font-medium">0</span> đến
+              <span id="toRecord" class="font-medium">0</span> trong số
+              <span id="totalRecords" class="font-medium">0</span> kết quả
+            </span>
           </div>
-          <div
-            class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between"
-          >
-            <div>
-              <p class="text-sm text-gray-700">
-                Hiển thị <span id="fromRecord">0</span> đến
-                <span id="toRecord">0</span> trong số
-                <span id="totalRecords">0</span> kết quả
-              </p>
-            </div>
-            <div id="paginationDesktop" class="flex gap-2">
-              <!-- Pagination buttons will be inserted here -->
-            </div>
-          </div>
+          <div id="paginationControls" class="flex gap-2"></div>
         </div>
       </div>
+
+      <!-- Add common styles -->
+      <style>
+        .btn-primary {
+          @apply bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors;
+        }
+        .btn-secondary {
+          @apply bg-white text-gray-700 px-4 py-2 rounded-lg border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition-colors;
+        }
+        .status-badge {
+          @apply px-2 py-1 text-xs font-medium rounded-full;
+        }
+      </style>
       <script src="/js/ca-benh/ca-benh-list.js"></script>
-    </div>
+    </section>
   </body>
 </html>

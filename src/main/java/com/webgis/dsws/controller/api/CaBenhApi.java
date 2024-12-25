@@ -1,5 +1,6 @@
 package com.webgis.dsws.controller.api;
 
+import com.webgis.dsws.domain.dto.CaBenhStatisticsDTO;
 import com.webgis.dsws.domain.model.CaBenh;
 import com.webgis.dsws.domain.service.CaBenhService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -7,11 +8,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
@@ -70,13 +78,22 @@ public class CaBenhApi {
         return ResponseEntity.ok(caBenhService.getCaBenhGroupedByDiseaseGeoJSON());
     }
 
+    // @GetMapping("/thong-ke")
+    // @Operation(summary = "Lấy thống kê ca bệnh theo khu vực và thời gian")
+    // public ResponseEntity<Map<String, Object>> getThongKeCaBenh(
+    // @RequestParam(required = false) String maTinhThanh,
+    // @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date
+    // fromDate,
+    // @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date
+    // toDate) {
+    // return ResponseEntity.ok(caBenhService.getThongKeCaBenh(maTinhThanh,
+    // fromDate, toDate, null, true));
+    // }
+
     @GetMapping("/thong-ke")
-    @Operation(summary = "Lấy thống kê ca bệnh theo khu vực và thời gian")
-    public ResponseEntity<Map<String, Object>> getThongKeCaBenh(
-            @RequestParam(required = false) String maTinhThanh,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date fromDate,
-            @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") Date toDate) {
-        return ResponseEntity.ok(caBenhService.getThongKeCaBenh(maTinhThanh, fromDate, toDate, null, true));
+    @Operation(summary = "Lấy thống kê tổng quan về ca bệnh")
+    public ResponseEntity<CaBenhStatisticsDTO> getThongKe() {
+        return ResponseEntity.ok(caBenhService.getThongKe());
     }
 
     @PostMapping
@@ -142,11 +159,106 @@ public class CaBenhApi {
 
     @GetMapping("/{id}")
     @Operation(summary = "Lấy thông tin chi tiết của một ca bệnh")
-    public ResponseEntity<CaBenh> getCaBenhById(@PathVariable Long id) {
+    public ResponseEntity<?> getCaBenhById(@PathVariable Long id) {
         try {
-            return ResponseEntity.ok(caBenhService.findById(id));
+            CaBenh caBenh = caBenhService.findById(id);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("id", caBenh.getId());
+
+            // Handle Benh data safely
+            if (caBenh.getBenh() != null) {
+                Map<String, Object> benhData = new HashMap<>();
+                benhData.put("id", caBenh.getBenh().getId());
+                benhData.put("tenBenh", caBenh.getBenh().getTenBenh());
+                benhData.put("mucDoBenhs",
+                        caBenh.getBenh().getMucDoBenhs() != null ? caBenh.getBenh().getMucDoBenhs() : new HashSet<>());
+                benhData.put("loaiVatNuoi",
+                        caBenh.getBenh().getLoaiVatNuoi() != null ? caBenh.getBenh().getLoaiVatNuoi()
+                                : new HashSet<>());
+                benhData.put("canCongBoDich", caBenh.getBenh().getCanCongBoDich());
+                benhData.put("canPhongBenhBatBuoc", caBenh.getBenh().getCanPhongBenhBatBuoc());
+                response.put("benh", benhData);
+            }
+
+            // Handle TrangTrai data safely
+            if (caBenh.getTrangTrai() != null) {
+                Map<String, Object> trangTraiData = new HashMap<>();
+                trangTraiData.put("id", caBenh.getTrangTrai().getId());
+
+                trangTraiData.put("tenChu", caBenh.getTrangTrai().getTenChu());
+                trangTraiData.put("tenTrangTrai", caBenh.getTrangTrai().getTenTrangTrai());
+                // Thong tin vat nuoi
+                // tong dan, dien tich va phuong thuc chan nuoi
+                trangTraiData.put("tongDan", caBenh.getTrangTrai().getTongDan());
+                trangTraiData.put("dienTich", caBenh.getTrangTrai().getDienTich());
+                trangTraiData.put("phuongThucChanNuoi", caBenh.getTrangTrai().getPhuongThucChanNuoi());
+
+                trangTraiData.put("tenTrangTrai", caBenh.getTrangTrai().getTenTrangTrai());
+                trangTraiData.put("diaChiDayDu", caBenh.getTrangTrai().getDiaChiDayDu());
+
+                if (caBenh.getTrangTrai().getDonViHanhChinh() != null) {
+                    trangTraiData.put("donViHanhChinh", Map.of(
+                            "id", caBenh.getTrangTrai().getDonViHanhChinh().getId(),
+                            "ten", caBenh.getTrangTrai().getDonViHanhChinh().getTen(),
+                            "capHanhChinh", caBenh.getTrangTrai().getDonViHanhChinh().getCapHanhChinh()));
+                }
+
+                // Add vatNuoi information if available
+                if (caBenh.getTrangTrai().getTrangTraiVatNuois() != null) {
+                    List<Map<String, Object>> danhSachVatNuoi = caBenh.getTrangTrai().getTrangTraiVatNuois().stream()
+                            .filter(ttvn -> ttvn != null && ttvn.getLoaiVatNuoi() != null)
+                            .map(ttvn -> Map.of(
+                                    "loaiVatNuoi", Map.of(
+                                            "id", ttvn.getLoaiVatNuoi().getId(),
+                                            "tenLoai", ttvn.getLoaiVatNuoi().getTenLoai()),
+                                    "soLuong", ttvn.getSoLuong()))
+                            .collect(Collectors.toList());
+                    trangTraiData.put("danhSachVatNuoi", danhSachVatNuoi);
+                }
+
+                response.put("trangTrai", trangTraiData);
+            }
+
+            // Add basic fields with null checks
+            response.put("ngayPhatHien", caBenh.getNgayPhatHien());
+            response.put("moTaBanDau", caBenh.getMoTaBanDau());
+            response.put("soCaNhiemBanDau", caBenh.getSoCaNhiemBanDau());
+            response.put("soCaTuVongBanDau", caBenh.getSoCaTuVongBanDau());
+            response.put("nguyenNhanDuDoan", caBenh.getNguyenNhanDuDoan());
+            response.put("trangThai", caBenh.getTrangThai());
+            response.put("daKetThuc", caBenh.getDaKetThuc());
+
+            // Handle DienBienCaBenh data safely
+            if (caBenh.getDienBienCaBenhs() != null && !caBenh.getDienBienCaBenhs().isEmpty()) {
+                List<Map<String, Object>> dienBienList = caBenh.getDienBienCaBenhs().stream()
+                        .map(db -> {
+                            Map<String, Object> dienBien = new HashMap<>();
+                            dienBien.put("id", db.getId());
+                            dienBien.put("ngayCapNhat", db.getNgayCapNhat());
+                            dienBien.put("soCaNhiemMoi", db.getSoCaNhiemMoi());
+                            dienBien.put("soCaKhoi", db.getSoCaKhoi());
+                            dienBien.put("soCaTuVong", db.getSoCaTuVong());
+                            dienBien.put("bienPhapXuLy", db.getBienPhapXuLy());
+                            dienBien.put("ketQuaXuLy", db.getKetQuaXuLy());
+                            if (db.getNguoiCapNhat() != null) {
+                                dienBien.put("nguoiCapNhat", Map.of(
+                                        "id", db.getNguoiCapNhat().getId(),
+                                        "hoTen", db.getNguoiCapNhat().getHoTen()));
+                            }
+                            return dienBien;
+                        })
+                        .collect(Collectors.toList());
+                response.put("dienBienCaBenhs", dienBienList);
+            }
+
+            return ResponseEntity.ok(response);
         } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body(Map.of("message", e.getMessage()));
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Lỗi khi lấy thông tin ca bệnh: " + e.getMessage()));
         }
     }
 
@@ -154,17 +266,41 @@ public class CaBenhApi {
     @Operation(summary = "Cập nhật thông tin ca bệnh")
     public ResponseEntity<?> updateCaBenh(
             @PathVariable Long id,
-            @RequestBody CaBenh caBenh,
+            @RequestBody Map<String, Object> updates, // Change to Map to handle partial updates
             @AuthenticationPrincipal NguoiDung nguoiDung) {
         try {
             CaBenh existingCaBenh = caBenhService.findById(id);
-            caBenh.setId(id);
-            CaBenh updatedCaBenh = caBenhService.thayDoiCaBenh(caBenh, nguoiDung);
+            if (existingCaBenh == null) {
+                return ResponseEntity.notFound().build();
+            }
+
+            // Update only the fields that are present in the request
+            if (updates.containsKey("ngayPhatHien")) {
+                existingCaBenh.setNgayPhatHien(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
+                        .parse((String) updates.get("ngayPhatHien")));
+            }
+            if (updates.containsKey("soCaNhiemBanDau")) {
+                existingCaBenh.setSoCaNhiemBanDau(((Number) updates.get("soCaNhiemBanDau")).intValue());
+            }
+            if (updates.containsKey("soCaTuVongBanDau")) {
+                existingCaBenh.setSoCaTuVongBanDau(((Number) updates.get("soCaTuVongBanDau")).intValue());
+            }
+            if (updates.containsKey("moTaBanDau")) {
+                existingCaBenh.setMoTaBanDau((String) updates.get("moTaBanDau"));
+            }
+            if (updates.containsKey("nguyenNhanDuDoan")) {
+                existingCaBenh.setNguyenNhanDuDoan((String) updates.get("nguyenNhanDuDoan"));
+            }
+            if (updates.containsKey("trangThai")) {
+                existingCaBenh.setTrangThai(TrangThaiEnum.valueOf((String) updates.get("trangThai")));
+            }
+
+            CaBenh updatedCaBenh = caBenhService.thayDoiCaBenh(existingCaBenh, nguoiDung);
             return ResponseEntity.ok(updatedCaBenh);
-        } catch (EntityNotFoundException e) {
-            return ResponseEntity.notFound().build();
-        } catch (IllegalArgumentException | IllegalStateException e) {
-            return ResponseEntity.badRequest().body(e.getMessage());
+        } catch (Exception e) {
+            return ResponseEntity
+                    .badRequest()
+                    .body(Map.of("message", "Lỗi cập nhật: " + e.getMessage()));
         }
     }
 

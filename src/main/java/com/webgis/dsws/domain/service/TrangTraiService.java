@@ -865,14 +865,14 @@ public class TrangTraiService {
             updateBasicInfo(trangTrai, dto);
             updateLocation(trangTrai, dto);
             updateOperatingInfo(trangTrai, dto);
-            
+
             if (dto.getVatNuoi() != null && !dto.getVatNuoi().isEmpty()) {
                 updateTrangTraiVatNuoi(trangTrai, dto.getVatNuoi());
             }
 
             trangTrai.setNgayCapNhat(LocalDateTime.now());
             return trangTraiRepository.save(trangTrai);
-            
+
         } catch (EntityNotFoundException e) {
             throw e;
         } catch (Exception e) {
@@ -881,13 +881,20 @@ public class TrangTraiService {
     }
 
     private void updateBasicInfo(TrangTrai trangTrai, TrangTraiUpdateDto dto) {
-        if (dto.getTenTrangTrai() != null) trangTrai.setTenTrangTrai(dto.getTenTrangTrai());
-        if (dto.getTenChu() != null) trangTrai.setTenChu(dto.getTenChu());
-        if (dto.getSoDienThoai() != null) trangTrai.setSoDienThoai(dto.getSoDienThoai());
-        if (dto.getEmail() != null) trangTrai.setEmail(dto.getEmail());
-        if (dto.getSoNha() != null) trangTrai.setSoNha(dto.getSoNha());
-        if (dto.getTenDuong() != null) trangTrai.setTenDuong(dto.getTenDuong());
-        if (dto.getKhuPho() != null) trangTrai.setKhuPho(dto.getKhuPho());
+        if (dto.getTenTrangTrai() != null)
+            trangTrai.setTenTrangTrai(dto.getTenTrangTrai());
+        if (dto.getTenChu() != null)
+            trangTrai.setTenChu(dto.getTenChu());
+        if (dto.getSoDienThoai() != null)
+            trangTrai.setSoDienThoai(dto.getSoDienThoai());
+        if (dto.getEmail() != null)
+            trangTrai.setEmail(dto.getEmail());
+        if (dto.getSoNha() != null)
+            trangTrai.setSoNha(dto.getSoNha());
+        if (dto.getTenDuong() != null)
+            trangTrai.setTenDuong(dto.getTenDuong());
+        if (dto.getKhuPho() != null)
+            trangTrai.setKhuPho(dto.getKhuPho());
     }
 
     private void updateLocation(TrangTrai trangTrai, TrangTraiUpdateDto dto) {
@@ -896,26 +903,29 @@ public class TrangTraiService {
             trangTrai.setDonViHanhChinh(dvhc);
             updateDiaChiDayDu(trangTrai);
         }
-        
+
         if (dto.getLongitude() != null && dto.getLatitude() != null) {
             trangTrai.setPoint(geometryService.createPoint(dto.getLongitude(), dto.getLatitude()));
         }
     }
 
     private void updateOperatingInfo(TrangTrai trangTrai, TrangTraiUpdateDto dto) {
-        if (dto.getDienTich() != null) trangTrai.setDienTich(dto.getDienTich());
-        if (dto.getTongDan() != null) trangTrai.setTongDan(dto.getTongDan());
-        if (dto.getPhuongThucChanNuoi() != null) trangTrai.setPhuongThucChanNuoi(dto.getPhuongThucChanNuoi());
-        if (dto.getTrangThaiHoatDong() != null) trangTrai.setTrangThaiHoatDong(dto.getTrangThaiHoatDong());
+        if (dto.getDienTich() != null)
+            trangTrai.setDienTich(dto.getDienTich());
+        if (dto.getTongDan() != null)
+            trangTrai.setTongDan(dto.getTongDan());
+        if (dto.getPhuongThucChanNuoi() != null)
+            trangTrai.setPhuongThucChanNuoi(dto.getPhuongThucChanNuoi());
+        if (dto.getTrangThaiHoatDong() != null)
+            trangTrai.setTrangThaiHoatDong(dto.getTrangThaiHoatDong());
     }
 
     private void updateDiaChiDayDu(TrangTrai trangTrai) {
         trangTrai.setDiaChiDayDu(buildFullAddress(
-            trangTrai.getSoNha(),
-            trangTrai.getTenDuong(),
-            trangTrai.getKhuPho(),
-            trangTrai.getDonViHanhChinh()
-        ));
+                trangTrai.getSoNha(),
+                trangTrai.getTenDuong(),
+                trangTrai.getKhuPho(),
+                trangTrai.getDonViHanhChinh()));
     }
 
     private void updateTrangTraiVatNuoi(TrangTrai trangTrai, List<TrangTraiCreateDto.VatNuoiDto> vatNuoiDtos) {
@@ -928,5 +938,23 @@ public class TrangTraiService {
             ttvn.setSoLuong(vatNuoiDto.getSoLuong());
             trangTrai.getTrangTraiVatNuois().add(ttvn);
         }
+    }
+
+    @Transactional(readOnly = true) 
+    public List<TrangTrai> searchByKeyword(String keyword, int limit) {
+        PageRequest pageRequest = PageRequest.of(0, limit, Sort.by("tenChu").ascending());
+        Page<TrangTrai> results = trangTraiRepository.searchByKeywordWithDetails(keyword, pageRequest);
+        
+        // Ensure collections are initialized
+        results.getContent().forEach(farm -> {
+            if (farm.getTrangTraiVatNuois() != null) {
+                farm.getTrangTraiVatNuois().size();  // Force initialization
+            }
+            if (farm.getDonViHanhChinh() != null) {
+                farm.getDonViHanhChinh().getTen(); // Force initialization
+            }
+        });
+        
+        return results.getContent();
     }
 }

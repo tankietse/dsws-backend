@@ -22,11 +22,11 @@ public class CaBenh {
     private Long id;
 
     @JsonBackReference("trangTrai-caBenh")
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "trang_trai_id")
     private TrangTrai trangTrai;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "benh_id")
     private Benh benh;
 
@@ -44,13 +44,13 @@ public class CaBenh {
     // @Column(columnDefinition = "geometry")
     // private Geometry viTriPhatHien;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nguoi_tao_id")
     private NguoiDung nguoiTao;
 
     private Date ngayTao;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "nguoi_duyet_id")
     private NguoiDung nguoiDuyet;
 
@@ -62,7 +62,7 @@ public class CaBenh {
     @Column(name = "trang_thai")
     private TrangThaiEnum trangThai;
 
-    @OneToMany(mappedBy = "caBenh")
+    @OneToMany(mappedBy = "caBenh", fetch = FetchType.LAZY)
     private Set<DienBienCaBenh> dienBienCaBenhs;
 
     @PrePersist
