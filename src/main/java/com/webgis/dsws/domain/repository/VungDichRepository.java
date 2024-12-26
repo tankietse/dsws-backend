@@ -1,5 +1,6 @@
 package com.webgis.dsws.domain.repository;
 
+import com.webgis.dsws.domain.model.Benh;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
@@ -11,6 +12,7 @@ import com.webgis.dsws.domain.model.enums.MucDoVungDichEnum;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 public interface VungDichRepository extends JpaRepository<VungDich, Long>, JpaSpecificationExecutor<VungDich> {
     List<VungDich> findByMucDo(MucDoVungDichEnum mucDo);
@@ -42,4 +44,10 @@ public interface VungDichRepository extends JpaRepository<VungDich, Long>, JpaSp
             "LEFT JOIN FETCH vt.trangTrai " +
             "WHERE v.id = :id")
     Optional<VungDich> findById(@Param("id") Long id);
+
+    List<VungDich> findByBenhAndMucDoInAndBanKinhLessThanEqual(
+            Benh benh,
+            Set<MucDoVungDichEnum> mucDoList,
+            Double radiusKm
+    );
 }

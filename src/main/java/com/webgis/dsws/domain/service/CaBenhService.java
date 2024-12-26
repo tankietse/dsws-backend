@@ -8,14 +8,18 @@ import com.webgis.dsws.domain.model.enums.MucDoBenhEnum;
 import com.webgis.dsws.domain.model.enums.TrangThaiEnum;
 import com.webgis.dsws.domain.model.Benh;
 import com.webgis.dsws.domain.repository.CaBenhRepository;
+import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
+import jakarta.persistence.Query;
 import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.*;
 import java.util.stream.Collectors;
 import java.time.LocalDateTime;
+
 import org.locationtech.jts.geom.Geometry;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.domain.Page;
@@ -28,10 +32,11 @@ public class CaBenhService {
     private final TrangTraiService trangTraiService;
     private final GeometryService geometryService;
     private final DonViHanhChinhService donViHanhChinhService;
+    private final EntityManager entityManager;
 
     @Transactional(readOnly = true)
     public Map<String, Object> getCaBenhGeoJSON(Date fromDate, Date toDate, String maTinhThanh, String loaiBenh,
-            boolean chiHienThiChuaKetThuc) {
+                                                boolean chiHienThiChuaKetThuc) {
         Specification<CaBenh> spec = buildCaBenhSpecification(fromDate, toDate, maTinhThanh, loaiBenh,
                 chiHienThiChuaKetThuc);
 
@@ -86,7 +91,7 @@ public class CaBenhService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> getThongKeCaBenh(String maTinhThanh, Date fromDate, Date toDate, String loaiBenh,
-            boolean chiHienThiChuaKetThuc) {
+                                                boolean chiHienThiChuaKetThuc) {
         Specification<CaBenh> spec = buildCaBenhSpecification(fromDate, toDate, maTinhThanh, loaiBenh,
                 chiHienThiChuaKetThuc);
 
@@ -113,7 +118,7 @@ public class CaBenhService {
 
     // Add a method to build the specification
     private Specification<CaBenh> buildCaBenhSpecification(Date fromDate, Date toDate, String maTinhThanh,
-            String loaiBenh, boolean chiHienThiChuaKetThuc) {
+                                                           String loaiBenh, boolean chiHienThiChuaKetThuc) {
         return (root, query, criteriaBuilder) -> {
             List<Predicate> predicates = new ArrayList<>();
 
@@ -532,5 +537,126 @@ public class CaBenhService {
                     return caseInfo;
                 })
                 .collect(Collectors.toList());
+    }
+
+    //Test trường hợp k có daKetThuc
+//    @Transactional(readOnly = true)
+//    public List<CaBenh> findByCriteria(Benh benh, Integer minSoCaNhiem, Integer minSoCaTuVong, Date afterDate, Boolean daKetThuc) {
+//        System.out.println("Tham số truyền vào: ");
+//        System.out.println("Benh: " + benh);
+//        System.out.println("Kiểu dữ liệu của afterDate: " + benh.getClass().getName());
+//        System.out.println("benh_id: " + benh.getId());
+//        System.out.println("Kiểu dữ liệu của afterDate: " + benh.getId().getClass().getName());
+//        System.out.println("MinSoCaNhiem: " + minSoCaNhiem);
+//        System.out.println("Kiểu dữ liệu của afterDate: " + minSoCaNhiem.getClass().getName());
+//        System.out.println("MinSoCaTuVong: " + minSoCaTuVong);
+//        System.out.println("Kiểu dữ liệu của afterDate: " + minSoCaTuVong.getClass().getName());
+//        System.out.println("AfterDate: " + afterDate);
+//        System.out.println("Kiểu dữ liệu của afterDate: " + afterDate.getClass().getName());
+//        System.out.println("DaKetThuc: " + daKetThuc);
+//        System.out.println("Kiểu dữ liệu của afterDate: " + daKetThuc.getClass().getName());
+//        executeQuery(benh,
+//                minSoCaNhiem,
+//                minSoCaTuVong,
+//                afterDate,
+//                daKetThuc);
+//        return caBenhRepository.findByBenhAndCriteria(
+//                benh,
+//                minSoCaNhiem,
+//                minSoCaTuVong,
+//                afterDate,
+//                daKetThuc
+//        );
+//    }
+
+
+    @Transactional(readOnly = true)
+    public List<CaBenh> findByCriteria(Benh benh, Integer minSoCaNhiem, Integer minSoCaTuVong) {
+        System.out.println("Tham số truyền vào: ");
+        System.out.println("Benh: " + benh);
+        System.out.println("Kiểu dữ liệu của afterDate: " + benh.getClass().getName());
+        System.out.println("benh_id: " + benh.getId());
+        System.out.println("Kiểu dữ liệu của afterDate: " + benh.getId().getClass().getName());
+        System.out.println("MinSoCaNhiem: " + minSoCaNhiem);
+        System.out.println("Kiểu dữ liệu của afterDate: " + minSoCaNhiem.getClass().getName());
+        System.out.println("MinSoCaTuVong: " + minSoCaTuVong);
+        System.out.println("Kiểu dữ liệu của afterDate: " + minSoCaTuVong.getClass().getName());
+        return caBenhRepository.findByBenhAndCriteria(
+                benh,
+                minSoCaNhiem,
+                minSoCaTuVong
+        );
+    }
+
+    //    public List<CaBenh> findByCriteria(Benh benh, Integer minSoCaNhiem, Integer minSoCaTuVong, Date afterDate, Boolean daKetThuc) {
+//        System.out.println("Tham số truyền vào: ");
+//        System.out.println("Benh: " + benh);
+//        System.out.println("MinSoCaNhiem: " + minSoCaNhiem);
+//        System.out.println("MinSoCaTuVong: " + minSoCaTuVong);
+//        System.out.println("AfterDate: " + afterDate);
+//        System.out.println("DaKetThuc: " + daKetThuc);
+//        return caBenhRepository.findByBenhAndCriteria(
+//                benh,
+//                minSoCaNhiem,
+//                minSoCaTuVong,
+//                afterDate,
+//                daKetThuc
+//        );
+//    }
+    public void executeQuery(Benh benh, Integer minSoCaNhiem, Integer minSoCaTuVong,
+                             Date afterDate, Boolean daKetThuc) {
+
+//        // Sử dụng EntityManager để tạo truy vấn với tên tham số
+//        Query query = entityManager.createQuery("SELECT cb FROM CaBenh cb WHERE " +
+//                "(:benh IS NULL OR cb.benh = :benh) AND " +
+//                "(:minSoCaNhiem IS NULL OR cb.soCaNhiemBanDau >= :minSoCaNhiem) AND " +
+//                "(:minSoCaTuVong IS NULL OR cb.soCaTuVongBanDau >= :minSoCaTuVong) AND " +
+//                "(:afterDate IS NULL OR cb.ngayPhatHien >= :afterDate) AND " +
+//                "(:daKetThuc IS NULL OR cb.daKetThuc = :daKetThuc)");
+//
+//        // Thiết lập các tham số
+//        query.setParameter("benh", benh);
+//        query.setParameter("minSoCaNhiem", minSoCaNhiem);
+//        query.setParameter("minSoCaTuVong", minSoCaTuVong);
+//        query.setParameter("afterDate", afterDate);
+//        query.setParameter("daKetThuc", daKetThuc);
+//
+//        // Thực thi truy vấn
+//        List<CaBenh> result = query.getResultList();
+//
+//        // In kết quả truy vấn (nếu cần)
+//        result.forEach(cb -> System.out.println(cb));
+//
+//        for (CaBenh cb : result) {
+//            System.out.println("ID: " + cb.getId());
+//            System.out.println("Benh: " + cb.getBenh());
+//            System.out.println("So Ca Nhiem: " + cb.getSoCaNhiemBanDau());
+//            System.out.println("So Ca Tu Vong: " + cb.getSoCaTuVongBanDau());
+//            System.out.println("Ngay Phat Hien: " + cb.getNgayPhatHien());
+//            System.out.println("Da Ket Thuc: " + cb.getDaKetThuc());
+//            System.out.println("==========================================");
+//        }
+        // Truy vấn thông tin từ bảng CaBenh
+        Query query = entityManager.createQuery("SELECT cb.id, cb.benh, cb.soCaNhiemBanDau, cb.soCaTuVongBanDau, cb.ngayPhatHien, cb.daKetThuc FROM CaBenh cb");
+
+        // Lấy kết quả
+        List<Object[]> result = query.getResultList();
+
+        // In thông tin từng bản ghi
+        for (Object[] row : result) {
+            System.out.println("ID: " + row[0]);
+            System.out.println("Kiểu dữ liệu của afterDate: " + row[0].getClass().getName());
+            System.out.println("Benh: " + row[1]);
+            System.out.println("Kiểu dữ liệu của afterDate: " + row[1].getClass().getName());
+            System.out.println("So Ca Nhiem: " + row[2]);
+            System.out.println("Kiểu dữ liệu của afterDate: " + row[2].getClass().getName());
+            System.out.println("So Ca Tu Vong: " + row[3]);
+            System.out.println("Kiểu dữ liệu của afterDate: " + row[3].getClass().getName());
+            System.out.println("Ngay Phat Hien: " + row[4]);
+            System.out.println("Kiểu dữ liệu của afterDate: " + row[4].getClass().getName());
+            System.out.println("Da Ket Thuc: " + row[5]);
+            System.out.println("Kiểu dữ liệu của afterDate: " + row[5].getClass().getName());
+            System.out.println("==========================================");
+        }
     }
 }

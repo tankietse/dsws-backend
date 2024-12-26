@@ -1,21 +1,16 @@
 package com.webgis.dsws.domain.service;
 
+import com.webgis.dsws.domain.model.*;
 import org.springframework.stereotype.Service;
 import org.springframework.validation.annotation.Validated;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.geom.Point;
-import com.webgis.dsws.domain.model.VungDich;
-import com.webgis.dsws.domain.model.VungDichTrangTrai;
 import com.webgis.dsws.domain.model.enums.MucDoVungDichEnum;
 import com.webgis.dsws.domain.repository.TrangTraiRepository;
 import com.webgis.dsws.domain.repository.VungDichRepository;
 import com.webgis.dsws.domain.repository.VungDichTrangTraiRepository;
 import com.webgis.dsws.domain.dto.VungDichMapDTO;
-import com.webgis.dsws.domain.model.BienPhapPhongChong;
-import com.webgis.dsws.domain.model.CaBenh;
-import com.webgis.dsws.domain.model.DonViHanhChinh;
-import com.webgis.dsws.domain.model.TrangTrai;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;
@@ -611,5 +606,9 @@ public class VungDichService {
                 })
                 .collect(Collectors.toList());
         return vungDichDetails;
+    }
+
+    public List<VungDich> findByCriteria(Benh benh, Set<MucDoVungDichEnum> mucDoList, Double radiusKm) {
+        return vungDichRepository.findByBenhAndMucDoInAndBanKinhLessThanEqual(benh, mucDoList, radiusKm);
     }
 }

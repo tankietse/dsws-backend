@@ -104,8 +104,9 @@ public class SecurityConfig {
                                                                 "/fonts/**",
                                                                 "/auth/**",
                                                                 "/img/**",
-                                                                "/favicon.ico",
-                                                                "/error")
+//                                                                "/favicon.ico",
+                                                                "/error",
+                                                                "/test/**")
                                                 .permitAll()
                                                 .anyRequest().authenticated())
                                 .sessionManagement(session -> session

@@ -20,10 +20,12 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import org.springframework.context.annotation.Profile;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EntityScan(basePackages = { "com.webgis.dsws.domain.model" })
 @EnableJpaRepositories(basePackages = { "com.webgis.dsws.domain.repository" })
+@EnableScheduling
 public class DswsApplication {
     private static final Logger log = LoggerFactory.getLogger(DswsApplication.class);
 
