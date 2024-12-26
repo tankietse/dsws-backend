@@ -7,6 +7,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.io.Serializable;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 
 @Entity
 @Getter
@@ -23,7 +24,7 @@ public class VungDichTrangTrai implements Serializable {
     private VungDich vungDich;
 
     @Id
-    @JsonBackReference("trangTrai-vungDich")
+    @JsonBackReference("trangTrai-vungDich") // Change this line
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "trang_trai_id")
     private TrangTrai trangTrai;

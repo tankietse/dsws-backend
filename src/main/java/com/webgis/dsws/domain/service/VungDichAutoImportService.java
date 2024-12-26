@@ -91,6 +91,53 @@ public class VungDichAutoImportService {
         return newZones;
     }
 
+    @Transactional
+    public VungDich autoCreateZoneForCase(CaBenh caBenh) {
+        DonViHanhChinh dvhc = caBenh.getTrangTrai().getDonViHanhChinh();
+        Benh benh = caBenh.getBenh();
+
+        // Create geometry from case location
+        Point caseLocation = caBenh.getTrangTrai().getPoint();
+        double initialRadius = calculateInitialRadius(caBenh);
+        Geometry zoneGeom = geometryService.createCircle(caseLocation, initialRadius);
+
+        // Create and save new zone
+        VungDich vungDich = new VungDich();
+        vungDich.setMaVung(generateZoneCode(benh.getId()));
+        vungDich.setTenVung("Vùng dịch " + benh.getTenBenh() + " - " + caBenh.getTrangTrai().getDiaChiDayDu());
+        vungDich.setMucDoNghiemTrong(calculateSeverityLevel(Collections.singletonList(caBenh)));
+        vungDich.setMucDo(calculateMucDoVungDich(vungDich.getMucDoNghiemTrong()));
+        vungDich.setBenh(benh);
+        vungDich.setGeom(zoneGeom);
+        vungDich.setBanKinh((float) initialRadius);
+        vungDich.setNgayBatDau(caBenh.getNgayPhatHien());
+
+        return vungDichService.save(vungDich, Collections.singletonList(caBenh));
+    }
+
+    private double calculateInitialRadius(CaBenh caBenh) {
+        // Base radius based on disease severity
+        double baseRadius = 1000; // 1km default
+
+        if (caBenh.getBenh().getMucDoBenhs().contains(MucDoBenhEnum.BANG_A)) {
+            baseRadius = 3000; // 3km for category A diseases
+        }
+
+        // Adjust based on infection rate
+        TrangTrai trangTrai = caBenh.getTrangTrai();
+        double infectionRate = calculateInfectionRate(caBenh, trangTrai);
+
+        return baseRadius * (1 + infectionRate);
+    }
+
+    private double calculateInfectionRate(CaBenh caBenh, TrangTrai trangTrai) {
+        int totalAnimals = trangTrai.getTrangTraiVatNuois().stream()
+                .filter(ttvn -> caBenh.getBenh().getLoaiVatNuoi().contains(ttvn.getLoaiVatNuoi()))
+                .mapToInt(TrangTraiVatNuoi::getSoLuong)
+                .sum();
+        return totalAnimals > 0 ? (double) caBenh.getSoCaNhiemBanDau() / totalAnimals : 0;
+    }
+
     private List<CaBenh> getCaBenhsByCapHanhChinh(Integer capHanhChinh) {
         Specification<CaBenh> spec = Specification
                 .where((root, query, builder) -> builder.equal(root.get("daKetThuc"), false));

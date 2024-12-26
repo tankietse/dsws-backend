@@ -57,8 +57,8 @@ public class DswsApplication {
     public ApplicationRunner dataImporter() {
         return args -> {
             if (!hoChiMinhBoundaryPath.isEmpty() && !farmPath.isEmpty()) {
-                // importBoundaryData();
-                // importFarmData();
+//                 importBoundaryData();
+//                 importFarmData();
 //                 importVirusZones();
 
                 System.out.println(

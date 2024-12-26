@@ -12,6 +12,7 @@ import jakarta.persistence.*;
 import lombok.*;
 import java.util.Set;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
 @Entity
 @Getter
@@ -52,7 +53,7 @@ public class VungDich {
     @JoinColumn(name = "nguoi_tao_id")
     private NguoiDung nguoiTao;
 
-    @JsonManagedReference
+    @JsonManagedReference("vungDich-trangTrais")
     @OneToMany(mappedBy = "vungDich", fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<VungDichTrangTrai> trangTrais = new HashSet<>();
 

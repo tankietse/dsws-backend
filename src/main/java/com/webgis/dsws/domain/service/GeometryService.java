@@ -19,6 +19,7 @@ import com.webgis.dsws.exception.DataImportException;
 
 import org.locationtech.jts.io.WKBReader;
 import org.locationtech.jts.io.WKTReader;
+import org.locationtech.jts.geom.LinearRing;
 
 @Service
 public class GeometryService {
@@ -213,5 +214,27 @@ public class GeometryService {
         }
 
         return multiPolygonCoords;
+    }
+
+    /**
+     * Tạo một hình tròn từ một điểm trung tâm và bán kính.
+     * 
+     * @param center Điểm trung tâm của hình tròn
+     * @param radius Bán kính của hình tròn (đơn vị: mét)
+     * @return Đối tượng Geometry đại diện cho hình tròn
+     */
+    public Geometry createCircle(Point center, double radius) {
+        int numPoints = 64; // Số điểm để tạo hình tròn
+        Coordinate[] coords = new Coordinate[numPoints + 1];
+        for (int i = 0; i < numPoints; i++) {
+            double angle = (i * 2 * Math.PI) / numPoints;
+            double dx = radius * Math.cos(angle);
+            double dy = radius * Math.sin(angle);
+            coords[i] = new Coordinate(center.getX() + dx, center.getY() + dy);
+        }
+        coords[numPoints] = coords[0]; // Đóng vòng tròn
+
+        LinearRing ring = geometryFactory.createLinearRing(coords);
+        return geometryFactory.createPolygon(ring, null);
     }
 }

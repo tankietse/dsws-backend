@@ -19,6 +19,7 @@ import com.webgis.dsws.domain.dto.VungDichMapDTO;
 import com.webgis.dsws.domain.model.BienPhapPhongChong;
 import com.webgis.dsws.domain.model.CaBenh;
 import com.webgis.dsws.domain.model.DonViHanhChinh;
+import com.webgis.dsws.domain.model.TrangTrai;
 
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.transaction.annotation.Transactional;

@@ -31,6 +31,7 @@ public class CaBenhService {
     private final TrangTraiService trangTraiService;
     private final GeometryService geometryService;
     private final DonViHanhChinhService donViHanhChinhService;
+    private BenhService benhService;
 
     private VungDichService vungDichService;
     private VungDichAutoImportService vungDichAutoImportService;
@@ -144,6 +145,19 @@ public class CaBenhService {
 
     @Transactional
     public CaBenh createCaBenh(CaBenh caBenh) {
+        // Set relationships based on IDs
+        if (caBenh.getTrangTrai().getId() != null) {
+            TrangTrai trangTrai = trangTraiService.findById(caBenh.getTrangTrai().getId());
+            caBenh.setTrangTrai(trangTrai);
+        }
+
+        if (caBenh.getBenh().getId() != null) {
+            Benh benh = benhService.findById(caBenh.getBenh().getId())
+                    .orElseThrow(() -> new EntityNotFoundException(
+                            "Không tìm thấy bệnh với ID: " + caBenh.getBenh().getId()));
+            caBenh.setBenh(benh);
+        }
+
         caBenh.setNgayTao(new Date());
         caBenh.setDaKetThuc(false);
 
