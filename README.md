@@ -113,7 +113,11 @@ mvn spring-boot:run
 ### Quản lý ca bệnh
 
 ![Quản lý ca bệnh](./UI/ql_ca_benh.png)
+
 *Giao diện theo dõi và quản lý các ca bệnh được ghi nhận*
+
+![Quản lý ca bệnh](./UI/them_cabenh.png)
+*Giao diện thêm ca bệnh mới*
 
 ### Quản lý đơn vị hành chính
 
@@ -123,6 +127,8 @@ mvn spring-boot:run
 ### Quản lý trang trại
 
 ![Quản lý trang trại](./UI/view_farm.png)
+
+![Quản lý trang trại](./UI/farm_management.png)
 *Giao diện quản lý thông tin các trang trại và cơ sở chăn nuôi*
 
 ### Bản đồ dịch bệnh
@@ -146,7 +152,7 @@ mvn spring-boot:run
 *Tài liệu API được hiển thị qua Swagger UI*
 
 ## Cấu trúc dự án
-
+```
 dsws/
 ├── src/
 │   ├── main/
@@ -167,3 +173,4 @@ dsws/
 │   └── test/                     # Unit tests
 ├── data/                         # Data files
 └── UI/                           # UI screenshots
+```
